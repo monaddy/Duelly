@@ -1,23 +1,24 @@
 SHELL := /bin/bash
 DC     := docker compose
 
-.PHONY: help build up down restart logs ps api:sh nginx:reload db:migrate db:studio test certbot:init certbot:renew dhparam
+.PHONY: help build up down restart logs ps api-sh nginx-reload db-migrate db-studio test certbot-init certbot-renew dhparam
 
 help:
-	@echo "Common targets:"
-	@echo "  build           Build images"
+	@echo "Available targets:"
+	@echo "  build           Build Docker images"
 	@echo "  up              Start stack (detached)"
 	@echo "  down            Stop & remove stack"
+	@echo "  restart         Restart the stack"
 	@echo "  logs            Tail logs"
 	@echo "  ps              Show container status"
-	@echo "  api:sh          Shell into API container"
-	@echo "  nginx:reload    Reload Nginx config"
-	@echo "  db:migrate      Run Prisma migrations (if present)"
-	@echo "  db:studio       Open Prisma Studio (interactive)"
-	@echo "  test            Run API tests (npm test)"
-	@echo "  certbot:init    Obtain Let's Encrypt certs (HTTP-01, webroot)"
-	@echo "  certbot:renew   Renew Let's Encrypt certs"
-	@echo "  dhparam         Generate dhparam.pem (optional)"
+	@echo "  api-sh          Shell into API container"
+	@echo "  nginx-reload    Reload Nginx config"
+	@echo "  db-migrate      Run Prisma migrations (if present)"
+	@echo "  db-studio       Open Prisma Studio (interactive)"
+	@echo "  test            Run API tests"
+	@echo "  certbot-init    Obtain Let's Encrypt cert (set DOMAIN=...)"
+	@echo "  certbot-renew   Renew Let's Encrypt certs"
+	@echo "  dhparam         Generate dhparam.pem"
 
 build:
 	$(DC) build --pull
@@ -38,36 +39,32 @@ logs:
 ps:
 	$(DC) ps
 
-api:sh:
+api-sh:
 	$(DC) exec api sh
 
-nginx:reload:
+nginx-reload:
+	$(DC) exec nginx nginx -t
 	$(DC) exec nginx nginx -s reload
 
-db:migrate:
-	# Safe even if Prisma is not installed yet
+db-migrate:
 	-$(DC) exec -T api sh -lc 'npx --yes prisma migrate deploy 2>/dev/null || echo "Prisma not installed or no migrations"'
 
-db:studio:
+db-studio:
 	$(DC) exec -T api sh -lc 'npx --yes prisma studio || true'
 
 test:
 	$(DC) exec -T api npm test
 
-# ---- Let's Encrypt (webroot) ----
-# Prereqs:
-#  1) Ensure port 80 is reachable on your domain.
-#  2) Set DOMAIN=yourdomain.example in the environment when calling these targets.
-#  3) The nginx service must be up (serving /.well-known/acme-challenge from ./certbot-www).
-certbot:init:
-	@if [ -z "$$DOMAIN" ]; then echo "Set DOMAIN=yourdomain.example"; exit 1; fi
+certbot-init:
+	@if [ -z "$$DOMAIN" ]; then echo "Usage: make certbot-init DOMAIN=example.com"; exit 1; fi
+	mkdir -p certbot-www certs
 	docker run --rm -it \
 	  -v $$PWD/certbot-www:/var/www/certbot \
 	  -v $$PWD/certs:/etc/letsencrypt \
 	  certbot/certbot certonly --webroot -w /var/www/certbot \
 	  -d $$DOMAIN --agree-tos -m admin@$$DOMAIN --non-interactive
 
-certbot:renew:
+certbot-renew:
 	docker run --rm \
 	  -v $$PWD/certbot-www:/var/www/certbot \
 	  -v $$PWD/certs:/etc/letsencrypt \
