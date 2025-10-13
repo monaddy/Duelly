@@ -33,6 +33,6 @@ http {
   send_timeout 15s;
   keepalive_timeout 65s;
 
-  # שים לב: אין include ל-/etc/nginx/snippets/*
+  # שים לב: אין include ל-snippets כאן
   include /etc/nginx/conf.d/*.conf;
 }

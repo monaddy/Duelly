@@ -1,0 +1,102 @@
+name: ci-cd-staging
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build frontend (if present)
+        working-directory: client
+        run: |
+          if [ -f package.json ]; then
+            corepack enable
+            npm ci
+            npm run build
+          else
+            echo "No client/package.json; skipping FE build."
+          fi
+
+      - name: API tests (placeholder)
+        working-directory: services/api
+        run: npm test
+
+  docker-images:
+    needs: build-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build & push API
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/api/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/duelly-api:staging
+      - name: Build & push WildBG stub
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/wildbg/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/duelly-wildbg:staging
+      - name: Upload FE dist artifact
+        if: hashFiles('client/dist/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: fe-dist
+          path: client/dist
+
+  deploy-staging:
+    needs: docker-images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download FE artifact
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          name: fe-dist
+          path: dist
+
+      - name: Copy FE to server
+        if: hashFiles('dist/**') != ''
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          source: "dist/*"
+          target: "/root/backgammon-mini-app/client/dist"
+          strip_components: 1
+
+      - name: Pull images & reload stack
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            set -e
+            cd /root/backgammon-mini-app
+            docker pull ghcr.io/${{ github.repository_owner }}/duelly-api:staging || true
+            docker pull ghcr.io/${{ github.repository_owner }}/duelly-wildbg:staging || true
+            # אם תחליטו לעבור לתמונות במקום build מקומי, תעדכנו את compose לשימוש ב-image: …
+            docker compose up -d
+            docker compose exec -T nginx nginx -t
+            docker compose exec -T nginx nginx -s reload
+            # Smoke
+            curl -sI https://play.duelly.online/healthz | head -n1 || true
+            curl -s https://play.duelly.online/api/health || true

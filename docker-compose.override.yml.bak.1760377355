@@ -1,0 +1,25 @@
+services:
+  api_v2:
+    build:
+      context: ./services/api-v2
+    env_file:
+      - ./api-v2.env
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - private
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+
+  nginx:
+    networks:
+      - public
+      - private
+    # מיפוי סטטי של שם השירות ל-IP הפנימי (עד שנפתור DNS פנימי)
+    extra_hosts:
+      - "api_v2:172.19.0.7"

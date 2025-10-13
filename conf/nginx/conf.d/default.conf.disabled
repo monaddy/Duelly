@@ -2,10 +2,10 @@
 upstream api_upstream {
   server api:3000;
   keepalive 128;
-    include /etc/nginx/snippets/api-v2.conf;
 }
 
 server {
+    include /etc/nginx/includes/api-v2.inc;
   listen 80 default_server reuseport;
   listen [::]:80 default_server reuseport;
   server_name _;
@@ -91,6 +91,7 @@ server {
 }
 
 server {
+    include /etc/nginx/includes/api-v2.inc;
   listen 443 ssl http2;
   listen [::]:443 ssl http2;
   server_name play.duelly.online;
@@ -166,6 +167,7 @@ server {
 
 # Redirect HTTP->HTTPS (preserve ACME on :80)
 server {
+    include /etc/nginx/includes/api-v2.inc;
   listen 80;
   listen [::]:80;
   server_name play.duelly.online;

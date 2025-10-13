@@ -1,0 +1,241 @@
+[
+    {
+        "Id": "546fce456a0ee116261b2b18bbceebf030f1537455470c7dbc3ac74d849820ac",
+        "Created": "2025-10-13T17:27:17.137191471Z",
+        "Path": "docker-entrypoint.sh",
+        "Args": [
+            "node",
+            "dist/index.js"
+        ],
+        "State": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 184689,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2025-10-13T17:27:17.22469927Z",
+            "FinishedAt": "0001-01-01T00:00:00Z"
+        },
+        "Image": "sha256:bc4771d18c9b52625490ed7fc29a82dcd535421c18e5f3de6c79686d303178d7",
+        "ResolvConfPath": "/var/lib/docker/containers/546fce456a0ee116261b2b18bbceebf030f1537455470c7dbc3ac74d849820ac/resolv.conf",
+        "HostnamePath": "/var/lib/docker/containers/546fce456a0ee116261b2b18bbceebf030f1537455470c7dbc3ac74d849820ac/hostname",
+        "HostsPath": "/var/lib/docker/containers/546fce456a0ee116261b2b18bbceebf030f1537455470c7dbc3ac74d849820ac/hosts",
+        "LogPath": "/var/lib/docker/containers/546fce456a0ee116261b2b18bbceebf030f1537455470c7dbc3ac74d849820ac/546fce456a0ee116261b2b18bbceebf030f1537455470c7dbc3ac74d849820ac-json.log",
+        "Name": "/backgammon-mini-app-api_v2-1",
+        "RestartCount": 0,
+        "Driver": "overlay2",
+        "Platform": "linux",
+        "MountLabel": "",
+        "ProcessLabel": "",
+        "AppArmorProfile": "docker-default",
+        "ExecIDs": null,
+        "HostConfig": {
+            "Binds": null,
+            "ContainerIDFile": "",
+            "LogConfig": {
+                "Type": "json-file",
+                "Config": {}
+            },
+            "NetworkMode": "backgammon-mini-app_private",
+            "PortBindings": {},
+            "RestartPolicy": {
+                "Name": "unless-stopped",
+                "MaximumRetryCount": 0
+            },
+            "AutoRemove": false,
+            "VolumeDriver": "",
+            "VolumesFrom": null,
+            "ConsoleSize": [
+                0,
+                0
+            ],
+            "CapAdd": null,
+            "CapDrop": null,
+            "CgroupnsMode": "private",
+            "Dns": null,
+            "DnsOptions": null,
+            "DnsSearch": null,
+            "ExtraHosts": [],
+            "GroupAdd": null,
+            "IpcMode": "private",
+            "Cgroup": "",
+            "Links": null,
+            "OomScoreAdj": 0,
+            "PidMode": "",
+            "Privileged": false,
+            "PublishAllPorts": false,
+            "ReadonlyRootfs": false,
+            "SecurityOpt": null,
+            "UTSMode": "",
+            "UsernsMode": "",
+            "ShmSize": 67108864,
+            "Runtime": "runc",
+            "Isolation": "",
+            "CpuShares": 0,
+            "Memory": 536870912,
+            "NanoCpus": 1000000000,
+            "CgroupParent": "",
+            "BlkioWeight": 0,
+            "BlkioWeightDevice": null,
+            "BlkioDeviceReadBps": null,
+            "BlkioDeviceWriteBps": null,
+            "BlkioDeviceReadIOps": null,
+            "BlkioDeviceWriteIOps": null,
+            "CpuPeriod": 0,
+            "CpuQuota": 0,
+            "CpuRealtimePeriod": 0,
+            "CpuRealtimeRuntime": 0,
+            "CpusetCpus": "",
+            "CpusetMems": "",
+            "Devices": null,
+            "DeviceCgroupRules": null,
+            "DeviceRequests": null,
+            "MemoryReservation": 0,
+            "MemorySwap": 1073741824,
+            "MemorySwappiness": null,
+            "OomKillDisable": null,
+            "PidsLimit": null,
+            "Ulimits": null,
+            "CpuCount": 0,
+            "CpuPercent": 0,
+            "IOMaximumIOps": 0,
+            "IOMaximumBandwidth": 0,
+            "MaskedPaths": [
+                "/proc/asound",
+                "/proc/acpi",
+                "/proc/interrupts",
+                "/proc/kcore",
+                "/proc/keys",
+                "/proc/latency_stats",
+                "/proc/timer_list",
+                "/proc/timer_stats",
+                "/proc/sched_debug",
+                "/proc/scsi",
+                "/sys/firmware",
+                "/sys/devices/virtual/powercap"
+            ],
+            "ReadonlyPaths": [
+                "/proc/bus",
+                "/proc/fs",
+                "/proc/irq",
+                "/proc/sys",
+                "/proc/sysrq-trigger"
+            ]
+        },
+        "GraphDriver": {
+            "Data": {
+                "ID": "546fce456a0ee116261b2b18bbceebf030f1537455470c7dbc3ac74d849820ac",
+                "LowerDir": "/var/lib/docker/overlay2/1dbf01d39415fa85c62eb39477f9bed0ea0a835c977dbe470c0f31b641744bb2-init/diff:/var/lib/docker/overlay2/ih75fzalcs2chb1eulkd57cmt/diff:/var/lib/docker/overlay2/vq3e4tkwwmgzqtygnvcbcgbbi/diff:/var/lib/docker/overlay2/ql76v1fgnskoeajcr46enfnmj/diff:/var/lib/docker/overlay2/ibdqan4vrsbfcds5cseam3lhs/diff:/var/lib/docker/overlay2/dbf7b0a09cceb81ab196e4792c5f0eeab1f237e0bad51e375a55249bc1f36f03/diff:/var/lib/docker/overlay2/b339ed92cee973734518e9ad82beec5edb51b7dd728e7b5f01104f811ed1e418/diff:/var/lib/docker/overlay2/729d91f0fcdbea34c3274ee3bdfc0589812de7e0067e37a79bb30ee8b40dd152/diff:/var/lib/docker/overlay2/77c1c227b78243bc0cb7aaef6e32954b706f42317da24634b7dda799c5de53a0/diff:/var/lib/docker/overlay2/c73da7113df3641201d170f3eb3f937e151c641b4dce08c287ef13a2e0170d2b/diff:/var/lib/docker/overlay2/fe622cfc69a134ddfc62375222e46f51ed35e401bd07e8ac154d0754f990d74e/diff:/var/lib/docker/overlay2/76529df99862a7328c731da092fce3d4f78f728e6f96b7bcfceb1e0924169da8/diff:/var/lib/docker/overlay2/c60cd8a6fc407ce5c72ddbc2124fd97a19d6bd53e81e4facc3b508ca95f12843/diff",
+                "MergedDir": "/var/lib/docker/overlay2/1dbf01d39415fa85c62eb39477f9bed0ea0a835c977dbe470c0f31b641744bb2/merged",
+                "UpperDir": "/var/lib/docker/overlay2/1dbf01d39415fa85c62eb39477f9bed0ea0a835c977dbe470c0f31b641744bb2/diff",
+                "WorkDir": "/var/lib/docker/overlay2/1dbf01d39415fa85c62eb39477f9bed0ea0a835c977dbe470c0f31b641744bb2/work"
+            },
+            "Name": "overlay2"
+        },
+        "Mounts": [],
+        "Config": {
+            "Hostname": "546fce456a0e",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": true,
+            "AttachStderr": true,
+            "ExposedPorts": {
+                "3000/tcp": {}
+            },
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "TELEGRAM_BOT_TOKEN=8371838009:AAF9gAQxG1klqw9UBNuAgjI2sFnW3Y1gRHw",
+                "TELEGRAM_PAYMENT_PROVIDER_TOKEN=TEST:PROVIDER",
+                "TELEGRAM_WEBHOOK_SECRET=2ae977700ec11e51602460e6e2ab8eb3439e7f7da3833ea8",
+                "PORT=3000",
+                "APP_BASE_URL=https://play.duelly.online",
+                "REDIS_URL=redis://redis:6379/0",
+                "JWT_SECRET=6b43552aa032f6f06ab23e62a5fc907016acd2b3ac52d0914e9a452b53d387e4",
+                "LOG_LEVEL=info",
+                "NODE_ENV=production",
+                "REDIS_HOST=redis",
+                "REDIS_PORT=6379",
+                "HOST=0.0.0.0",
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "NODE_VERSION=20.19.5",
+                "YARN_VERSION=1.22.22"
+            ],
+            "Cmd": [
+                "node",
+                "dist/index.js"
+            ],
+            "Image": "backgammon-mini-app-api_v2",
+            "Volumes": null,
+            "WorkingDir": "/app",
+            "Entrypoint": [
+                "docker-entrypoint.sh"
+            ],
+            "OnBuild": null,
+            "Labels": {
+                "com.docker.compose.config-hash": "95917e4c6b934298e501be9d0700f6c6d56be0633da0fe9e762728118181fcc8",
+                "com.docker.compose.container-number": "1",
+                "com.docker.compose.depends_on": "redis:service_started:false,postgres:service_started:false",
+                "com.docker.compose.image": "sha256:bc4771d18c9b52625490ed7fc29a82dcd535421c18e5f3de6c79686d303178d7",
+                "com.docker.compose.oneoff": "False",
+                "com.docker.compose.project": "backgammon-mini-app",
+                "com.docker.compose.project.config_files": "/root/backgammon-mini-app/docker-compose.yml,/root/backgammon-mini-app/docker-compose.override.yml",
+                "com.docker.compose.project.working_dir": "/root/backgammon-mini-app",
+                "com.docker.compose.replace": "api_v2-1",
+                "com.docker.compose.service": "api_v2",
+                "com.docker.compose.version": "2.40.0"
+            }
+        },
+        "NetworkSettings": {
+            "Bridge": "",
+            "SandboxID": "73b05af2f1560b710799bb2955eb827b537087b4413abe02428061d15a70a9b8",
+            "SandboxKey": "/var/run/docker/netns/73b05af2f156",
+            "Ports": {},
+            "HairpinMode": false,
+            "LinkLocalIPv6Address": "",
+            "LinkLocalIPv6PrefixLen": 0,
+            "SecondaryIPAddresses": null,
+            "SecondaryIPv6Addresses": null,
+            "EndpointID": "",
+            "Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "IPAddress": "",
+            "IPPrefixLen": 0,
+            "IPv6Gateway": "",
+            "MacAddress": "",
+            "Networks": {
+                "backgammon-mini-app_private": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": [
+                        "backgammon-mini-app-api_v2-1",
+                        "api_v2"
+                    ],
+                    "MacAddress": "f6:03:73:0a:cd:08",
+                    "DriverOpts": null,
+                    "GwPriority": 0,
+                    "NetworkID": "608961200c50b29db765b255d8cdb384ee0cde53150800b2b7d2e7231aded616",
+                    "EndpointID": "55c91e7284460280f8706bba2c12c1b6bdd30ce38dfd49c4ad23f78b96b1becd",
+                    "Gateway": "",
+                    "IPAddress": "172.19.0.7",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "DNSNames": [
+                        "backgammon-mini-app-api_v2-1",
+                        "api_v2",
+                        "546fce456a0e"
+                    ]
+                }
+            }
+        }
+    }
+]
