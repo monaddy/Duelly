@@ -1,0 +1,22 @@
+// Placeholder Prisma schema (adjust to your data model).
+// Keeps `make db:migrate` targets harmless even before schema design.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Example model to verify connectivity (remove/replace)
+/*
+model LedgerEntry {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  amountCents Int
+  type      String // credit/debit
+}
+*/
