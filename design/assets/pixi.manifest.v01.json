@@ -1,8 +1,1 @@
-{
-  "bundles": [
-    { "name": "ui", "assets": [ { "name": "ui_atlas", "srcs": ["assets/atlas/ui.json", "assets/atlas/ui.png"] } ] },
-    { "name": "board", "assets": [ { "name": "board_atlas", "srcs": ["assets/atlas/board.json", "assets/atlas/board.png"] } ] },
-    { "name": "checkers", "assets": [ { "name": "checkers_atlas", "srcs": ["assets/atlas/checkers.json", "assets/atlas/checkers.png"] } ] },
-    { "name": "dice_cube", "assets": [ { "name": "dice_atlas", "srcs": ["assets/atlas/dice.json", "assets/atlas/dice.png"] } ] }
-  ]
-}
+{}
