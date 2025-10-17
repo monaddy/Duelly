@@ -1,0 +1,1 @@
+openapi: add /api/v2/rng/verify (200/404/409)
