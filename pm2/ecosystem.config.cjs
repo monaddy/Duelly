@@ -3,7 +3,7 @@ module.exports = {
   apps: [
     {
       name: "api",
-      script: "services/api/server.js",
+      script: "/app/services/api/server.js",
       exec_mode: "fork",          // set "cluster" to scale CPU-bound
       instances: 1,
       watch: false,

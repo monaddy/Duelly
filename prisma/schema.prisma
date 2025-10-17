@@ -1,5 +1,3 @@
-// Prisma schema — Backgammon Mini App (v1 bootstrap)
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,34 +8,42 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   createdAt   DateTime @default(now())
-  tgId        String   @unique
+  telegramId  BigInt   @unique
   username    String?
   firstName   String?
   lastName    String?
-  matchesP1   Match[]  @relation("P1")
-  matchesP2   Match[]  @relation("P2")
+
+  matchesA    Match[]  @relation("MatchA")
+  matchesB    Match[]  @relation("MatchB")
   ledger      LedgerEntry[]
 }
 
 model Match {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  status      String
-  p1Id        String?
-  p2Id        String?
-  p1          User?    @relation("P1", fields: [p1Id], references: [id])
-  p2          User?    @relation("P2", fields: [p2Id], references: [id])
-  entryCents  Int
-  currency    String
-  winnerId    String?
-  rngCommits  RngCommit[]
+  id          String      @id @default(uuid())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  status      MatchStatus @default(PENDING)
+
+  playerAId   String
+  playerA     User        @relation("MatchA", fields: [playerAId], references: [id])
+
+  playerBId   String
+  playerB     User        @relation("MatchB", fields: [playerBId], references: [id])
+
+  turn        Side        @default(A)
+  cubeOwner   CubeOwner   @default(CENTER)
+  cubeValue   Int         @default(1)
+  boardJson   Json?
+
+  rolls       RngCommit[]
+  ledgerTxId  String? @unique
+  ledgerTx    LedgerTx?   @relation(name: "MatchLedger", fields: [ledgerTxId], references: [id])
 }
 
 model RngCommit {
-  id              String   @id @default(cuid())
+  id              String   @id @default(uuid())
   createdAt       DateTime @default(now())
   matchId         String
   match           Match    @relation(fields: [matchId], references: [id])
@@ -47,23 +53,51 @@ model RngCommit {
   revealed        Boolean  @default(false)
 }
 
+model LedgerTx {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  type      String
+  entries   LedgerEntry[]
+  match     Match?   @relation(name: "MatchLedger")
+}
+
 model LedgerEntry {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
+  id          String     @id @default(uuid())
+  createdAt   DateTime   @default(now())
   userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  user        User       @relation(fields: [userId], references: [id])
+  txId        String
+  tx          LedgerTx   @relation(fields: [txId], references: [id])
   amountCents Int
-  type        String
+  kind        String
   ref         String?
   memo        String?
 }
 
 model WebhookEvent {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   createdAt DateTime @default(now())
   provider  String
   eventType String
   rawJson   Json
   handled   Boolean  @default(false)
   dedupeKey String   @unique
+}
+
+enum MatchStatus {
+  PENDING
+  ACTIVE
+  FINISHED
+  CANCELED
+}
+
+enum Side {
+  A
+  B
+}
+
+enum CubeOwner {
+  A
+  B
+  CENTER
 }

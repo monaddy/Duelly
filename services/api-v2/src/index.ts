@@ -3,27 +3,37 @@ import Fastify from "fastify";
 import helmet from "@fastify/helmet";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
-import fastifyJwt from "@fastify/jwt";
-import { env } from "./env.js";
-import redisPlugin from "./plugins/redis.js";
-import socketPlugin from "./plugins/socket.js";
-import systemRoutes from "./routes/system.js";
-import authRoutes from "./routes/auth.js";
-import paymentsRoutes from "./routes/payments.js";
-import rngRoutes from "./routes/rng.js";
+import { ZodError } from "zod";
 
-const app = Fastify({ logger: { level: env.LOG_LEVEL } });
+import prismaPlugin from "./plugins/prisma.js";
+import authRoutes from "./routes/auth.js";
+import rngRoutes from "./routes/rng.js";
+import paymentsRoutes from "./routes/payments.js";
+import matchesRoutes from "./routes/matches.js";
+
+const app = Fastify({ logger: { level: process.env.LOG_LEVEL ?? "info" } });
+
 await app.register(helmet, { contentSecurityPolicy: false });
 await app.register(cors, { origin: true, credentials: true });
 await app.register(rateLimit, { max: 300, timeWindow: "1 minute" });
-await app.register(fastifyJwt, { secret: process.env.JWT_SECRET! });
-await app.register(redisPlugin);
-await app.register(socketPlugin);
 
-await app.register(systemRoutes, { prefix: "/api/v2" });
-await app.register(authRoutes, { prefix: "/api/v2" });
+await app.register(prismaPlugin);
+await app.register(authRoutes,     { prefix: "/api/v2" });
+await app.register(matchesRoutes,  { prefix: "/api/v2" });
+await app.register(rngRoutes,      { prefix: "/api/v2" });
 await app.register(paymentsRoutes, { prefix: "/api/v2" });
-await app.register(rngRoutes, { prefix: "/api/v2" });
 
-await app.listen({ port: env.PORT, host: env.HOST });
-app.log.info(`API V2 listening at ${env.HOST}:${env.PORT} (prefix=/api/v2, ws=/socket.io-v2)`);
+app.get("/api/v2/health", async () => ({ ok: true }));
+
+app.setErrorHandler((err, _req, reply) => {
+  if (err instanceof ZodError) {
+    return reply.code(400).send({ error: "bad_request", issues: err.issues });
+  }
+  const status = (err as any)?.statusCode ?? 500;
+  const code   = (err as any)?.code ?? "internal_error";
+  const msg    = (err as any)?.message ?? "Internal error";
+  reply.code(status).send({ error: code, message: msg });
+});
+
+await app.listen({ port: Number(process.env.PORT ?? 3000), host: process.env.HOST ?? "0.0.0.0" });
+app.log.info("API V2 listening (health @ /api/v2/health)");

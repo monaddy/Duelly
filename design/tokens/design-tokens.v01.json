@@ -1,0 +1,68 @@
+{
+  "color": {
+    "accent": { "value": "#2AABEE", "comment": "Telegram accent when available" },
+    "text": { "value": "#F2F5F7" },
+    "textSecondary": { "value": "#B4BDC9" },
+    "muted": { "value": "#8A93A1" },
+    "surface": { "value": "#121417" },
+    "surface2": { "value": "#181B20" },
+    "elevated": { "value": "#1E232B" },
+    "border": { "value": "#2B313B" },
+    "success": { "value": "#22C55E" },
+    "warning": { "value": "#F59E0B" },
+    "danger": { "value": "#EF4444" },
+    "focus": { "value": "#94C6FF" },
+    "boardWood": { "value": "#2A1E17" },
+    "pointLight": { "value": "#D8B48C" },
+    "pointDark": { "value": "#7A4F2D" },
+    "checkerLight": { "value": "#F9FAFB" },
+    "checkerDark": { "value": "#1F2937" },
+    "cube": { "value": "#D4AF37" }
+  },
+  "typography": {
+    "fontFamilySans": {
+      "value": "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans Hebrew'",
+      "comment": "Tabular numerals recommended for timers"
+    },
+    "size": {
+      "xs": { "value": "12px" },
+      "sm": { "value": "14px" },
+      "md": { "value": "16px" },
+      "lg": { "value": "18px" },
+      "xl": { "value": "20px" },
+      "2xl": { "value": "24px" },
+      "3xl": { "value": "28px" }
+    },
+    "weight": {
+      "regular": { "value": 400 },
+      "semibold": { "value": 600 },
+      "bold": { "value": 700 }
+    }
+  },
+  "spacing": {
+    "1": { "value": "4px" },
+    "2": { "value": "8px" },
+    "3": { "value": "12px" },
+    "4": { "value": "16px" },
+    "5": { "value": "20px" },
+    "6": { "value": "24px" }
+  },
+  "radius": {
+    "sm": { "value": "8px" },
+    "md": { "value": "12px" },
+    "lg": { "value": "16px" },
+    "pill": { "value": "999px" }
+  },
+  "elevation": {
+    "elev1": { "value": "0 2px 8px rgba(0,0,0,.25)" },
+    "elev2": { "value": "0 6px 16px rgba(0,0,0,.28)" }
+  },
+  "z": {
+    "board": { "value": 0 },
+    "dice": { "value": 1 },
+    "hints": { "value": 2 },
+    "tooltip": { "value": 3 },
+    "modal": { "value": 4 },
+    "toast": { "value": 5 }
+  }
+}

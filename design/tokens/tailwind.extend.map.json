@@ -1,0 +1,40 @@
+{
+  "colors": {
+    "accent": "var(--color-accent)",
+    "surface": "var(--color-surface)",
+    "text": "var(--color-text)",
+    "success": "var(--color-success)",
+    "warning": "var(--color-warning)",
+    "danger": "var(--color-danger)"
+  },
+  "fontSize": {
+    "xs": "var(--fs-xs)",
+    "sm": "var(--fs-sm)",
+    "md": "var(--fs-md)",
+    "lg": "var(--fs-lg)",
+    "xl": "var(--fs-xl)",
+    "2xl": "var(--fs-2xl)",
+    "3xl": "var(--fs-3xl)"
+  },
+  "borderRadius": {
+    "sm": "var(--radius-sm)",
+    "md": "var(--radius-md)",
+    "lg": "var(--radius-lg)",
+    "pill": "var(--radius-pill)"
+  },
+  "boxShadow": {
+    "elev1": "var(--elev-1)",
+    "elev2": "var(--elev-2)"
+  },
+  "transitionTimingFunction": {
+    "out": "var(--ease-out)",
+    "inout": "var(--ease-inout)",
+    "over": "var(--ease-overshoot)"
+  },
+  "transitionDuration": {
+    "quick": "var(--dur-quick)",
+    "fast": "var(--dur-fast)",
+    "med": "var(--dur-med)",
+    "slow": "var(--dur-slow)"
+  }
+}

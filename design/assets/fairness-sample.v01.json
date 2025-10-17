@@ -1,0 +1,9 @@
+{
+  "game_id": "A1B23",
+  "server_seed": "<hex>",
+  "client_seed": "<hex-or-null>",
+  "nonce_count": 49,
+  "hmac_algo": "HMAC-SHA256",
+  "mapping": "rejection-sampling-36",
+  "rolls": [[6,2],[3,3],[5,1]]
+}

@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --tg-bg: #0b0d10;
+  --tg-fg: #e5e7eb;
+  --tg-muted: #9ca3af;
+  --tg-accent: #22d3ee;
+  --tg-danger: #ef4444;
+  --tg-surface: #111827;
+}
+
+* { -webkit-tap-highlight-color: transparent; }
+
+button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
+  outline: none;
+  box-shadow: var(--ring, 0 0 0 3px var(--tg-accent, #22d3ee));
+  border-radius: 12px;
+}
+
+.high-contrast {
+  --tg-bg: #000000;
+  --tg-fg: #ffffff;
+  --tg-muted: #d1d5db;
+  --tg-accent: #00ffff;
+  --tg-danger: #ff4d4f;
+  --tg-surface: #0a0a0a;
+}
+
+.btn { @apply min-h-12 h-12 px-5 rounded-xl text-lg font-medium bg-surface text-fg hover:opacity-90 active:opacity-80; }
+.btn-accent { @apply bg-accent text-black; }
+.btn-danger { @apply bg-danger text-white; }
+.card { @apply rounded-2xl p-4 bg-surface/60 backdrop-blur border border-white/5; }

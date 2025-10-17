@@ -1,0 +1,37 @@
+{
+  "general": {
+    "matching": "Matching an opponent…",
+    "opponent_found": "Opponent found!",
+    "reconnecting": "Reconnecting… your clock is paused.",
+    "connection_lost": "Connection lost. Trying to reconnect…"
+  },
+  "actions": {
+    "roll": "Tap to roll",
+    "confirm": "Confirm move",
+    "undo": "Undo",
+    "offer_cube": "Offer cube",
+    "resign": "Resign"
+  },
+  "rules": {
+    "illegal_move": "That move isn’t legal.",
+    "no_moves": "No legal moves. Opponent’s turn.",
+    "cube_unavailable": "You can’t offer the cube right now."
+  },
+  "timers": { "your_turn": "Your turn", "opp_turn": "Opponent’s turn", "grace": "Grace time" },
+  "fairness": {
+    "committed": "Server committed to seed for this game.",
+    "revealed": "Seed revealed. You can verify the rolls.",
+    "copy": "Copy verify data",
+    "copied": "Verification JSON copied."
+  },
+  "money": {
+    "entry_split": "Entry fee split: 90% winner / 10% house.",
+    "cube_money_note": "Doubling cube affects points only (v1)."
+  },
+  "compliance": {
+    "age_gate_title": "Adults only",
+    "age_gate_body": "You must be {{age}}+ to play.",
+    "geo_blocked_title": "Unavailable in your region",
+    "geo_blocked_body": "Real-money matches aren’t available where you are."
+  }
+}

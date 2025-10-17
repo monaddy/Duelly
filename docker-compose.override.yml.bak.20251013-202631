@@ -1,0 +1,21 @@
+services:
+  api_v2:
+    build:
+      context: .
+      dockerfile: services/api-v2/Dockerfile
+    env_file:
+      - ./api-v2.env
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - private
+    restart: unless-stopped
+
+  nginx:
+    networks:
+      - public
+      - private
+    volumes:
+      - ./conf/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./conf/nginx/includes:/etc/nginx/includes:ro

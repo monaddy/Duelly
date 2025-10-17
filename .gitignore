@@ -1,9 +1,5 @@
+node_modules
+dist
+server/dist
 .env
-certs/
-certbot-www/
-dhparam/
-pgdata/
-redisdata/
-node_modules/
-npm-debug.log*
 .DS_Store

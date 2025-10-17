@@ -1,0 +1,37 @@
+{
+  "general": {
+    "matching": "מתבצע חיבור ליריב…",
+    "opponent_found": "נמצא יריב!",
+    "reconnecting": "מתבצעת התחברות מחדש… השעון שלך מושהה.",
+    "connection_lost": "החיבור נותק. מנסים להתחבר שוב…"
+  },
+  "actions": {
+    "roll": "הקשה לזריקה",
+    "confirm": "אישור מהלך",
+    "undo": "בטל",
+    "offer_cube": "הצע קובייה",
+    "resign": "כניעה"
+  },
+  "rules": {
+    "illegal_move": "מהלך לא חוקי.",
+    "no_moves": "אין מהלכים חוקיים. תור היריב.",
+    "cube_unavailable": "לא ניתן להציע קובייה כעת."
+  },
+  "timers": { "your_turn": "התור שלך", "opp_turn": "תור היריב", "grace": "זמן חסד" },
+  "fairness": {
+    "committed": "השרת ביצע Commit ל-Seed למשחק זה.",
+    "revealed": "ה-Seed נחשף. ניתן לאמת את ההטלות.",
+    "copy": "העתק נתוני אימות",
+    "copied": "JSON לאימות הועתק."
+  },
+  "money": {
+    "entry_split": "חלוקת דמי כניסה: 90% למנצח / 10% לבית.",
+    "cube_money_note": "קוביית הכפלה משפיעה על נקודות בלבד (v1)."
+  },
+  "compliance": {
+    "age_gate_title": "למבוגרים בלבד",
+    "age_gate_body": "יש להיות בני {{age}} ומעלה.",
+    "geo_blocked_title": "לא זמין באזור שלך",
+    "geo_blocked_body": "משחקים בכסף אמיתי אינם זמינים במקום הימצאך."
+  }
+}

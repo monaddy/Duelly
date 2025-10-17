@@ -1,0 +1,5 @@
+atlas,max_size,target,contents,budget_mb,format
+board@2x,2048,1536,"wood, points L/D, bar, trays",1.2,webp_lossless
+checkers@2x,2048,1024,"light/dark checkers, shadows, hit glow",0.6,png32
+dice_cube@2x,1024,1024,"dice faces 1-6, roll frames, doubling cube",0.4,png32
+ui_common@2x,2048,1536,"buttons, pills, icons",0.8,webp_lossless

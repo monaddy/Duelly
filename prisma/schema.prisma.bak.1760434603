@@ -1,0 +1,86 @@
+generator client { provider = "prisma-client-js" }
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  telegramId  BigInt   @unique
+  username    String?
+  firstName   String?
+  lastName    String?
+
+  matchesA    Match[]  @relation("MatchA")
+  matchesB    Match[]  @relation("MatchB")
+  ledger      LedgerEntry[]
+}
+
+model Match {
+  id          String      @id @default(uuid())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  status      MatchStatus @default(PENDING)
+
+  playerAId   String
+  playerA     User        @relation("MatchA", fields: [playerAId], references: [id])
+
+  playerBId   String
+  playerB     User        @relation("MatchB", fields: [playerBId], references: [id])
+
+  turn        Side        @default(A)
+  cubeOwner   CubeOwner   @default(CENTER)
+  cubeValue   Int         @default(1)
+  boardJson   Json?
+
+  rolls       RngCommit[]
+  ledgerTxId  String?
+  ledgerTx    LedgerTx?   @relation(fields: [ledgerTxId], references: [id])
+}
+
+model RngCommit {
+  id              String   @id @default(uuid())
+  createdAt       DateTime @default(now())
+  matchId         String
+  match           Match    @relation(fields: [matchId], references: [id])
+  serverCommitHex String
+  serverSeedHex   String?
+  clientSaltHex   String?
+  revealed        Boolean  @default(false)
+}
+
+model LedgerTx {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  type      String
+  entries   LedgerEntry[]
+}
+
+model LedgerEntry {
+  id          String     @id @default(uuid())
+  createdAt   DateTime   @default(now())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  txId        String
+  tx          LedgerTx   @relation(fields: [txId], references: [id])
+  amountCents Int
+  kind        String
+  ref         String?
+  memo        String?
+}
+
+model WebhookEvent {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  provider  String
+  eventType String
+  rawJson   Json
+  handled   Boolean  @default(false)
+  dedupeKey String   @unique
+}
+
+enum MatchStatus { PENDING ACTIVE FINISHED CANCELED }
+enum Side        { A B }
+enum CubeOwner   { A B CENTER }

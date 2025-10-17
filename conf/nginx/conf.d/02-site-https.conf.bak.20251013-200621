@@ -1,0 +1,47 @@
+server {
+  listen 443 ssl;
+  listen [::]:443 ssl;
+  server_name play.duelly.online;
+  http2 on;
+
+  ssl_certificate     /etc/letsencrypt/live/play.duelly.online/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/play.duelly.online/privkey.pem;
+  ssl_session_cache   shared:SSL:10m;
+  ssl_session_timeout 1d;
+  ssl_protocols       TLSv1.2 TLSv1.3;
+  ssl_ciphers         HIGH:!aNULL:!MD5;
+  add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+  root  /usr/share/nginx/html;
+  index index.html;
+
+  # ACME (לא מזיק גם ב-443)
+  location ^~ /.well-known/acme-challenge/ {
+    alias /var/www/certbot/.well-known/acme-challenge/;
+    default_type "text/plain";
+    allow all;
+  }
+
+  # Security headers
+  add_header X-Content-Type-Options nosniff always;
+  add_header X-Frame-Options SAMEORIGIN always;
+  add_header Referrer-Policy no-referrer-when-downgrade always;
+  add_header X-XSS-Protection "1; mode=block" always;
+  add_header Content-Security-Policy "default-src 'self'; connect-src 'self' https://play.duelly.online https://t.me wss://play.duelly.online; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; frame-ancestors https://t.me; base-uri 'self'; form-action 'self'" always;
+
+  # hashed assets
+  location ~* \.(?:js|mjs|css|png|jpg|jpeg|gif|svg|ico|webp|woff2?)$ {
+    expires 7d; access_log off; try_files $uri =404;
+  }
+
+  # Include v1 (REST+WS)
+  include /etc/nginx/includes/app-v1.inc;
+  # Payments webhook (strict)
+  include /etc/nginx/includes/payments.inc;
+  # SPA fallback
+  location / { try_files $uri $uri/ /index.html; }
+
+  # כלול את מיקומי v2 (locations בלבד)
+  include /etc/nginx/includes/api-v2.inc;
+  include /etc/nginx/includes/payments.inc;
+}

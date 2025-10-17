@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(uuid())
+  telegramId BigInt   @unique
+  username   String?
+  createdAt  DateTime @default(now())
+
+  matchesA   Match[]  @relation("MatchA")
+  matchesB   Match[]  @relation("MatchB")
+}
+
+model Match {
+  id         String      @id @default(uuid())
+  status     MatchStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  playerAId  String
+  playerA    User        @relation("MatchA", fields: [playerAId], references: [id])
+
+  playerBId  String
+  playerB    User        @relation("MatchB", fields: [playerBId], references: [id])
+
+  turn       Side        @default(A)
+  cubeValue  Int         @default(1)
+  boardJson  Json?
+}
+
+enum MatchStatus {
+  PENDING
+  ACTIVE
+  FINISHED
+  CANCELED
+}
+
+enum Side {
+  A
+  B
+}

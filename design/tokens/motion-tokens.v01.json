@@ -1,0 +1,18 @@
+{
+  "duration": { "quick": "120ms", "fast": "180ms", "med": "260ms", "slow": "420ms" },
+  "easing": {
+    "out": "cubic-bezier(.22,1,.36,1)",
+    "inout": "cubic-bezier(.65,0,.35,1)",
+    "overshoot": "cubic-bezier(.2,1.2,.2,1)"
+  },
+  "board": {
+    "diceRollShake": { "duration": "420ms", "easing": "cubic-bezier(.25,.46,.45,.94)" },
+    "diceSettle": { "duration": "180ms", "easing": "cubic-bezier(.2,1.2,.2,1)" },
+    "checkerPerPoint": { "duration": "70ms", "cap": "420ms", "easing": "cubic-bezier(.65,0,.35,1)" },
+    "hitToBar": { "duration": "240ms", "easing": "cubic-bezier(.2,1.2,.2,1)" },
+    "bearoffArc": { "duration": "260ms", "easing": "cubic-bezier(.22,1,.36,1)" }
+  },
+  "reducedMotion": {
+    "enabled": "shorten by 30%, remove shakes/screen-jitter"
+  }
+}
