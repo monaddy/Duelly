@@ -1,0 +1,1 @@
+Route: GET /api/v2/rng/verify?id=<CID>
