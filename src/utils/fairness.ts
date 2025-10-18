@@ -30,7 +30,13 @@ export async function hmacSha256Hex(keyHex: string, data: Uint8Array): Promise<s
     false,
     ['sign']
   );
-  const sig = (() => { const __d = (data); const __view = (__d instanceof Uint8Array) ? __d : new Uint8Array((__d && __d.buffer) ? __d.buffer.slice(0) : __d); return (() => { const __d = (__view); const __u8 = (__d instanceof Uint8Array) ? __d : new Uint8Array(ArrayBuffer.isView(__d) ? __d.buffer.slice(0) : (__d || new ArrayBuffer(0))); return (() => { const __d = (__u8); const __u8 = (__d instanceof Uint8Array) ? __d : (ArrayBuffer.isView(__d) ? new Uint8Array(__d.buffer.slice(0)) : new Uint8Array(__d || 0)); return crypto.subtle.sign('HMAC', key, __u8); })(); })(); })();
+  const sig = (() => { const __d = (data); const __view = (__d instanceof Uint8Array) ? __d : new Uint8Array((__d && __d.buffer) ? __d.buffer.slice(0) : __d); return (() => { const __d = (__view); const __u8 = (__d instanceof Uint8Array) ? __d : new Uint8Array(ArrayBuffer.isView(__d) ? __d.buffer.slice(0) : (__d || new ArrayBuffer(0))); return (() => { const __d = (__u8); const __u8 = (__d instanceof Uint8Array) ? __d : (ArrayBuffer.isView(__d) ? new Uint8Array(__d.buffer.slice(0)) : new Uint8Array(__d || 0)); return ( () => { /*__duelly_buffer_source*/ const __arg = __u8;
+      let __buf: ArrayBuffer | undefined;
+      if (typeof (__arg as any)?.buffer !== 'undefined') { __buf = ( __arg as ArrayBufferView ).buffer; }
+      else { __buf = __arg as ArrayBuffer; }
+      const __u8 = __buf instanceof ArrayBuffer ? new Uint8Array(__buf) : new Uint8Array(0);
+      return crypto.subtle.sign('HMAC', key, __u8);
+    })(); })(); })(); })();
   return bytesToHex(new Uint8Array(sig));
 }
 

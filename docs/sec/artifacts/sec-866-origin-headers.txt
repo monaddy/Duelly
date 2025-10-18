@@ -1,0 +1,17 @@
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sat, 18 Oct 2025 10:28:36 GMT
+Content-Type: text/html
+Content-Length: 880
+Last-Modified: Sat, 18 Oct 2025 09:50:21 GMT
+Connection: keep-alive
+Vary: Accept-Encoding
+ETag: "68f362dd-370"
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Resource-Policy: same-origin
+Origin-Agent-Cluster: ?1
+Accept-Ranges: bytes
+
