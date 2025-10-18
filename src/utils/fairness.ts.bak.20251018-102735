@@ -30,7 +30,7 @@ export async function hmacSha256Hex(keyHex: string, data: Uint8Array): Promise<s
     false,
     ['sign']
   );
-  const sig = (() => { const __d = (data); const __view = (__d instanceof Uint8Array) ? __d : new Uint8Array((__d && __d.buffer) ? __d.buffer.slice(0) : __d); return (() => { const __d = (__view); const __u8 = (__d instanceof Uint8Array) ? __d : new Uint8Array(ArrayBuffer.isView(__d) ? __d.buffer.slice(0) : (__d || new ArrayBuffer(0))); return (() => { const __d = (__u8); const __u8 = (__d instanceof Uint8Array) ? __d : (ArrayBuffer.isView(__d) ? new Uint8Array(__d.buffer.slice(0)) : new Uint8Array(__d || 0)); return crypto.subtle.sign('HMAC', key, __u8); })(); })(); })();
+  const sig = (() => { const __d = (data); const __view = (__d instanceof Uint8Array) ? __d : new Uint8Array((__d && __d.buffer) ? __d.buffer.slice(0) : __d); return (() => { const __d = (__view); const __u8 = (__d instanceof Uint8Array) ? __d : new Uint8Array(ArrayBuffer.isView(__d) ? __d.buffer.slice(0) : (__d || new ArrayBuffer(0))); return crypto.subtle.sign('HMAC', key, __u8); })(); })();
   return bytesToHex(new Uint8Array(sig));
 }
 
