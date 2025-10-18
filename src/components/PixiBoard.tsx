@@ -130,6 +130,8 @@ if (!dest) return;
 const to: number | 'bar' | 'bearoff-white' | 'bearoff-black' = dest.type === 'point' ? dest.idx : dest.type;
 if (!dest) return;
 const to: number | 'bar' | 'bearoff-white' | 'bearoff-black' = dest.type === 'point' ? dest.idx : dest.type;
+if (!dest) return;
+const to: number | 'bar' | 'bearoff-white' | 'bearoff-black' = dest.type === 'point' ? dest.idx : dest.type;
 socket?.emit('moveAttempt', { from: tapSelection.origin, to });
 useGameStore.getState().setTapSelection(null]);
       }
