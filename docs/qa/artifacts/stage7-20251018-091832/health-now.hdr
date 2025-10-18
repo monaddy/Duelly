@@ -1,0 +1,28 @@
+HTTP/2 200 
+server: nginx
+date: Sat, 18 Oct 2025 09:18:32 GMT
+content-type: application/json; charset=utf-8
+content-length: 11
+cross-origin-opener-policy: same-origin
+cross-origin-resource-policy: same-origin
+origin-agent-cluster: ?1
+referrer-policy: no-referrer
+strict-transport-security: max-age=15552000; includeSubDomains
+x-content-type-options: nosniff
+x-dns-prefetch-control: off
+x-download-options: noopen
+x-frame-options: SAMEORIGIN
+x-permitted-cross-domain-policies: none
+x-xss-protection: 0
+vary: Origin
+access-control-allow-credentials: true
+x-ratelimit-limit: 300
+x-ratelimit-remaining: 299
+x-ratelimit-reset: 60
+strict-transport-security: max-age=31536000; includeSubDomains
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+referrer-policy: no-referrer-when-downgrade
+x-xss-protection: 1; mode=block
+content-security-policy: default-src 'self'; connect-src 'self' https://play.duelly.online https://t.me wss://play.duelly.online; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; frame-ancestors https://t.me; base-uri 'self'; form-action 'self'
+

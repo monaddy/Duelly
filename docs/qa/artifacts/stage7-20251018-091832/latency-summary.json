@@ -1,0 +1,37 @@
+{
+  "domain": "play.duelly.online",
+  "ts": "2025-10-18T09:11:22+00:00",
+  "artifacts": "/root/duelly/.duelly/artifacts/qa-730-latency-baseline-v1-20251018-091117",
+  "summaries": {
+    "health": {
+      "n": 30,
+      "ok": 30,
+      "min": 52.419,
+      "p50": 56.498,
+      "p95": 75.08099999999999,
+      "max": 89.705,
+      "mean": 59.32163333333332,
+      "success_rate": 100
+    },
+    "socketio_open": {
+      "n": 20,
+      "ok": 20,
+      "min": 51.788000000000004,
+      "p50": 55.181,
+      "p95": 72.367,
+      "max": 72.367,
+      "mean": 57.056450000000005,
+      "success_rate": 100
+    },
+    "rng_commit": {
+      "n": 10,
+      "ok": 0,
+      "min": 52.945,
+      "p50": 55.193,
+      "p95": 57.522,
+      "max": 57.522,
+      "mean": 54.948899999999995,
+      "success_rate": 0
+    }
+  }
+}
