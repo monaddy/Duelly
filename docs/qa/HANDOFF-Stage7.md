@@ -26,3 +26,7 @@ curl -sS -X POST "https://play.duelly.online/api/v2/rng/commit" \
 1. Fix `/api/v2/rng/commit` to return `{ id, serverCommitHex }` and complete Commit → Reveal → Verify.
 2. Re‑run `qa-720` → `qa-730` → `qa-740` and flip Stage 7 to **READY_FOR_REVIEW**.
 3. Merge `feat/qa-stage7-perf-fairness` after blocker resolution.
+
+- rng_commit=FAIL_500
+
+**Blocker:** See docs/qa/blockers/STAGE7-RNG-COMMIT-500-LATEST.md
