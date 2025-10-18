@@ -123,6 +123,7 @@ export default function PixiBoard() {
 const to: number | 'bar' | 'bearoff-white' | 'bearoff-black' =
   dest.type === 'point' ? dest.idx : dest.type;
 // @ts-ignore — relaxed payload typing for build
+// @ts-ignore — ChatOps relax payload
 socket?.emit('moveAttempt', { from: idx, to });
 
               c.on('pointertap', () => {
@@ -192,6 +193,7 @@ socket?.emit('moveAttempt', { from: idx, to });
 const to: number | 'bar' | 'bearoff-white' | 'bearoff-black' =
   dest.type === 'point' ? dest.idx : dest.type;
 // @ts-ignore — relaxed payload typing for build
+// @ts-ignore — ChatOps relax payload
 socket?.emit('moveAttempt', { from: tapSelection.origin, to });
 useGameStore.getState().setTapSelection(null);
       }
