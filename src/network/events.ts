@@ -24,7 +24,7 @@ export type ClientToServerEvents = {
 
   practiceVsAi: (data: { difficulty: 'easy' | 'normal' | 'hard' }) => void;
 
-  moveAttempt: (data: { from: number; to: number | 'bar' | 'bearoff-white' | 'bearoff-black' }) => void;
+  moveAttempt: (data: { from: number; to?: number | 'bar' | 'bearoff-white' | 'bearoff-black' }) => void;
 
   offerDouble: () => void;
   takeDouble: () => void;

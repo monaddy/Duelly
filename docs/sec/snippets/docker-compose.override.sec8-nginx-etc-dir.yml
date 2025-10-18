@@ -1,0 +1,4 @@
+services:
+  nginx:
+    volumes:
+      - '/root/backgammon-mini-app/docs/sec/snippets/nginx-etc-merged:/etc/nginx:ro'
