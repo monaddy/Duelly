@@ -1,4 +1,4 @@
-# DUELLY Stage 8 — Security Headers
+# DUELLY Stage 8 — Security Headers (server/http context; included by nginx)
 add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
 add_header X-Content-Type-Options "nosniff" always;
 add_header Referrer-Policy "strict-origin-when-cross-origin" always;

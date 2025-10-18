@@ -119,7 +119,7 @@ export default function PixiBoard() {
                 c.cursor = 'grab';
                 const { x, y } = ev.data.global;
                 const dest = hitTestPoint(x, y, pointRects, barRect, bearOffRects);
-                if (!dest) { /* guard added by ChatOps */ return; } socket?.emit('moveAttempt', { from: idx, to: dest.type === "point" ? dest.idx : (dest.type as any) });
+                if (!dest) { /* guard added by ChatOps */ return; } socket?.emit("moveAttempt", { from: idx, to: dest.type === "point" ? dest.idx : (dest.type as any) } as any);
               });
               c.on('pointertap', () => {
                 if (!(isMyTurn && p.owner === myColor)) return;
@@ -184,7 +184,7 @@ export default function PixiBoard() {
       const dest = hitTestPoint(x, y, pointRects, barRect, bearOffRects);
       const { tapSelection } = useGameStore.getState();
       if (tapSelection?.origin != null && dest) {
-        socket?.emit('moveAttempt', { from: tapSelection.origin, to: dest.type === 'point' ? dest.idx : dest.type });
+        socket?.emit("moveAttempt", { from: tapSelection.origin, to: dest.type === 'point' ? dest.idx : dest.type } as any);
         useGameStore.getState().setTapSelection(null);
       }
     };

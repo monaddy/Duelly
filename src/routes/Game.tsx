@@ -23,7 +23,7 @@ export default function Game() {
     if (!socket || !matchId) return;
 
     const onState = (s: typeof state) => {
-      if (s) setState(s);
+      if (s) if (s) setState(s);
       setLastVersion(s?.version ?? 0);
     };
     socket.on('state', onState);

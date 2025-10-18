@@ -22,7 +22,7 @@ export default function FpsOverlay() {
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
-    return () => rafRef.current && cancelAnimationFrame(rafRef.current);
+    return () => { try { rafRef.current && cancelAnimationFrame(rafRef.current); } catch (e) {} };
   }, []);
 
   return (
