@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
     "dev:all": "bash ./dev-all.sh",
-    "_duelly_build_orig": "tsc -b && vite build"
+    "_duelly_build_orig": "tsc -b && vite build",
+    "postbuild": "node scripts/postbuild-theme-fallback.cjs"
   },
   "dependencies": {
     "classnames": "^2.5.1",
