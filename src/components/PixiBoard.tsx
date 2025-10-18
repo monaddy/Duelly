@@ -124,77 +124,11 @@ const to: number | 'bar' | 'bearoff-white' | 'bearoff-black' =
   dest.type === 'point' ? dest.idx : dest.type;
 // @ts-ignore — relaxed payload typing for build
 // @ts-ignore — ChatOps relax payload
-socket?.emit('moveAttempt', { from: idx, to }]);
-
-              c.on('pointertap', () => {
-                if (!(isMyTurn && p.owner === myColor)) return;
-                setTapSelection({ origin: idx }]);
-                haptic('impact']);
-              }]);
-              checkersLayer.addChild(c]);
-            }
-          }]);
-
-          const bar = new Graphics(]);
-          bar.roundRect(barRect.x + 3, barRect.y + 3, barRect.w - 6, barRect.h - 6, 12).stroke({ color: 0xffffff, alpha: 0.05 }]);
-          hudLayer.addChild(bar]);
-
-          if (state.bar.white > 0) {
-            const t = new Text({ text: `W: ${state.bar.white}`, style: { fill: 0xffffff, fontSize: 14 } }]);
-            t.x = barRect.x + 6; t.y = barRect.y + barRect.h - 22;
-            hudLayer.addChild(t]);
-          }
-          if (state.bar.black > 0) {
-            const t = new Text({ text: `B: ${state.bar.black}`, style: { fill: 0xffffff, fontSize: 14 } }]);
-            t.x = barRect.x + 6; t.y = barRect.y + 6;
-            hudLayer.addChild(t]);
-          }
-
-          const boW = new Text({ text: `W off: ${state.borneOff.white}`, style: { fill: 0xffffff, fontSize: 14 } }]);
-          boW.x = bearOffRects.white.x - 80; boW.y = bearOffRects.white.y + bearOffRects.white.h - 22;
-          hudLayer.addChild(boW]);
-          const boB = new Text({ text: `B off: ${state.borneOff.black}`, style: { fill: 0xffffff, fontSize: 14 } }]);
-          boB.x = bearOffRects.black.x - 80; boB.y = bearOffRects.black.y + 6;
-          hudLayer.addChild(boB]);
-
-          drawDice(diceLayer, state.dice.values, state.dice.rolling]);
-        };
-
-        stateToScene(]);
-        const unsub = useGameStore.getState().subscribeState(stateToScene]);
-
-        const onDice = ({ values }: { values: [number, number] } as any) => {
-          if (diceLayerRef.current) animateDice(diceLayerRef.current, values]);
-          sound('dice']);
-          haptic('impact']);
-        };
-        socket?.on('diceRolled', onDice]);
-
-        return () => {
-          unsub(]);
-          socket?.off('diceRolled', onDice]);
-          app.destroy(true]);
-          appRef.current = null;
-        };
-      }]);
-  }, [ref, pointRects, barRect, bearOffRects, socket, haptic, sound]]);
-
-  const setTapSelection = useGameStore((s) => s.setTapSelection]);
-  useEffect(() => {
-    const onTapTarget = (ev: PointerEvent) => {
-      const rect = (appRef.current?.canvas.getBoundingClientRect?.() ?? null]);
-      if (!rect) return;
-      const x = ev.clientX - rect.left;
-      const y = ev.clientY - rect.top;
-      const dest = hitTestPoint(x, y, pointRects, barRect, bearOffRects]);
-      const { tapSelection } = useGameStore.getState(]);
-      if (tapSelection?.origin != null && dest) {
-        if (!dest) return;
-const to: number | 'bar' | 'bearoff-white' | 'bearoff-black' =
-  dest.type === 'point' ? dest.idx : dest.type;
-// @ts-ignore — relaxed payload typing for build
-// @ts-ignore — ChatOps relax payload
-socket?.emit('moveAttempt', { from: tapSelection.origin, to }]);
+if (!dest) return;
+const to: number | 'bar' | 'bearoff-white' | 'bearoff-black' = dest.type === 'point' ? dest.idx : dest.type;
+if (!dest) return;
+const to: number | 'bar' | 'bearoff-white' | 'bearoff-black' = dest.type === 'point' ? dest.idx : dest.type;
+socket?.emit('moveAttempt', { from: tapSelection.origin, to });
 useGameStore.getState().setTapSelection(null]);
       }
     };
