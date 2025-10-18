@@ -21,7 +21,8 @@
     "forceConsistentCasingInFileNames": true,
     "types": [
       "vite/client"
-    ]
+    ],
+    "noEmitOnError": false
   },
   "include": [
     "src"
