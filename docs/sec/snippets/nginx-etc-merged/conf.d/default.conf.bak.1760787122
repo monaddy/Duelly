@@ -18,17 +18,7 @@ server {
     #access_log  /var/log/nginx/host.access.log  main;
 
     location / {
-    # DUELLY SEC8 UNIVERSAL LOC HEADERS START
-    add_header Cross-Origin-Opener-Policy "same-origin" always;
-    add_header Cross-Origin-Resource-Policy "same-origin" always;
-    add_header Origin-Agent-Cluster "?1" always;
-    # DUELLY SEC8 UNIVERSAL LOC HEADERS END
     location / {
-    # DUELLY SEC8 UNIVERSAL LOC HEADERS START
-    add_header Cross-Origin-Opener-Policy "same-origin" always;
-    add_header Cross-Origin-Resource-Policy "same-origin" always;
-    add_header Origin-Agent-Cluster "?1" always;
-    # DUELLY SEC8 UNIVERSAL LOC HEADERS END
         root   /usr/share/nginx/html;
         index  index.html index.htm;
     }
@@ -39,17 +29,7 @@ server {
     #
     error_page   500 502 503 504  /50x.html;
     location = /50x.html {
-    # DUELLY SEC8 UNIVERSAL LOC HEADERS START
-    add_header Cross-Origin-Opener-Policy "same-origin" always;
-    add_header Cross-Origin-Resource-Policy "same-origin" always;
-    add_header Origin-Agent-Cluster "?1" always;
-    # DUELLY SEC8 UNIVERSAL LOC HEADERS END
     location = /50x.html {
-    # DUELLY SEC8 UNIVERSAL LOC HEADERS START
-    add_header Cross-Origin-Opener-Policy "same-origin" always;
-    add_header Cross-Origin-Resource-Policy "same-origin" always;
-    add_header Origin-Agent-Cluster "?1" always;
-    # DUELLY SEC8 UNIVERSAL LOC HEADERS END
         root   /usr/share/nginx/html;
     }
 

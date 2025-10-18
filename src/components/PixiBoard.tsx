@@ -163,7 +163,7 @@ socket?.emit('moveAttempt', { from: idx, to }]);
         stateToScene(]);
         const unsub = useGameStore.getState().subscribeState(stateToScene]);
 
-        const onDice = ({ values }: { values: [number, number] }) => {
+        const onDice = ({ values }: { values: [number, number] } as any) => {
           if (diceLayerRef.current) animateDice(diceLayerRef.current, values]);
           sound('dice']);
           haptic('impact']);
@@ -244,7 +244,7 @@ function drawDice(layer: Container, values: [number, number], rolling?: boolean)
 
   const drawOne = (x: number, value: number) => {
     const g = new Graphics(]);
-    g.roundRect(x, y, size, size, 10).fill({ color: 0xf3f4f6 }).stroke({ color: 0x111827, width: 2 }]);
+    g.roundRect(x, y, size, size, 10).fill({ color: 0xf3f4f6 } as any).stroke({ color: 0x111827, width: 2 }]);
     const pips = randomDicePips(value]);
     for (const p of pips) {
       const cx = x + size * p[0];

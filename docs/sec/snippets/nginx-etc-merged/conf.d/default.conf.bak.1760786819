@@ -3,11 +3,6 @@ server {
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-    # DUELLY SEC8 REF RIPPLE START
-    add_header Cross-Origin-Opener-Policy "same-origin" always;
-    add_header Cross-Origin-Resource-Policy "same-origin" always;
-    add_header Origin-Agent-Cluster "?1" always;
-    # DUELLY SEC8 REF RIPPLE END
     add_header Cross-Origin-Opener-Policy "same-origin" always;
     add_header Cross-Origin-Resource-Policy "same-origin" always;
     add_header Origin-Agent-Cluster "?1" always;
@@ -18,17 +13,7 @@ server {
     #access_log  /var/log/nginx/host.access.log  main;
 
     location / {
-    # DUELLY SEC8 UNIVERSAL LOC HEADERS START
-    add_header Cross-Origin-Opener-Policy "same-origin" always;
-    add_header Cross-Origin-Resource-Policy "same-origin" always;
-    add_header Origin-Agent-Cluster "?1" always;
-    # DUELLY SEC8 UNIVERSAL LOC HEADERS END
     location / {
-    # DUELLY SEC8 UNIVERSAL LOC HEADERS START
-    add_header Cross-Origin-Opener-Policy "same-origin" always;
-    add_header Cross-Origin-Resource-Policy "same-origin" always;
-    add_header Origin-Agent-Cluster "?1" always;
-    # DUELLY SEC8 UNIVERSAL LOC HEADERS END
         root   /usr/share/nginx/html;
         index  index.html index.htm;
     }
@@ -39,17 +24,7 @@ server {
     #
     error_page   500 502 503 504  /50x.html;
     location = /50x.html {
-    # DUELLY SEC8 UNIVERSAL LOC HEADERS START
-    add_header Cross-Origin-Opener-Policy "same-origin" always;
-    add_header Cross-Origin-Resource-Policy "same-origin" always;
-    add_header Origin-Agent-Cluster "?1" always;
-    # DUELLY SEC8 UNIVERSAL LOC HEADERS END
     location = /50x.html {
-    # DUELLY SEC8 UNIVERSAL LOC HEADERS START
-    add_header Cross-Origin-Opener-Policy "same-origin" always;
-    add_header Cross-Origin-Resource-Policy "same-origin" always;
-    add_header Origin-Agent-Cluster "?1" always;
-    # DUELLY SEC8 UNIVERSAL LOC HEADERS END
         root   /usr/share/nginx/html;
     }
 
