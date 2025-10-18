@@ -1,0 +1,7 @@
+# DUELLY Stage 8 — Security Headers (http-wide)
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Cross-Origin-Opener-Policy "same-origin" always;
+add_header Cross-Origin-Resource-Policy "same-origin" always;
+add_header Origin-Agent-Cluster "?1" always;
