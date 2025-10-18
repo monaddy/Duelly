@@ -39,3 +39,7 @@ Artifacts saved under `docs/qa/artifacts/stage7-20251018-091832/webhook-mini/`.
 3. Add CI e2e for Commit→Reveal→Verify to guard regressions.
 
 _This PR is marked **HOLD_FOR_APPROVAL** until RNG commit is fixed and fairness flow passes._
+
+
+## Blockers
+- See `docs/qa/blockers/stage7-rng-commit-500-20251018-094624.md`
