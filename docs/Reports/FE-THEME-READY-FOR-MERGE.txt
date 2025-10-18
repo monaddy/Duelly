@@ -1,0 +1,12 @@
+FE Theme — READY FOR MERGE
+
+Preview: http://104.238.172.232:4173  (HTTP 200)
+Probe:   http://104.238.172.232:4173/theme-probe.html      (HTTP 200)
+
+QA Results: docs/Reports/FE-THEME-QA-LATEST.md
+Signoff:    docs/Reports/FE-THEME-SIGNOFF-20251018-222802.md
+Delivery:   docs/Reports/FE-THEME-DELIVERY-LATEST.md
+
+Notes:
+- Fallback stylesheet (theme.css) is PREVIEW-ONLY.
+- Proceed to merge; plan to remove fallback after Tailwind utilities land in prod.

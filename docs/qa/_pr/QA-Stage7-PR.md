@@ -35,3 +35,14 @@
 - **Signoff:** [docs/Reports/FE-THEME-SIGNOFF-LATEST.md](docs/Reports/FE-THEME-SIGNOFF-LATEST.md)
 - **Delivery:** [docs/Reports/FE-THEME-DELIVERY-LATEST.md](docs/Reports/FE-THEME-DELIVERY-LATEST.md)
 <!-- FE_THEME_SIGNOFF_END -->
+<!-- FE_THEME_READY_START -->
+## FE Theme — READY FOR MERGE
+
+- Preview: <http://104.238.172.232:4173> (HTTP 200)
+- Probe:   <http://104.238.172.232:4173/theme-probe.html> (HTTP 200)
+- QA Results: [docs/Reports/FE-THEME-QA-LATEST.md](docs/Reports/FE-THEME-QA-LATEST.md)
+- Signoff: [docs/Reports/FE-THEME-SIGNOFF-20251018-222802.md](docs/Reports/FE-THEME-SIGNOFF-20251018-222802.md)
+- Delivery: [docs/Reports/FE-THEME-DELIVERY-LATEST.md](docs/Reports/FE-THEME-DELIVERY-LATEST.md)
+
+> Fallback stylesheet is PREVIEW-ONLY; schedule removal after Tailwind utilities are generated in prod.
+<!-- FE_THEME_READY_END -->
