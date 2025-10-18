@@ -21,3 +21,17 @@
 
 > The fallback stylesheet is loaded in *preview only* and will be removed once Tailwind generates these utilities in production.
 <!-- FE_THEME_QA_END -->
+<!-- FE_THEME_SIGNOFF_START -->
+## FE Theme — SIGNOFF
+
+- **Preview:** <http://104.238.172.232:4173> | **Probe:** <http://104.238.172.232:4173/theme-probe.html>
+- **Signoff:** [docs/Reports/FE-THEME-SIGNOFF-LATEST.md](docs/Reports/FE-THEME-SIGNOFF-LATEST.md)
+- **Delivery:** [docs/Reports/FE-THEME-DELIVERY-LATEST.md](docs/Reports/FE-THEME-DELIVERY-LATEST.md)
+<!-- FE_THEME_SIGNOFF_END -->
+<!-- FE_THEME_SIGNOFF_START -->
+## FE Theme — SIGNOFF
+
+- **Preview:** <http://104.238.172.232:4173> | **Probe:** <http://104.238.172.232:4173/theme-probe.html>
+- **Signoff:** [docs/Reports/FE-THEME-SIGNOFF-LATEST.md](docs/Reports/FE-THEME-SIGNOFF-LATEST.md)
+- **Delivery:** [docs/Reports/FE-THEME-DELIVERY-LATEST.md](docs/Reports/FE-THEME-DELIVERY-LATEST.md)
+<!-- FE_THEME_SIGNOFF_END -->
