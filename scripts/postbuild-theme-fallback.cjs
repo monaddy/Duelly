@@ -4,8 +4,10 @@ const idx = path.join(dist, 'index.html');
 const cssDir = path.join(dist, 'assets');
 const css = path.join(cssDir, 'theme.css');
 const probe = path.join(dist, 'theme-probe.html');
+const linkTag = '<link rel="stylesheet" href="./assets/theme.css" />';
 
 function ensureDir(d){ if(!fs.existsSync(d)) fs.mkdirSync(d, {recursive:true}); }
+
 function ensureThemeCss(){
   if (!fs.existsSync(css) || fs.statSync(css).size === 0){
     ensureDir(cssDir);
@@ -18,20 +20,48 @@ function ensureThemeCss(){
     ].join('\n'), 'utf8');
   }
 }
-function ensureIndexLink(){
-  if (!fs.existsSync(idx)) return;
-  let s = fs.readFileSync(idx,'utf8');
-  if (!/assets\/theme\.css/.test(s)){
-    s = s.replace(/<\/head>/i, '  <link rel="stylesheet" href="./assets/theme.css" />\n</head>');
-    fs.writeFileSync(idx, s, 'utf8');
+
+function injectLink(html){
+  if (/assets\/theme\.css/.test(html)) return html; // already linked
+  // case 1: has </head>
+  if (/<\/head>/i.test(html)){
+    return html.replace(/<\/head>/i, `  ${linkTag}\n</head>`);
   }
+  // case 2: has <head ...>
+  if (/<head[^>]*>/i.test(html)){
+    return html.replace(/<head[^>]*>/i, (m)=> `${m}\n  ${linkTag}`);
+  }
+  // case 3: has <html ...> -> create head
+  if (/<html[^>]*>/i.test(html)){
+    return html.replace(/<html[^>]*>/i, (m)=> `${m}\n<head>\n  ${linkTag}\n</head>`);
+  }
+  // fallback: prepend minimal head
+  return `<!doctype html>\n<head>\n  ${linkTag}\n</head>\n` + html;
 }
+
+function ensureIndex(){
+  ensureDir(dist);
+  if (!fs.existsSync(idx)){
+    const minimal = [
+      '<!doctype html><meta charset="utf-8"/>',
+      '<title>Preview</title>',
+      linkTag,
+      '<body><div style="font:14px system-ui">DUELLY preview fallback index</div></body>'
+    ].join('\n');
+    fs.writeFileSync(idx, minimal, 'utf8');
+    return;
+  }
+  const s = fs.readFileSync(idx,'utf8');
+  const out = injectLink(s);
+  if (out !== s) fs.writeFileSync(idx, out, 'utf8');
+}
+
 function ensureProbe(){
   if (!fs.existsSync(probe)){
     fs.writeFileSync(probe, [
       '<!doctype html><meta charset="utf-8"/>',
       '<title>Theme Probe</title>',
-      '<link rel="stylesheet" href="./assets/theme.css"/>',
+      linkTag,
       '<style>div{padding:8px;margin:6px;border-radius:6px;color:#fff;font:14px/1.4 system-ui}</style>',
       '<h1 style="color:#0F172A;">Theme Probe</h1>',
       '<div class="bg-accent">.bg-accent</div>',
@@ -41,10 +71,10 @@ function ensureProbe(){
     ].join('\n'), 'utf8');
   }
 }
+
 try{
-  ensureDir(dist);
   ensureThemeCss();
-  ensureIndexLink();
+  ensureIndex();
   ensureProbe();
   const bytes = fs.existsSync(css) ? fs.statSync(css).size : 0;
   console.log(`[postbuild-theme-fallback] ok bytes=${bytes}`);
