@@ -46,3 +46,9 @@
 
 > Fallback stylesheet is PREVIEW-ONLY; schedule removal after Tailwind utilities are generated in prod.
 <!-- FE_THEME_READY_END -->
+<!-- FE_THEME_MERGE_START -->
+## FE Theme — Merge Checklist (link)
+
+- Checklist: [docs/Reports/FE-THEME-MERGE-CHECKLIST.md](docs/Reports/FE-THEME-MERGE-CHECKLIST.md)
+- Preview: <http://104.238.172.232:4173>  |  Probe: <http://104.238.172.232:4173/theme-probe.html>
+<!-- FE_THEME_MERGE_END -->
