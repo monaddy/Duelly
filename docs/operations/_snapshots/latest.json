@@ -1,13 +1,13 @@
 {
   "project": "Duelly",
-  "generatedAt": "2025-10-18T08:57:01Z",
+  "generatedAt": "2025-10-18T09:24:18Z",
   "env": {
     "domain": "play.duelly.online"
   },
   "git": {
     "repo": "git@github.com:monaddy/Duelly.git",
-    "branch": "feat/fps-latency-observability-stub",
-    "commit": "9da2829",
+    "branch": "feat/qa-stage7-perf-fairness",
+    "commit": "6a886b4",
     "dirty": true
   },
   "health": {
@@ -43,47 +43,47 @@
   "recentSteps": [
     {
       "step": "$STEP_ID",
-      "status": "error"
-    },
-    {
-      "step": "$STEP_ID",
-      "status": "error"
-    },
-    {
-      "step": "$STEP_ID",
-      "status": "running"
-    },
-    {
-      "step": "sec-840-telegram-initdata-v1",
-      "status": "running"
-    },
-    {
-      "step": "sec-840-telegram-initdata-v1",
-      "status": "error"
-    },
-    {
-      "step": "$STEP_ID",
-      "status": "error"
-    },
-    {
-      "step": "$STEP_ID",
-      "status": "error"
-    },
-    {
-      "step": "$STEP_ID",
-      "status": "running"
-    },
-    {
-      "step": "sec-840-telegram-initdata-v1",
-      "status": "running"
-    },
-    {
-      "step": "$STEP_ID",
       "status": "ok"
     },
     {
-      "step": "sec-840-telegram-initdata-v1",
+      "step": "sec-856-acceptance-snapshot-fix-v1",
       "status": "ok"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "running"
+    },
+    {
+      "step": "sec-860-nginx-headers-and-token-v1",
+      "status": "running"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "running"
+    },
+    {
+      "step": "sec-860-nginx-headers-and-token-v1",
+      "status": "running"
+    },
+    {
+      "step": "sec-860-nginx-headers-and-token-v1",
+      "status": "error"
     },
     {
       "step": "$STEP_ID",
