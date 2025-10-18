@@ -23,3 +23,25 @@ Blocker: [/api/v2/rng/commit → HTTP 500](docs/qa/blockers/STAGE7-RNG-COMMIT-50
 3) Remove HOLD_FOR_APPROVAL label and merge.
 
 _This body was generated at 2025-10-18T10:15:16+00:00._
+
+<!-- STAGE7_BLOCKERS_START -->
+### Blocker: RNG Commit returns 500 on POST
+
+- Endpoint: `https://play.duelly.online/api/v2/rng/commit`
+- Status: **FAIL_500** (commit cannot proceed to Reveal/Verify)
+- Local Issue Doc: [ISSUE-RNG-COMMIT-500.md](/docs/qa/_issues/ISSUE-RNG-COMMIT-500.md)
+- Latest Stage7 artifacts: [stage7-latest](/docs/qa/artifacts/stage7-latest)
+- Live status JSON: [stage7-status-latest.json](/docs/qa/stage7-status-latest.json)
+
+**Reproduction**
+```bash
+curl -sS -X POST "https://play.duelly.online/api/v2/rng/commit"   -H 'Accept: application/json' -H 'Content-Type: application/json'   -d '{"clientCommitHex":"<sha256-of-32-bytes-hex>"}' -i
+```
+
+**Expected (per spec):**
+- 200 with `{id, serverCommitHex}`
+
+**Observed:**
+- HTTP 500 from server (see artifacts/log excerpts in PR)
+
+<!-- STAGE7_BLOCKERS_END -->
