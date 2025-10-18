@@ -29,6 +29,8 @@ export default function FpsOverlay({ enabled = false }: Props) {
     return () => { try { if (rafId.current) cancelAnimationFrame(rafId.current); } catch {} };
   
   return () => { /* cleanup-safe */ }; 
+
+  return () => { /* cleanup-safe */ }; 
 }, [] );
 
   if (!enabled) return null;
