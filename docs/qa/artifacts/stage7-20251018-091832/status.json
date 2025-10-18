@@ -1,0 +1,35 @@
+{
+  "stage": 7,
+  "generatedAt": "2025-10-18T09:53:04+00:00",
+  "domain": "play.duelly.online",
+  "status": "HOLD_FOR_APPROVAL",
+  "checks": {
+    "health": {
+      "code": 200,
+      "ok": true
+    },
+    "webhook_wrong_secret": {
+      "code": 401,
+      "expect_401": true
+    },
+    "rng_commit": {
+      "code": 500,
+      "is_500": true
+    },
+    "socketio_open": {
+      "code": 200,
+      "ok": true
+    }
+  },
+  "docs": {
+    "signoff_md": "/root/backgammon-mini-app/docs/qa/QA-Stage7-SIGNOFF.md",
+    "report_md": "/root/backgammon-mini-app/docs/qa/QA-Report.md",
+    "blocker_latest": "/root/backgammon-mini-app/docs/qa/blockers/STAGE7-RNG-COMMIT-500-LATEST.md"
+  },
+  "artifacts": {
+    "stage7_latest_dir": "/root/backgammon-mini-app/docs/qa/artifacts/stage7-20251018-091832",
+    "bundle_tar": "/root/duelly/.duelly/artifacts/duelly-stage7-20251018-092522.tar.gz",
+    "latency_summary_json": "/root/duelly/.duelly/artifacts/qa-730-latency-baseline-v1-20251018-091117/latency-summary.json",
+    "this_run_prefix": "/root/duelly/.duelly/artifacts/qa-799-stage7-status-summary-v1-20251018-095304"
+  }
+}
