@@ -1,0 +1,6 @@
+# Added by sec-862 — make 'healthcheck' a valid service so compose project parses
+services:
+  healthcheck:
+    image: busybox:stable
+    command: ["sh","-c","sleep infinity"]
+    restart: unless-stopped

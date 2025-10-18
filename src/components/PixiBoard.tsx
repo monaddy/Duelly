@@ -119,7 +119,7 @@ export default function PixiBoard() {
                 c.cursor = 'grab';
                 const { x, y } = ev.data.global;
                 const dest = hitTestPoint(x, y, pointRects, barRect, bearOffRects);
-                socket?.emit('moveAttempt', { from: idx, to: dest?.type === 'point' ? dest.idx : dest?.type });
+                if (!dest) { /* guard added by ChatOps */ return; } socket?.emit('moveAttempt', { from: idx, to: dest.type === "point" ? dest.idx : (dest.type as any) });
               });
               c.on('pointertap', () => {
                 if (!(isMyTurn && p.owner === myColor)) return;
@@ -168,7 +168,7 @@ export default function PixiBoard() {
         return () => {
           unsub();
           socket?.off('diceRolled', onDice);
-          app.destroy(true, { children: true, texture: true, baseTexture: true });
+          app.destroy(true);
           appRef.current = null;
         };
       });
@@ -211,10 +211,8 @@ function drawBoard(g: Graphics) {
 function triangle(g: Graphics, x: number, y: number, w: number, h: number, color: number, down: boolean) {
   g.moveTo(x, y).beginFill(color, 0.6);
   if (down) {
-    g.polygon(x, y, x + w, y, x + w / 2, y + h - 6);
-  } else {
-    g.polygon(x, y + h, x + w, y + h, x + w / 2, y + 6);
-  }
+    g.drawPolygon([x, y, x + w, y, x + w / 2, y + h - 6]);} else {
+    g.drawPolygon([x, y + h, x + w, y + h, x + w / 2, y + 6]);}
   g.endFill();
 }
 
@@ -223,7 +221,7 @@ function disk(owner: 'white' | 'black') {
   g.circle(0, 0, CHECKER_R).fill({ color: owner === 'white' ? 0xf3f4f6 : 0x111827 });
   g.circle(0, 0, CHECKER_R).stroke({ color: 0x000000, alpha: 0.35, width: 2 });
   g.eventMode = 'static';
-  g.buttonMode = true;
+  g.eventMode = "static"; g.cursor = "pointer";
   g.interactive = true;
   return g;
 }

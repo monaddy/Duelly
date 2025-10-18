@@ -1,0 +1,4 @@
+services:
+  nginx:
+    volumes:
+      - '/root/backgammon-mini-app/docs/sec/snippets/nginx-sec-headers.stage8.conf:/etc/nginx/conf.d/zz-duelly-sec8-headers.conf:ro'
