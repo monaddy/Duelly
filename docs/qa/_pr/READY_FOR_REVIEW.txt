@@ -1,0 +1,24 @@
+[DUELLY][Stage 7] READY FOR REVIEW — HOLD_FOR_APPROVAL (rng/commit=500)
+
+Branch: feat/qa-stage7-perf-fairness @ 757e374
+Domain: https://play.duelly.online
+
+Live status:
+- Health: 200
+- Webhook (Telegram): OK (401/200 + dedup)
+- WS polling: OK (200)
+- RNG Commit: FAIL_500 (Blocker — see docs/qa/_issues/ISSUE-RNG-COMMIT-500.md)
+
+Reviewables:
+- PR body: docs/qa/_pr/QA-Stage7-PR.md
+- QA Report: docs/qa/QA-Report.md
+- SIGNOFF: docs/qa/QA-Stage7-SIGNOFF.md
+- Checklist: docs/qa/QA-Stage7-CHECKLIST.md
+- Stage7 artifacts dir: docs/qa/artifacts/stage7-latest
+- Offline PR bundle: /root/duelly/.duelly/artifacts/duelly-pr-offline-feat-qa-stage7-perf-fairness-20251018-104511.tar.gz
+- Full Stage7 bundle: /root/duelly/.duelly/artifacts/duelly-stage7-20251018-092522.tar.gz
+
+Action requested:
+- Approve HOLD_FOR_APPROVAL or request fixes; unblock RNG /api/v2/rng/commit (500).
+
+(Generated 2025-10-18T11:07:34+00:00)
