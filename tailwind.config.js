@@ -14,5 +14,6 @@ function withDefaults(cfg) {
   return c;
 }
 const resolvedBase = (typeof baseCfg === 'function') ? baseCfg() : (baseCfg?.default ?? baseCfg);
-export default withDefaults(resolvedBase || {});
+export default withDefaults(resolvedBase || {,
+  theme: { extend: { colors: { accent: { DEFAULT: '#10B3B3' }, fg: '#0F172A', surface: { DEFAULT: '#121417' } } } }});
 /* DUELLY-CONFIG-WRAPPER-END */
