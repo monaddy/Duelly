@@ -1,0 +1,12 @@
+HTTP/2 200 
+server: nginx
+date: Sat, 18 Oct 2025 08:39:49 GMT
+content-type: application/json; charset=utf-8
+content-length: 30
+strict-transport-security: max-age=31536000; includeSubDomains
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+referrer-policy: no-referrer-when-downgrade
+x-xss-protection: 1; mode=block
+content-security-policy: default-src 'self'; connect-src 'self' https://play.duelly.online https://t.me wss://play.duelly.online; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; frame-ancestors https://t.me; base-uri 'self'; form-action 'self'
+

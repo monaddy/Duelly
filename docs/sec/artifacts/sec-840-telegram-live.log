@@ -1,0 +1,8 @@
+SEC-840 live probes @ 2025-10-18T08:52:43+00:00  Base: https://play.duelly.online
+Paths tested: 4
+For each path: JSON(form) codes for (valid/tampered/expired)
+----
+/api/auth/telegram               JSON[v/t/e]=401/401/401  FORM[v/t/e]=415/415/415
+/api/payments/telegram/webhook   JSON[v/t/e]=409/409/409  FORM[v/t/e]=415/415/429
+/auth/telegram                   JSON[v/t/e]=405/405/405  FORM[v/t/e]=405/405/405
+/payments/telegram/webhook       JSON[v/t/e]=405/405/405  FORM[v/t/e]=405/405/405

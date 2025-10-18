@@ -1,0 +1,7 @@
+SEC-840 Telegram initData tests @ 2025-10-18T08:52:42+00:00
+Token present: miss   TTL=1440s (status=ok)
+Files: valid=/root/backgammon-mini-app/docs/sec/artifacts/sec-840-valid.initdata tampered=/root/backgammon-mini-app/docs/sec/artifacts/sec-840-tampered.initdata expired=/root/backgammon-mini-app/docs/sec/artifacts/sec-840-expired.initdata
+---- results ----
+valid   -> ok=true
+tampered-> ok=false (expected false)
+expired -> ok=false (expected false)

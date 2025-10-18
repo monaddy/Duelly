@@ -1,0 +1,10 @@
+SEC-810 Webhook Tests @ 2025-10-18T08:27:30+00:00
+Base URL: https://play.duelly.online
+Event-Id: 1760776050-23818-28490  Req-Timestamp: 1760776050
+Signature: sha256=<redacted>
+----
+/api/payments/telegram/webhook   unsigned=409 xsig=409 hub=409 dup=409
+/payments/telegram/webhook       unsigned=405 xsig=405 hub=405 dup=405
+/payments/webhook                unsigned=405 xsig=405 hub=405 dup=405
+/scripts/04-set-telegram-webhook.sh unsigned=405 xsig=405 hub=405 dup=405
+/webhooks                        unsigned=405 xsig=405 hub=405 dup=405

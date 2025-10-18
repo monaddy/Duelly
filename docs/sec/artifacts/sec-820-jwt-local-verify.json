@@ -1,0 +1,20 @@
+{
+  "alg": "HS512",
+  "aud": "play.duelly.online",
+  "iss": "duelly.api.v2",
+  "exp_seconds": 900,
+  "local_verify": {
+    "valid": {
+      "ok": true,
+      "reason": "ok"
+    },
+    "expired": {
+      "ok": true,
+      "reason": "ok"
+    },
+    "none": {
+      "ok": false,
+      "reason": "alg_none_rejected"
+    }
+  }
+}

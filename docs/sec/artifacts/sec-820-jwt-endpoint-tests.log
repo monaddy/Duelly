@@ -1,0 +1,17 @@
+SEC-820 JWT Authorization Tests @ 2025-10-18T08:34:08+00:00
+Base URL: https://play.duelly.online
+Paths tested: 12
+Tokens: valid/expired/none saved under /root/backgammon-mini-app/docs/sec/artifacts (redacted in logs)
+----
+/api_v2/me               noauth=200 none=200 expired=200 valid=200
+/api_v2/profile          noauth=200 none=200 expired=200 valid=200
+/api_v2/protected        noauth=200 none=200 expired=200 valid=200
+/api_v2/health           noauth=200 none=200 expired=200 valid=200
+/api/me                  noauth=404 none=404 expired=404 valid=404
+/api/profile             noauth=404 none=404 expired=404 valid=404
+/api/protected           noauth=404 none=404 expired=404 valid=404
+/api/secure              noauth=404 none=404 expired=404 valid=404
+/api/secure-ping         noauth=404 none=404 expired=404 valid=404
+/api/user/me             noauth=404 none=404 expired=404 valid=404
+/api/users/me            noauth=404 none=404 expired=404 valid=404
+/api/health              noauth=200 none=200 expired=200 valid=200

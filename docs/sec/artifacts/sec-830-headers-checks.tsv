@@ -1,0 +1,5 @@
+path	code	HSTS	XCTO	REF	COOP	CORP	OAC
+/	200	ok	ok	ok	miss	miss	miss
+/api_v2/health	200	ok	ok	ok	miss	miss	miss
+/api/health	200	ok	ok	ok	miss	miss	miss
+/healthz	200	ok	ok	ok	miss	miss	miss

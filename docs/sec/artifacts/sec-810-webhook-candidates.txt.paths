@@ -1,0 +1,5 @@
+/api/payments/telegram/webhook
+/payments/telegram/webhook
+/payments/webhook
+/scripts/04-set-telegram-webhook.sh
+/webhooks

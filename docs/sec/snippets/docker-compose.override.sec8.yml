@@ -1,0 +1,38 @@
+# Stage8 override snippet — ensures env_file points to secure.env (apply in PR)
+services:
+  api:
+    env_file:
+      - /root/duelly/.duelly/secure.env
+  api_v2:
+    env_file:
+      - /root/duelly/.duelly/secure.env
+  build:
+    env_file:
+      - /root/duelly/.duelly/secure.env
+  depends_on:
+    env_file:
+      - /root/duelly/.duelly/secure.env
+  env_file:
+    env_file:
+      - /root/duelly/.duelly/secure.env
+  environment:
+    env_file:
+      - /root/duelly/.duelly/secure.env
+  expose:
+    env_file:
+      - /root/duelly/.duelly/secure.env
+  healthcheck:
+    env_file:
+      - /root/duelly/.duelly/secure.env
+  networks:
+    env_file:
+      - /root/duelly/.duelly/secure.env
+  ports:
+    env_file:
+      - /root/duelly/.duelly/secure.env
+  volumes:
+    env_file:
+      - /root/duelly/.duelly/secure.env
+  wildbg:
+    env_file:
+      - /root/duelly/.duelly/secure.env

@@ -1,0 +1,4 @@
+/api/auth/telegram
+/api/payments/telegram/webhook
+/auth/telegram
+/payments/telegram/webhook

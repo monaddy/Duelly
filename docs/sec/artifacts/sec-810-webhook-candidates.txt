@@ -1,0 +1,36 @@
+Detected webhook references (raw):
+./scripts/04-set-telegram-webhook.sh:8:URL="${APP_BASE_URL}/api/v2/payments/telegram/webhook"
+./scripts/21-bootstrap-api-v2.sh:276:# routes: payments webhook (idempotent via redis + secret_token)
+./scripts/21-bootstrap-api-v2.sh:280:  app.post("/payments/telegram/webhook", async (req, reply) => {
+./scripts/21-bootstrap-api-v2.sh:290:    await app.redis.lpush("queue:webhooks:telegram", JSON.stringify(update));
+./scripts/21-bootstrap-api-v2.sh:291:    app.log.info({ update_id: update?.update_id }, "telegram webhook accepted");
+./.env.bak:37:# Used for callbacks/webhooks if needed; set to your HTTPS origin.
+./docs/sec/artifacts/sec-800-leak-suspects.txt:11:./scripts/04-set-telegram-webhook.sh
+./docs/stage3-delivery.md:16:- **Rate-limited idempotent payment webhooks**
+./docs/stage3-delivery.md:30:|  | Rate-limit zones + per-route limits | ✅ | 60 r/s global, 5 r/s webhook |
+./docs/stage3-delivery.md:32:|  | Endpoints: `/api/health`, `/auth/telegram`, `/match/create`, `/rng/*`, `/payments/webhook` | ✅ | All validated via Zod |
+./docs/stage3-delivery.md:34:|  | Idempotent + rate-limited Telegram webhook | ✅ | Prisma + Nginx enforcement |
+./docs/stage3-delivery.md:45:| **Testing** | Smoke checks via curl (health + WS + webhook) | ✅ | Passed 200/409 responses |
+./docs/stage3-delivery.md:55:| Webhook idempotency | `/api/payments/telegram/webhook` | 1st = 200/409 duplicate | ✅ |
+./conf/nginx/includes/payments.inc:1:# Payments webhook stricter limits
+./conf/nginx/includes/payments.inc:2:location = /api/payments/telegram/webhook {
+./conf/nginx/conf.d/02-site-https.conf.bak.20251013-200621:39:  # Payments webhook (strict)
+./conf/nginx/conf.d/02-site-https.conf:39:  # Payments webhook (strict)
+./conf/nginx/conf.d/02-site-https.conf:41:  # Payments webhook (strict)
+./conf/nginx/conf.d/02-site-https.conf:44:  # Payments webhook (strict)
+./conf/nginx/conf.d/02-site-https.conf.bak.20251013-201342:38:  # Payments webhook (strict)
+./conf/nginx/conf.d/02-site-https.conf.bak.20251013-201342:41:  # Payments webhook (strict)
+./services/api/server.js:158:// Payments webhook with per-route rateLimit
+./services/api/server.js:161:  url: '/api/payments/telegram/webhook',
+./services/api/server.js:167:      await prisma.webhookEvent.create({ data: { provider: 'telegram', eventType: 'payment', rawJson: payload, handled: false, dedupeKey } });
+./services/api-v2/src/routes/payments.ts:4:  app.post("/payments/telegram/webhook", async (req, reply) => {
+./services/api-v2/src/routes/payments.ts:11:    const existing = await app.prisma.webhookEvent.findUnique({ where: { dedupeKey: key } });
+./services/api-v2/src/routes/payments.ts:14:    await app.prisma.webhookEvent.create({
+./services/api-v2/src/routes/payments.ts:22:    app.log.info({ update_id: update?.update_id }, "telegram webhook stored");
+
+Candidate paths to probe:
+/api/payments/telegram/webhook
+/payments/telegram/webhook
+/payments/webhook
+/scripts/04-set-telegram-webhook.sh
+/webhooks

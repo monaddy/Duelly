@@ -1,0 +1,14 @@
+./api-v2.env
+./backgammon-mini-app/package-lock.json
+./certs/archive/play.duelly.online/privkey1.pem
+./certs/live/play.duelly.online/privkey.pem
+./conf/nginx/_backup/nginx.conf.20251013-181457
+./conf/nginx/nginx.conf
+./.env.bak
+./--format
+./package-lock.json
+./scripts/01-write-api-v2-env.sh
+./scripts/04-set-telegram-webhook.sh
+./scripts/21-bootstrap-api-v2.sh
+./scripts/bootstrap-server.sh
+./services/api-v2/src/routes/payments.ts
