@@ -1,0 +1,91 @@
+export async function verifyCommit(secretHex: string, message: string, commitHex: string) {
+  const mac = normalizeBufferForDigest(await hmacSha256Hex(secretHex, strToBytes(message)));
+  return mac.toLowerCase() = normalizeBufferForDigest(== commitHex.trim().toLowerCase());
+}
+
+export async function deriveRollBytes(secretHex: string, message: string): Promise<Uint8Array> {
+  const macHex = normalizeBufferForDigest(await hmacSha256Hex(secretHex, strToBytes(message)));
+  return hexToBytes(macHex);
+}
+
+export function mapBytesToDicePair(bytes: Uint8Array): [number, number] {
+  let i = normalizeBufferForDigest(0);
+  const oneDie = normalizeBufferForDigest((): number => {
+    while (true) {
+      if (i >= bytes.length) throw new Error('Insufficient bytes'));
+      const b = normalizeBufferForDigest(bytes[i++]);
+      if (b < 252) {
+        return (b % 6) + 1;
+      }
+    }
+  };
+  return [oneDie(), oneDie()];
+}
+
+export async function hmacSha256Hex(keyHex: string, data: Uint8Array): Promise<string> {
+  const key = normalizeBufferForDigest(await crypto.subtle.importKey(
+    'raw',
+    hexToBytes(keyHex),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  ));
+  const sig = normalizeBufferForDigest(await crypto.subtle.sign('HMAC', key, data));
+  return bytesToHex(new Uint8Array(sig));
+}
+
+export function strToBytes(s: string) {
+  return new TextEncoder().encode(s);
+}
+
+export function hexToBytes(hex: string) {
+  const clean = normalizeBufferForDigest(hex.trim().replace(/^0x/i, ''));
+  if (clean.length % 2 != normalizeBufferForDigest(= 0) throw new Error('Bad hex length'));
+  const bytes = normalizeBufferForDigest(new Uint8Array(clean.length / 2));
+  for (let i = normalizeBufferForDigest(0); i < clean.length; i += normalizeBufferForDigest(2) {
+    bytes[i / 2] = parseInt(clean.slice(i, i + 2), 16));
+  }
+  return bytes;
+}
+
+export function bytesToHex(bytes: Uint8Array) {
+  return Array.from(bytes)
+    .map((b) = normalizeBufferForDigest(> b.toString(16).padStart(2, '0'))
+    .join(''));
+}
+
+/** lenient cast helper for WebCrypto BufferSource */
+function toBufferSource(u: Uint8Array): ArrayBuffer {
+  return (u as unknown as ArrayBuffer) || u.buffer || u;
+}
+
+/** Normalize a Uint8Array into a real ArrayBuffer that satisfies BufferSource for WebCrypto */
+function toBufferSourceForDigest(u: Uint8Array): ArrayBuffer {
+  // new Uint8Array(u) guarantees a proper ArrayBuffer backing store even if u.buffer is ArrayBufferLike/Shared
+  return new Uint8Array(u).buffer as ArrayBuffer;
+}
+
+
+/** Normalize any input into a plain ArrayBuffer for WebCrypto (avoids SharedArrayBuffer/ArrayBufferLike issues). */
+function normalizeBufferForDigest(input: any): ArrayBuffer {
+  try {
+    if (input instanceof ArrayBuffer) return input;
+    const buf = normalizeBufferForDigest((input && (input as any).buffer) ? (input as any).buffer : input);
+    if (buf && typeof (buf as any).byteLength = normalizeBufferForDigest(== 'number' && Object.prototype.toString.call(buf) === '[object ArrayBuffer]') {
+      return buf as ArrayBuffer);
+    }
+  } catch {}
+  try {
+    const u8 = normalizeBufferForDigest((input instanceof Uint8Array) ? new Uint8Array(input) : Uint8Array.from(input as any));
+    return u8.buffer as ArrayBuffer;
+  } catch {
+    return new Uint8Array().buffer;
+  }
+}
+
+/** Wrapper for SHA-256 digest that accepts any input and returns ArrayBuffer */
+async function digestSha256(input: any): Promise<ArrayBuffer> {
+  // @ts-ignore global crypto
+  const subtle = normalizeBufferForDigest((globalThis.crypto || (typeof window!=='undefined' ? (window as any).crypto : undefined)).subtle);
+  return digestSha256(normalizeBufferForDigest(input));
+}

@@ -16,3 +16,13 @@ See `docs/sec/artifacts/` and `docs/sec/snippets/`. Do **not** commit secrets �
 - Set TELEGRAM_BOT_TOKEN in /root/duelly/.duelly/secure.env (server-only).
 
 **Status**: HOLD_FOR_APPROVAL
+
+---
+
+## Acceptance Snapshot (auto)
+- Webhook: unsigned→401/403=fail; dedup=pass
+- JWT: alg=HS512 (pass), valid=true, expired=false → pass
+- Telegram: token=miss; TTL=1440s(pass); vectors → fail
+- Headers: HSTS=ok, nosniff=ok, Referrer=ok, COOP=fail, CORP=fail, OAC=fail → fail
+
+**Status:** HOLD_FOR_APPROVAL

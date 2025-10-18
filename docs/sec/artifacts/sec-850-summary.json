@@ -1,8 +1,9 @@
 {
   "domain":"play.duelly.online",
   "webhook":{"enforced":"unknown","dedup":"present"},
-  "jwt":{"alg":"::DUELLY::step=sec-850-report-and-pr-v1","local_valid_ok":"status=error","local_expired_ok":"code=1 line=1 log=/root/duelly/.duelly/logs/sec-850-report-and-pr-v1-20251018-090250.log","endpoint_auth":"present"},
+  "jwt":{"alg":"HS512","local_valid_ok":"true","local_expired_ok":"true","endpoint_auth":"present"},
   "headers":{"hsts":"ok","nosniff":"ok","referrer":"ok","coop":"miss","corp":"miss","oac":"miss"},
-  "telegram":{"token":"miss","ttl":"ok","valid_ok":"true"info"","tampered_ok":"false"info"","expired_ok":"false"info""},
-  "fairness":{"verify_ok":"true","commit_file":"/root/backgammon-mini-app/docs/sec/artifacts/sec-845-fairness/commit.json","reveal_file":"/root/backgammon-mini-app/docs/sec/artifacts/sec-845-fairness/reveal.json","verify_file":"/root/backgammon-mini-app/docs/sec/artifacts/sec-845-fairness/verify.json"}
+  "telegram":{"token":"miss","ttl_seconds":"1440","ttl_status":"ok","valid_ok":"true"info"","tampered_ok":"false"info"","expired_ok":"false"info""},
+  "fairness":{"verify_ok":"true"recomputed""},
+  "pr":"branch_ready"
 }

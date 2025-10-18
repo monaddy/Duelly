@@ -1,50 +1,47 @@
-import { useEffect, useRef, useState } from 'react';
-import { useUIStore } from '../store/useUIStore';
+import React, { useEffect, useRef, useState } from "react";
 
 export default function FpsOverlay() {
-  if (!import.meta.env.DEV) return null;
-
-  const [fps, setFps] = useState<number>(0);
-  const rafRef = useRef<number>();
-  const lastRef = useRef<number>(performance.now());
-  const accRef = useRef<number[]>([]);
-  const { latencyHttpMs, latencySocketMs } = useUIStore();
+  const last = useRef<number>(performance.now());
+  const [fps, setFps] = useState<number>(60);
+  const rafId = useRef<number | null>(null);
 
   useEffect(() => {
-    const tick = (now: number) => {
-      const dt = now - lastRef.current;
-      lastRef.current = now;
-      const inst = 1000 / Math.max(1, dt);
-      accRef.current.push(inst);
-      if (accRef.current.length > 20) accRef.current.shift();
-      const avg = accRef.current.reduce((a, b) => a + b, 0) / accRef.current.length;
-      setFps(Math.round(avg));
-      rafRef.current = requestAnimationFrame(tick);
+    let frames = 0;
+    let secStart = performance.now();
+
+    const tick = () => {
+      const now = performance.now();
+      frames++;
+      // once per ~500ms update estimate (smoother)
+      if (now - secStart >= 500) {
+        const delta = (now - secStart) / 1000;
+        setFps(Math.round(frames / delta));
+        frames = 0;
+        secStart = now;
+      }
+      last.current = now;
+      rafId.current = requestAnimationFrame(tick);
     };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => rafRef.current && cancelAnimationFrame(rafRef.current);
+
+    rafId.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafId.current != null) cancelAnimationFrame(rafId.current);
+      rafId.current = null;
+    };
   }, []);
 
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        right: 12,
-        bottom: 12,
-        background: 'rgba(17,24,39,0.8)',
-        color: 'var(--tg-fg,#fff)',
-        padding: '8px 10px',
-        borderRadius: 10,
-        border: '1px solid rgba(255,255,255,0.08)',
-        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace',
-        fontSize: 12,
-        zIndex: 1000
-      }}
-      aria-label="Performance Overlay"
-    >
-      <div>FPS: <b>{fps}</b></div>
-      <div>HTTP: {latencyHttpMs ?? '—'} ms</div>
-      <div>Socket: {latencySocketMs ?? '—'} ms</div>
-    </div>
-  );
+  const boxStyle: React.CSSProperties = {
+    position: "fixed",
+    right: 10,
+    bottom: 10,
+    padding: "6px 9px",
+    borderRadius: 8,
+    background: "rgba(0,0,0,.55)",
+    color: fps >= 55 ? "#C6F6D5" : "#FED7D7",
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+    fontSize: 12,
+    zIndex: 9999,
+    pointerEvents: "none"
+  };
+  return <div style={boxStyle}>FPS: {fps}</div>;
 }
