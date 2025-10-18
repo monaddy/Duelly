@@ -1,0 +1,7 @@
+Domain: play.duelly.online
+Edge layer: container:backgammon-mini-app-nginx-1 (owner=docker-proxy)
+Edge container (if any): backgammon-mini-app-nginx-1
+Artifacts:
+  ss      -> /root/backgammon-mini-app/docs/sec/artifacts/sec-868-edge/listeners-ss.txt
+  docker  -> /root/backgammon-mini-app/docs/sec/artifacts/sec-868-edge/docker-ps-ports.txt ; /root/backgammon-mini-app/docs/sec/artifacts/sec-868-edge/docker-ports/*.ports.txt
+  tls     -> /root/backgammon-mini-app/docs/sec/artifacts/sec-868-edge/openssl-s_client.txt

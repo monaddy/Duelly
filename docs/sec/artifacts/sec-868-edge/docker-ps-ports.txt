@@ -1,0 +1,7 @@
+NAMES                            IMAGE                        PORTS
+backgammon-mini-app-nginx-1      nginx:1.27-alpine            0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp
+backgammon-mini-app-api-1        backgammon-mini-app-api      
+backgammon-mini-app-redis-1      redis:7-alpine               
+backgammon-mini-app-postgres-1   postgres:16-alpine           
+backgammon-mini-app-api_v2-1     backgammon-mini-app-api_v2   
+backgammon-mini-app-wildbg-1     backgammon-mini-app-wildbg   

@@ -1,0 +1,10 @@
+# ss -ltnp at 2025-10-18T10:36:22+00:00
+State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess                                   
+LISTEN 0      4096   127.0.0.53%lo:53        0.0.0.0:*    users:(("systemd-resolve",pid=560,fd=15))
+LISTEN 0      4096      127.0.0.54:53        0.0.0.0:*    users:(("systemd-resolve",pid=560,fd=17))
+LISTEN 0      128          0.0.0.0:22        0.0.0.0:*    users:(("sshd",pid=918,fd=3))            
+LISTEN 0      4096         0.0.0.0:80        0.0.0.0:*    users:(("docker-proxy",pid=2746184,fd=7))
+LISTEN 0      4096         0.0.0.0:443       0.0.0.0:*    users:(("docker-proxy",pid=2746198,fd=7))
+LISTEN 0      128             [::]:22           [::]:*    users:(("sshd",pid=918,fd=4))            
+LISTEN 0      4096            [::]:80           [::]:*    users:(("docker-proxy",pid=2746190,fd=7))
+LISTEN 0      4096            [::]:443          [::]:*    users:(("docker-proxy",pid=2746203,fd=7))
