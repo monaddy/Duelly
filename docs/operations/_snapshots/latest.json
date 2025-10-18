@@ -1,0 +1,245 @@
+{
+  "project": "Duelly",
+  "generatedAt": "2025-10-18T08:57:01Z",
+  "env": {
+    "domain": "play.duelly.online"
+  },
+  "git": {
+    "repo": "git@github.com:monaddy/Duelly.git",
+    "branch": "feat/fps-latency-observability-stub",
+    "commit": "9da2829",
+    "dirty": true
+  },
+  "health": {
+    "web": true,
+    "api": true
+  },
+  "stages": {
+    "FE": {
+      "ts": "2025-10-17T18:18:17+00:00",
+      "repo": "monaddy/Duelly",
+      "base": "main",
+      "branch": "feat/fps-latency-observability-stub",
+      "pr": "https://github.com/monaddy/Duelly/pull/new/feat/fps-latency-observability-stub",
+      "gate": "READY_TO_MERGE",
+      "dashboard": "/root/duelly/.duelly/reports/fe-fps-latency-dashboard.md",
+      "index": "/root/duelly/.duelly/reports/index.md",
+      "pmo": "/root/duelly/.duelly/pmo/fe-stage5-fps-latency-pr.log",
+      "manifest": "/root/duelly/.duelly/artifacts/fe-fps-latency-latest.manifest.txt",
+      "artifact": "/root/duelly/.duelly/artifacts/fe-fps-latency-20251017-181519.tar.gz",
+      "final_ack": {
+        "ts": "2025-10-17T18:24:35+00:00"
+      },
+      "handoff": "/root/duelly/.duelly/hand_off/FE-Stage5-Handoff-20251017-182314.tar.gz",
+      "done_file": "/root/duelly/.duelly/done/fe-stage5.done",
+      "pr_url": "https://github.com/monaddy/Duelly/pull/new/feat/fps-latency-observability-stub"
+    },
+    "BE": {},
+    "UX": {},
+    "QA": {},
+    "Security": {},
+    "Release": {}
+  },
+  "recentSteps": [
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "running"
+    },
+    {
+      "step": "sec-840-telegram-initdata-v1",
+      "status": "running"
+    },
+    {
+      "step": "sec-840-telegram-initdata-v1",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "running"
+    },
+    {
+      "step": "sec-840-telegram-initdata-v1",
+      "status": "running"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "ok"
+    },
+    {
+      "step": "sec-840-telegram-initdata-v1",
+      "status": "ok"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "ok"
+    },
+    {
+      "step": "ux-handoff-v01-apply",
+      "status": "ok"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "ok"
+    },
+    {
+      "step": "ux-handoff-v01-create",
+      "status": "ok"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "ok"
+    },
+    {
+      "step": "fe-create-pr-safe-v2",
+      "status": "ok"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "ok"
+    },
+    {
+      "step": "fe-show-pr-link-v1",
+      "status": "ok"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "ok"
+    },
+    {
+      "step": "fe-pr-hold-for-approval-fps-v1",
+      "status": "ok"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "ok"
+    },
+    {
+      "step": "fe-pr-generate-summary-artifact-v1",
+      "status": "ok"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "ok"
+    },
+    {
+      "step": "fe-pr-compose-approval-report-v1",
+      "status": "ok"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "ok"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "ok"
+    },
+    {
+      "step": "fe-pr-attach-approval-report-v1",
+      "status": "ok"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "ok"
+    },
+    {
+      "step": "fe-pr-final-summary-v1",
+      "status": "ok"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    },
+    {
+      "step": "$STEP_ID",
+      "status": "error"
+    }
+  ]
+}
