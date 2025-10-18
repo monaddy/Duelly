@@ -52,3 +52,11 @@
 - Checklist: [docs/Reports/FE-THEME-MERGE-CHECKLIST.md](docs/Reports/FE-THEME-MERGE-CHECKLIST.md)
 - Preview: <http://104.238.172.232:4173>  |  Probe: <http://104.238.172.232:4173/theme-probe.html>
 <!-- FE_THEME_MERGE_END -->
+<!-- FE_THEME_MERGE_GATE_START -->
+## FE Theme — MERGE GATE
+
+- Preview: <http://104.238.172.232:4173> (HTTP 200) | Probe: <http://104.238.172.232:4173/theme-probe.html> (HTTP 200)
+- Gate Doc: [docs/Reports/FE-THEME-MERGE-GATE.md](docs/Reports/FE-THEME-MERGE-GATE.md)
+
+**Reminder:** Merge is allowed once Tailwind utilities are ready and the preview-only fallback remains non-production.
+<!-- FE_THEME_MERGE_GATE_END -->
