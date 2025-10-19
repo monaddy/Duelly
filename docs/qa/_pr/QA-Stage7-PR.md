@@ -63,3 +63,10 @@
 - **QA Results (Latest):** [docs/Reports/FE-THEME-QA-LATEST.md](docs/Reports/FE-THEME-QA-LATEST.md)
 <!-- FE_THEME_MERGE_GATE_END -->
 
+<!-- FE_THEME_FOLLOWUP_START -->
+## FE Theme — Follow‑Up (Fallback Removal)
+
+- **Preview:** <http://104.238.172.232:4173> | **Probe:** <http://104.238.172.232:4173/theme-probe.html>
+- **Task:** Remove preview fallback `theme.css` after Tailwind utilities are generated.
+- **Issue Doc:** [docs/Reports/_issues/ISSUE-FE-THEME-FALLBACK-REMOVAL-20251019-054826.md](docs/Reports/_issues/ISSUE-FE-THEME-FALLBACK-REMOVAL-20251019-054826.md)
+<!-- FE_THEME_FOLLOWUP_END -->
