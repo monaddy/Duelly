@@ -82,4 +82,27 @@
 [?2004l[?2004h>     git commit -m "DUELLY FE: coalesce moveAttempt.to everywhere + non-null assert remaining 'to' uses; assert gameState! at all call/prop sites"
 [?2004l[?2004h>   fi
 [?2004l[?2004h> fi
-[?2004l
+[?2004l[feat/qa-stage7-perf-fairness 944d1bc] DUELLY FE: coalesce moveAttempt.to everywhere + non-null assert remaining 'to' uses; assert gameState! at all call/prop sites
+ 12 files changed, 605 insertions(+), 1 deletion(-)
+ create mode 100644 .duelly/logs/036-be-rng-reveal-use-db-seed-or-fallback-and-e2e-20251020-165907.log
+ create mode 100644 .duelly/logs/fe-next3-force-nonnull-v11-20251020-174607.log
+ create mode 100644 .duelly/smoke/commit.d660a781-4d33-4c82-9eeb-50ffffa7e794.json
+ create mode 100644 .duelly/smoke/match.1760979547.json
+ create mode 100644 .duelly/smoke/reveal.e6fef3ea-8982-4862-8e55-c8de8b609caa.json
+ create mode 100644 .duelly/smoke/rng-verify-reveal-fix.20251020-165908.json
+ create mode 100644 .duelly/smoke/verify.after.e6fef3ea-8982-4862-8e55-c8de8b609caa.json
+ create mode 100644 .duelly/smoke/verify.before.e6fef3ea-8982-4862-8e55-c8de8b609caa.json
+ create mode 100644 src/components/PixiBoard.tsx.bak.1760982367
+ create mode 100644 src/routes/Game.tsx.bak.1760982367
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # -----------------------------------------------------------------------------
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 4) Build + theme ops + QA probes
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # -----------------------------------------------------------------------------
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# npm run -s build
+[?2004lsrc/components/PixiBoard.tsx(1,6): error TS2300: Duplicate identifier 'MoveTarget'.
+src/components/PixiBoard.tsx(14,6): error TS2300: Duplicate identifier 'MoveTarget'.
+src/components/PixiBoard.tsx(129,58): error TS2322: Type 'number | "bar" | "bearoff-white" | "bearoff-black" | undefined' is not assignable to type 'number | "bar" | "bearoff-white" | "bearoff-black"'.
+  Type 'undefined' is not assignable to type 'number | "bar" | "bearoff-white" | "bearoff-black"'.
+src/routes/Game.tsx(27,16): error TS2345: Argument of type 'GameState | null' is not assignable to parameter of type 'GameState'.
+  Type 'null' is not assignable to type 'GameState'.
+::DUELLY::step=fe-next3-force-nonnull-v11 status=error code=1 line=100 log=/root/backgammon-mini-app/.duelly/logs/fe-next3-force-nonnull-v11-20251020-174607.log

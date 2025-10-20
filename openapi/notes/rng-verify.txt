@@ -1,1 +1,6 @@
-openapi: add /api/v2/rng/verify (200/404/409)
+# rng-verify — notes
+- נתיב: GET /api/v2/rng/verify?id=<CID>
+- לפני reveal: { id, matchId, serverCommitHex, revealed:false }
+- אחרי reveal: { serverSeedHex, dice } מתווספים.
+- סטטוס ידוע: POST /api/v2/rng/reveal מחזיר 500 כשה-body חסר serverSeedHex; דרוש עדכון סכמה/handler.
+- המלצה: לאפשר גם reveal ע"י commitId בלבד (seed בצד שרת), ולהשיב 400 עם פירוט במקום 500.

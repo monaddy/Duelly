@@ -1,0 +1,65 @@
+/* @ts-nocheck */
+import { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import PixiBoard from '../components/PixiBoard';
+import DoublingCube from '../components/DoublingCube';
+import Timer from '../components/Timer';
+import HUD from '../components/HUD';
+import { useGameStore } from '../store/useGameStore';
+import { useNetStore } from '../store/useNetStore';
+import { useUIStore } from '../store/useUIStore';
+
+export default function Game() {
+  const { matchId } = useParams<{ matchId: string }>();
+  const { setMatchId, state, setState, setLastVersion, lastVersion } = useGameStore();
+  const { socket, connected } = useNetStore();
+  const { haptic } = useUIStore();
+
+  useEffect(() => {
+    if (!matchId) return;
+    setMatchId(matchId);
+  }, [matchId, setMatchId]);
+
+  useEffect(() => {
+    if (!socket || !matchId) return;
+
+    const onState = (s: typeof state) => {
+      setState(s);
+      setLastVersion(s?.version ?? 0);
+    };
+    socket.on('state', onState);
+
+    socket.emit('resume', { matchId, lastVersion });
+
+    return () => {
+      socket.off('state', onState);
+    };
+  }, [socket, matchId, setState, setLastVersion, lastVersion, state]);
+
+  useEffect(() => {
+    if (!connected) return;
+    haptic('impact');
+  }, [connected, haptic]);
+
+  if (!state) {
+    return <p className="text-muted">Waiting for match state…</p>;
+  }
+
+  return (
+    <div className="grid lg:grid-cols-[1fr_340px] gap-4">
+      <section className="card">
+        <PixiBoard />
+      </section>
+      <aside className="card">
+        <HUD />
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <Timer who="white" />
+          <Timer who="black" />
+        </div>
+        <div className="mt-4">
+          <DoublingCube />
+        </div>
+      </aside>
+    </div>
+  );
+}

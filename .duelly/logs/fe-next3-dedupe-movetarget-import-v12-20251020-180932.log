@@ -1,0 +1,90 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step='"$STEP_ID"' status=error code=$code line=$LINENO log=$LOG_FILE"; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"; exec 9>"$LOCK_FILE"; flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED notes=\"another step running\""; exit 1; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is) notes=\"centralize MoveTarget/resolveTo; clean PixiBoard; harden Game.tsx; build + theme ops + QA\""
+[?2004l::DUELLY::step=fe-next3-dedupe-movetarget-import-v12 status=running time=2025-10-20T18:09:32+00:00 notes="centralize MoveTarget/resolveTo; clean PixiBoard; harden Game.tsx; build + theme ops + QA"
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 1) New shared type/helper (idempotent) -----------------------------------
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# mkdir -p src/types
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# MOVES_FILE="src/types/moves.ts"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ ! -f "$MOVES_FILE" ]; then
+[?2004l[?2004h>   cat >"$MOVES_FILE" <<'TS'
+[?2004l[?2004h> // Centralized move-target typing + resolver for Backgammon UI.
+[?2004l[?2004h> export type MoveTarget = number | 'bar' | 'bearoff-white' | 'bearoff-black';
+[?2004l[?2004h> export function resolveTo(to: MoveTarget | undefined, fallback: MoveTarget): MoveTarget {
+[?2004l[?2004h>   return (typeof to === 'undefined' ? fallback : to) as MoveTarget;
+[?2004l[?2004h> }
+[?2004l[?2004h> TS
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 2) PixiBoard.tsx: dedupe & import centralized helper ---------------------
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# PB="src/components/PixiBoard.tsx"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f "$PB" ]; then
+[?2004l[?2004h>   cp -a "$PB" "$PB.bak.$(date +%s)"
+[?2004l[?2004h> 
+[?2004l[?2004h>   # 2a) Remove any in-file MoveTarget duplicates and inline resolveTo() blocks
+[?2004l[?2004h>   #     (delete ALL, we'll import from src/types/moves.ts)
+[?2004l[?2004h>   perl -0777 -i -pe "s/\btype\s+MoveTarget\s*=\s*number\s*\|\s*'bar'\s*\|\s*'bearoff-white'\s*\|\s*'bearoff-black'\s*;\s*//g" "$PB"
+[?2004l[?2004h>   perl -0777 -i -pe "s/function\s+resolveTo\s*\([^)]*\)\s*\{[^}]*\}\s*//gs" "$PB"
+[?2004l[?2004h> 
+[?2004l[?2004h>   # 2b) Ensure single import of shared type/helper right after the import block
+[?2004l[?2004h>   if ! grep -q "from '../types/moves'" "$PB"; then
+[?2004l[?2004h>     awk 'BEGIN{ins=0}
+[?2004l[?2004h>       /^import /{print; next}
+[?2004l[?2004h>       { if(!ins){ print "import type { MoveTarget } from '\''../types/moves'\'';"; print "import { resolveTo } from '\''../types/moves'\'';"; ins=1 } print }' \
+[?2004l[?2004h>       "$PB" > "$PB.new" && mv "$PB.new" "$PB"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> 
+[?2004l[?2004h>   # 2c) Coalesce all occurrences of moveAttempt.to (with/without optional chain)
+[?2004l[?2004h>   perl -0777 -i -pe 's/(?<!resolveTo\()moveAttempt\?\.\s*to/resolveTo(moveAttempt?.to, from)/g' "$PB"
+[?2004l[?2004h>   perl -0777 -i -pe 's/(?<!resolveTo\()moveAttempt\.to/resolveTo(moveAttempt?.to, from)/g' "$PB"
+[?2004l[?2004h> 
+[?2004l[?2004h>   # 2d) Ensure local 'to' variables are definite MoveTarget
+[?2004l[?2004h>   perl -0777 -i -pe 's/\bconst\s+to\s*=\s*\(moveAttempt\?\.\s*to\s*\?\?\s*from\)\s*;/const to: MoveTarget = resolveTo(moveAttempt?.to, from);/g' "$PB"
+[?2004l[?2004h>   perl -0777 -i -pe 's/\bconst\s+to\s*=\s*resolveTo\(\s*moveAttempt\?\.\s*to\s*,\s*from\s*\)\s*;/const to: MoveTarget = resolveTo(moveAttempt?.to, from);/g' "$PB"
+[?2004l[?2004h>   perl -0777 -i -pe 's/\bconst\s+to\s*=\s*moveAttempt\.to\s*;/const to: MoveTarget = resolveTo(moveAttempt?.to, from);/g' "$PB"
+[?2004l[?2004h>   perl -0777 -i -pe 's/const\s*\{\s*to\s*\}\s*=\s*moveAttempt\s*;/const to: MoveTarget = resolveTo(moveAttempt?.to, from);/g' "$PB"
+[?2004l[?2004h> 
+[?2004l[?2004h>   # 2e) Object literals: to: <expr> → to: resolveTo(...)
+[?2004l[?2004h>   perl -0777 -i -pe 's/(to\s*:\s*)moveAttempt\?\.\s*to/\1resolveTo(moveAttempt?.to, from)/g' "$PB" [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[K"
+[?2004l[?2004h>   perl -0777 -i -pe 's/(to\s*:\s*)moveAttempt\.to/\1resolveTo(moveAttempt?.to, from)/g' "$PB"
+[?2004l[?2004h>   # As last resort, if a plain "to: to" remains, assert non-null (safe/idempotent)
+[?2004l[?2004h>   perl -0777 -i -pe 's/(\bto\s*:\s*)to\b/\1to!/g' "$PB"
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 3) Game.tsx: enforce non-null usage around GameState ---------------------
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# GAME="src/routes/Game.tsx"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f "$GAME" ]; then
+[?2004l[?2004h>   cp -a "$GAME" "$GAME.bak.$(date +%s)"
+[?2004l[?2004h>   # Ensure nullable state
+[?2004l[?2004h>   perl -0777 -i -pe 's/useState<\s*GameState\s*>\(\s*null\s*\)/useState<GameState | null>(null)/g' "$GAME"
+[?2004l[?2004h> 
+[?2004l[?2004h>   # Early render guard (once)
+[?2004l[?2004h>   if ! grep -q "if (gameState == null)" "$GAME"; then
+[?2004l[?2004h>     perl -0777 -i -pe "s/(useState<\s*GameState\s*\|\s*null\s*>\(\s*null\s*\)\s*\)\s*;?)/\\1\nif (gameState == null) { return null; }\n/;" "$GAME"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> 
+[?2004l[?2004h>   # Non-null alias just after the guard (once)
+[?2004l[?2004h>   if ! grep -q "const gameStateNN:" "$GAME"; then
+[?2004l[?2004h>     perl -0777 -i -pe 's/(if\s*\(\s*gameState\s*==\s*null\s*\)\s*\{\s*return\s+null;\s*\}\s*)/\1\nconst gameStateNN: GameState = gameState as GameState;\n/' "$GAME"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> 
+[?2004l[?2004h>   # Redirect common usages to non-null alias or assertion
+[?2004l[?2004h>   sed -E -i 's/state=\{gameState\}/state={gameStateNN}/g' "$GAME" || true
+[?2004l[?2004h>   perl -0777 -i -pe 's/(\(|,)\s*gameState(\s*)(\)|,)/\1 gameStateNN\2\3/g' "$GAME" || true
+[?2004l[?2004h>   perl -0777 -i -pe 's/\bgameState\./gameStateNN./g' "$GAME" || true
+[?2004l[?2004h>   perl -0777 -i -pe 's/\.\.\.\s*gameState\b/...gameStateNN/g' "$GAME" || true
+[?2004l[?2004h>   perl -0777 -i -pe 's/\bgameState\[/gameStateNN[/g' "$GAME" || true
+[?2004l[?2004h> 
+[?2004l[?2004h>   # Specific: setGameState(gameState) → setGameState(gameState as GameState)
+[?2004l[?2004h>   sed -E -i 's/setGameState\(\s*gameState\s*\)/setGameState(gameState as GameState)/g' "$GAME" || true
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 4) Commit changes if any -------------------------------------------------
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if git rev-parse --git-dir >/dev/null 2>&1; then
+[?2004l[?2004h>   git add -A
+[?2004l[?2004h>   if ! git diff --cached --quiet --ignore-submodules --; then
+[?2004l[?2004h>     git commit -m "FE: centralize MoveTarget/resolveTo; clean PixiBoard duplicates; coalesce moveAttempt.to; enforce non-null GameState usages"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004l

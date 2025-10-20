@@ -1,0 +1,158 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step=$STEP_ID status=error code=$code line=$LINENO log=$LOG_FILE" >&2; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # נעילה להרצה מתואמת
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"; mkdir -p "$(dirname "$LOCK_FILE")"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if command -v flock >/dev/null 2>&1; then exec 9>"$LOCK_FILE"; flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED notes=another step running"; exit 1; }; fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is)"
+[?2004l::DUELLY::step=040-openapi-and-smoke-artifacts-for-rng-verify status=running time=2025-10-20T17:46:36+00:00
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 1) OpenAPI (fragment עצמאי ל-rng/verify)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# OAPI_FILE="$OPENAPI_DIR/openapi.rng-verify.yaml"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cat >"$OAPI_FILE.new" <<'YAML'
+[?2004l[?2004h> openapi: 3.1.0
+[?2004l[?2004h> info:
+[?2004l[?2004h>   title: DUELLY API — RNG Verify (fragment)
+[?2004l[?2004h>   version: "0.1.0"
+[?2004l[?2004h> servers:
+[?2004l[?2004h>   - url: https://play.duelly.online/api/v2
+[?2004l[?2004h> paths:
+[?2004l[?2004h>   /rng/verify:
+[?2004l[?2004h>     get:
+[?2004l[?2004h>       summary: Verify RNG server commit
+[?2004l[?2004h>       description: >
+[?2004l[?2004h>         מחזיר את נתוני ה-commit של השרת ומצב ה-reveal. לפני חשיפה: {id, matchId, serverCommitHex, revealed=false}.
+[?2004l[?2004h>         אחרי חשיפה: מתווספים serverSeedHex ו-dice.
+[?2004l[?2004h>       parameters:
+[?2004l[?2004h>         - name: id
+[?2004l[?2004h>           in: query
+[?2004l[?2004h>           required: true
+[?2004l[?2004h>           description: RNG Commit ID (UUID)
+[?2004l[?2004h>           schema:
+[?2004l[?2004h>             type: string
+[?2004l[?2004h>             format: uuid
+[?2004l[?2004h>       responses:
+[?2004l[?2004h>         '200':
+[?2004l[?2004h>           description: Found
+[?2004l[?2004h>           content:
+[?2004l[?2004h>             application/json:
+[?2004l[?2004h>               schema:
+[?2004l[?2004h>                 $ref: '#/components/schemas/RngVerifyResponse'
+[?2004l[?2004h>         '404':
+[?2004l[?2004h>           description: Not Found
+[?2004l[?2004h>           content:
+[?2004l[?2004h>             application/json:
+[?2004l[?2004h>               schema:
+[?2004l[?2004h>                 $ref: '#/components/schemas/NotFound'
+[?2004l[?2004h> components:
+[?2004l[?2004h>   schemas:
+[?2004l[?2004h>     RngVerifyResponse:
+[?2004l[?2004h>       type: object
+[?2004l[?2004h>       required: [id, matchId, serverCommitHex, revealed]
+[?2004l[?2004h>       properties:
+[?2004l[?2004h>         id: { type: string, format: uuid }
+[?2004l[?2004h>         matchId: { type: string, format: uuid }
+[?2004l[?2004h>         serverCommitHex: { type: string, description: 'SHA-256(HMAC/seed) in hex' }
+[?2004l[?2004h>         revealed: { type: boolean }
+[?2004l[?2004h>         serverSeedHex:
+[?2004l[?2004h>           anyOf: [{ type: 'string' }, { type: 'null' }]
+[?2004l[?2004h>           description: 'מופיע רק אחרי חשיפה'
+[?2004l[?2004h>         dice:
+[?2004l[?2004h>           anyOf:
+[?2004l[?2004h>             - { type: 'null' }
+[?2004l[?2004h>             - type: array
+[?2004l[?2004h>               minItems: 2
+[?2004l[?2004h>               maxItems: 2
+[?2004l[?2004h>               items:
+[?2004l[?2004h>                 type: integer
+[?2004l[?2004h>                 minimum: 1
+[?2004l[?2004h>                 maximum: 6
+[?2004l[?2004h>               description: 'מופיע רק אחרי חשיפה; חישוב דטרמיניסטי'
+[?2004l[?2004h>     NotFound:
+[?2004l[?2004h>       type: object
+[?2004l[?2004h>       required: [ok, error, message]
+[?2004l[?2004h>       properties:
+[?2004l[?2004h>         ok: { type: boolean, example: false }
+[?2004l[?2004h>         error: { type: string, example: NOT_FOUND }
+[?2004l[?2004h>         message: { type: string, example: 'RngCommit not found' }
+[?2004l[?2004h> YAML
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f "$OAPI_FILE" ]; then
+[?2004l[?2004h>   if ! cmp -s "$OAPI_FILE.new" "$OAPI_FILE"; then cp -a "$OAPI_FILE" "$OAPI_FILE.bak.$(date +%s)"; mv "$OAPI_FILE.new" "$OAPI_FILE"; else rm -f "$OAPI_FILE.new"; fi
+[?2004l[?2004h> else
+[?2004l[?2004h>   mv "$OAPI_FILE.new" "$OAPI_FILE"
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "OpenAPI written: $OAPI_FILE"
+[?2004lOpenAPI written: docs/openapi.rng-verify.yaml
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 2) הערות OpenAPI/known-issues
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# NOTES_FILE="$NOTES_DIR/rng-verify.txt"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cat >"$NOTES_FILE.new" <<'TXT'
+[?2004l[?2004h> # rng-verify — notes
+[?2004l[?2004h> - נתיב: GET /api/v2/rng/verify?id=<CID>
+[?2004l[?2004h> - לפני reveal: { id, matchId, serverCommitHex, revealed:false }
+[?2004l[?2004h> - אחרי reveal: { serverSeedHex, dice } מתווספים.
+[?2004l[?2004h> - סטטוס ידוע: POST /api/v2/rng/reveal מחזיר 500 כשה-body חסר serverSeedHex; דרוש עדכון סכמה/handler.
+[?2004l[?2004h> - המלצה: לאפשר גם reveal ע"י commitId בלבד (seed בצד שרת), ולהשיב 400 עם פירוט במקום 500.
+[?2004l[?2004h> TXT
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f "$NOTES_FILE" ]; then
+[?2004l[?2004h>   if ! cmp -s "$NOTES_FILE.new" "$NOTES_FILE"; then cp -a "$NOTES_FILE" "$NOTES_FILE.bak.$(date +%s)"; mv "$NOTES_FILE.new" "$NOTES_FILE"; else rm -f "$NOTES_FILE.new"; fi
+[?2004l[?2004h> else
+[?2004l[?2004h>   mv "$NOTES_FILE.new" "$NOTES_FILE"
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "Notes written: $NOTES_FILE"
+[?2004lNotes written: openapi/notes/rng-verify.txt
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 3) דוגמאות curl לעשן
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SMOKE_SCRIPT="$SMOKE_DIR/rng-verify-examples.sh"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cat >"$SMOKE_SCRIPT.new" <<'BASH'
+[?2004l[?2004h> #!/usr/bin/env bash
+[?2004l[?2004h> set -Eeuo pipefail
+[?2004l[?2004h> API="${API:-https://play.duelly.online/api/v2}"
+[?2004l[?2004h> HDR=(-H "content-type: application/json" -H "accept: application/json")
+[?2004l[?2004h> 
+[?2004l[?2004h> echo "# Health"
+[?2004l[?2004h> curl -sS "$API/health"
+[?2004l[?2004h> 
+[?2004l[?2004h> echo -e "\n\n# Create match"
+[?2004l[?2004h> MATCH="$(curl -sS -X POST "$API/matches" "${HDR[@]}" -d '{}')"; echo "$MATCH"
+[?2004l[?2004h> MID="$(echo "$MATCH" | sed -n 's/.*"id":"\([0-9a-fA-F-]\{36\}\)".*/\1/p')"
+[?2004l[?2004h> 
+[?2004l[?2004h> echo -e "\n\n# RNG commit"
+[?2004l[?2004h> COMMIT="$(curl -sS -X POST "$API/rng/commit" "${HDR[@]}" -d "{\"matchId\":\"$MID\"}")"; echo "$COMMIT"
+[?2004l[?2004h> CID="$(echo "$COMMIT" | sed -n 's/.*"id":"\([0-9a-fA-F-]\{36\}\)".*/\1/p')"
+[?2004l[?2004h> 
+[?2004l[?2004h> echo -e "\n\n# Verify BEFORE (revealed=false)"
+[?2004l[?2004h> curl -sS "$API/rng/verify?id=$CID"; echo
+[?2004l[?2004h> 
+[?2004l[?2004h> echo -e "\n\n# Reveal (אופציונלי: אם השרת דורש seed, הגדרו SERVER_SEED_HEX=...)"
+[?2004l[?2004h> if [ -n "${SERVER_SEED_HEX:-}" ]; then
+[?2004l[?2004h>   curl -sS -X POST "$API/rng/reveal" "${HDR[@]}" -d "{\"id\":\"$CID\",\"serverSeedHex\":\"$SERVER_SEED_HEX\"}"; echo
+[?2004l[?2004h> else
+[?2004l[?2004h>   echo "Skipping /rng/reveal (no SERVER_SEED_HEX provided)."
+[?2004l[?2004h> fi
+[?2004l[?2004h> 
+[?2004l[?2004h> echo -e "\n\n# Verify AFTER (אם בוצעה חשיפה)"
+[?2004l[?2004h> curl -sS "$API/rng/verify?id=$CID"; echo
+[?2004l[?2004h> BASH
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# chmod +x "$SMOKE_SCRIPT.new"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f "$SMOKE_SCRIPT" ]; then
+[?2004l[?2004h>   if ! cmp -s "$SMOKE_SCRIPT.new" "$SMOKE_SCRIPT"; then cp -a "$SMOKE_SCRIPT" "$SMOKE_SCRIPT.bak.$(date +%s)"; mv "$SMOKE_SCRIPT.new" "$SMOKE_SCRIPT"; else rm -f "$SMOKE_SCRIPT.new"; fi
+[?2004l[?2004h> else
+[?2004l[?2004h>   mv "$SMOKE_SCRIPT.new" "$SMOKE_SCRIPT"
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "Smoke script written: $SMOKE_SCRIPT"
+[?2004lSmoke script written: docs/smoke/rng-verify-examples.sh
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 4) עותק summary אחרון אל docs/smoke
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LAST_SUMMARY="$(ls -1t "$RUNTIME_SMOKE_DIR"/rng-verify*.json 2>/dev/null | head -n1 || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -n "$LAST_SUMMARY" ] && [ -s "$LAST_SUMMARY" ]; then
+[?2004l[?2004h>   cp -a "$LAST_SUMMARY" "$SMOKE_DIR/last-rng-verify-summary.json"
+[?2004l[?2004h>   echo "Copied last summary: $LAST_SUMMARY -> $SMOKE_DIR/last-rng-verify-summary.json"
+[?2004l[?2004h> else
+[?2004l[?2004h>   echo "No previous rng-verify summary found under $RUNTIME_SMOKE_DIR (skipping copy)"
+[?2004l[?2004h> fi
+[?2004lCopied last summary: .duelly/smoke/rng-verify-reveal-fix.20251020-165908.json -> docs/smoke/last-rng-verify-summary.json
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=ok time=$(date -Is) notes=\"openapi+notes+smoke written; lastSummary=$(basename "${LAST_SUMMARY:-none}")\""
+[?2004l::DUELLY::step=040-openapi-and-smoke-artifacts-for-rng-verify status=ok time=2025-10-20T17:46:36+00:00 notes="openapi+notes+smoke written; lastSummary=rng-verify-reveal-fix.20251020-165908.json"
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [?2004l[?2004l
