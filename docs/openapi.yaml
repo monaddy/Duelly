@@ -1,0 +1,48 @@
+openapi: 3.1.0
+info: { title: DUELLY API — RNG (verify + reveal), version: "0.1.0" }
+servers: [ { url: https://play.duelly.online/api/v2 } ]
+paths:
+  /rng/verify:
+    get:
+      summary: Verify RNG commit/reveal status
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Commit found
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, matchId, serverCommitHex, revealed]
+                properties:
+                  id: { type: string, format: uuid }
+                  matchId: { type: string, format: uuid }
+                  serverCommitHex: { type: string }
+                  revealed: { type: boolean }
+                  serverSeedHex: { type: [string,"null"] }
+                  dice:
+                    type: array
+                    minItems: 2
+                    maxItems: 2
+                    items: { type: integer, minimum: 1, maximum: 6 }
+  /rng/reveal:
+    post:
+      summary: Reveal RNG seed and dice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id: { type: string, format: uuid }
+                serverSeedHex: { type: string, pattern: '^[0-9a-fA-F]+$' }
+      responses:
+        '200': { description: OK — dice returned }
+        '400': { description: Commit mismatch or invalid seed }
+        '404': { description: Commit not found }
