@@ -5,30 +5,6 @@ import { createHash } from 'node:crypto';
 
 const prisma = new PrismaClient();
 
-function diceFromBytes(bytes: Buffer): [number, number] {
-  let i = 0;
-  const next = () => {
-    if (i >= bytes.length) { bytes = createHash('sha256').update(bytes).digest(); i = 0; }
-    return bytes[i++];
-  };
-  const nextDie = () => {
-    let b = next();
-    while (b >= 252) b = next(); // rejection sampling למניעת bias
-    return (b % 6) + 1;
-  };
-  return [ nextDie(), nextDie() ];
-}
-
-function diceFromSeed(seedHex: string): [number, number] {
-  const bytes = createHash('sha256').update(Buffer.concat([Buffer.from('dice:'), Buffer.from(seedHex, 'hex')])).digest();
-  return diceFromBytes(bytes);
-}
-
-function diceFromCommit(commitHex: string): [number, number] {
-  const bytes = createHash('sha256').update(Buffer.from(commitHex, 'hex')).digest();
-  return diceFromBytes(bytes);
-}
-
 const rngVerifyRoute: FastifyPluginAsync = async (app) => {
   app.get('/rng/verify', {
     schema: {
@@ -53,11 +29,10 @@ const rngVerifyRoute: FastifyPluginAsync = async (app) => {
     if (payload.revealed) {
       const seed: string | null = (c as any).serverSeedHex ?? null;
       payload.serverSeedHex = seed;
-      let dice: number[] | null = null;
-      if (seed) {
-        dice = diceFromSeed(seed);
-      } else if ((c as any).serverCommitHex) {
-        dice = diceFromCommit((c as any).serverCommitHex);
+      let dice: number[] | null = Array.isArray((c as any).dice) ? (c as any).dice : null;
+      if (!dice && seed) {
+        const h = createHash('sha256').update(Buffer.from(seed, 'hex')).digest();
+        dice = [ (h[0] % 6) + 1, (h[1] % 6) + 1 ];
       }
       if (dice) payload.dice = dice;
     }

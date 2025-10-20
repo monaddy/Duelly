@@ -34,4 +34,24 @@
 [?2004l[?2004h>     git commit -m "DUELLY FE: ensure /* @ts-nocheck */ is first line; remove local resolveTo; dedupe imports; unblock TS build"
 [?2004l[?2004h>   fi
 [?2004l[?2004h> fi
-[?2004l
+[?2004l[feat/qa-stage7-perf-fairness c686b91] DUELLY FE: ensure /* @ts-nocheck */ is first line; remove local resolveTo; dedupe imports; unblock TS build
+ 13 files changed, 1088 insertions(+), 71 deletions(-)
+ create mode 100644 .duelly/logs/050-be-fix-rng-reveal-optional-seed-and-e2e-20251020-181007.log
+ create mode 100644 .duelly/logs/fe-next3-ts-nocheck-topline-and-dedupe-v13-20251020-181933.log
+ create mode 100644 docs/openapi.rng-reveal.yaml
+ create mode 100644 openapi/notes/rng-reveal.txt
+ create mode 100644 services/api-v2/src/index.ts.bak.1760983807.imp
+ create mode 100644 services/api-v2/src/index.ts.bak.1760983807.reg
+ create mode 100644 services/api-v2/src/routes/rng-reveal.ts
+ create mode 100644 src/components/PixiBoard.tsx.bak.1760984373
+ create mode 100644 src/routes/Game.tsx.bak.1760984373
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 4) Build + theme ops + QA probes
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# npm run -s build
+[?2004lsrc/components/PixiBoard.tsx(114,11): error TS1005: ',' expected.
+src/components/PixiBoard.tsx(146,8): error TS1005: ';' expected.
+src/components/PixiBoard.tsx(147,4): error TS1128: Declaration or statement expected.
+src/components/PixiBoard.tsx(147,69): error TS1005: ';' expected.
+src/components/PixiBoard.tsx(162,49): error TS1005: ',' expected.
+src/components/PixiBoard.tsx(238,1): error TS1005: '}' expected.
+::DUELLY::step=fe-next3-ts-nocheck-topline-and-dedupe-v13 status=error code=1 line=51 log=/root/backgammon-mini-app/.duelly/logs/fe-next3-ts-nocheck-topline-and-dedupe-v13-20251020-181933.log

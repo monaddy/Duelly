@@ -42,7 +42,7 @@ const rngRoutes: FastifyPluginAsync = async (app) => {
     return reply.send({ id, serverCommitHex });
   });
 
-  app.post("/rng/reveal_legacy", async (req, reply) => {
+  app.post("/rng/reveal", async (req, reply) => {
     const { id, serverSeedHex, clientSaltHex } = RevealBody.parse(req.body ?? {});
     const commit = await app.prisma.rngCommit.findUnique({ where: { id } });
     if (!commit) return reply.code(404).send({ error: "commit_not_found" });

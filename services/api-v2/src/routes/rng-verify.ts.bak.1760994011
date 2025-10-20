@@ -1,0 +1,58 @@
+// DUELLY — RNG Verify (expects registration with { prefix: "/api/v2" })
+import type { FastifyPluginAsync } from 'fastify';
+import { PrismaClient } from '@prisma/client';
+import { createHash } from 'node:crypto';
+
+const prisma = new PrismaClient();
+
+const rngVerifyRoute: FastifyPluginAsync = async (app) => {
+  app.get('/rng/verify', {
+    schema: {
+      querystring: {
+        type: 'object',
+        properties: { id: { type: 'string', format: 'uuid' } },
+        required: ['id']
+      }
+    }
+  }, async (req, reply) => {
+    const { id } = (req.query as any);
+    const c = await prisma.rngCommit.findUnique({ where: { id } });
+    if (!c) return reply.code(404).send({ ok:false, error:'NOT_FOUND', message:'RngCommit not found' });
+
+    const payload: any = {
+      id: (c as any).id,
+      matchId: (c as any).matchId,
+      serverCommitHex: (c as any).serverCommitHex,
+      revealed: Boolean((c as any).revealed)
+    };
+
+    if (payload.revealed) {
+      const seed: string | null = (c as any).serverSeedHex ?? null;
+      payload.serverSeedHex = seed;
+      let dice: number[] | null = Array.isArray((c as any).dice) ? (c as any).dice : null;
+      if (!dice && seed) {
+        const h = createHash('sha256').update(Buffer.from(seed, 'hex')).digest();
+        dice = [ (h[0] % 6) + 1, (h[1] % 6) + 1 ];
+      }
+      if (dice_json= if (dice) payload.dice = dice;if (dice) payload.dice = dice; seed= if (dice) payload.dice = dice;if (dice) payload.dice = dice; (c as any).serverCommitHex) { dice = diceFromCommit((c as any).serverCommitHex); } if (dice) payload.dice = dice;
+    }
+
+    return payload;
+  });
+};
+
+export default rngVerifyRoute;
+import { createHash } from 'node:crypto';
+function diceFromBytes(bytes: Buffer): [number, number] {
+  let i = 0; const next = () => { if (i >= bytes.length) { bytes = createHash('sha256').update(bytes).digest(); i = 0; } return bytes[i++]; };
+  const nextDie = () => { let b = next(); while (b >= 252) b = next(); return (b % 6) + 1; };
+  return [ nextDie(), nextDie() ];
+}
+function diceFromSeed(seedHex: string) {
+  const bytes = createHash('sha256').update(Buffer.concat([Buffer.from('dice:'), Buffer.from(seedHex, 'hex')])).digest();
+  return diceFromBytes(bytes);
+}
+function diceFromCommit(commitHex: string) {
+  const bytes = createHash('sha256').update(Buffer.from(commitHex, 'hex')).digest();
+  return diceFromBytes(bytes);
+}

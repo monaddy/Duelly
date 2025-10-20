@@ -1,9 +1,9 @@
-/* @ts-nocheck */
 import type { MoveTarget } from '../types/moves';
 import { resolveTo } from '../types/moves';
 function resolveTo(to: MoveTarget | undefined, fallback: MoveTarget): MoveTarget {
   return (typeof to === 'undefined' ? fallback : to) as MoveTarget;
 }
+/* @ts-nocheck */
 import { useEffect, useMemo, useRef } from 'react';
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import { useGameStore } from '../store/useGameStore';

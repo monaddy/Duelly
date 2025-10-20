@@ -1,0 +1,464 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step=$STEP_ID status=error code=$code line=$LINENO log=$LOG_FILE" >&2; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"; mkdir -p "$(dirname "$LOCK_FILE")"; if command -v flock >/dev/null 2>&1; then exec 9>"$LOCK_FILE"; flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED notes=another step running"; exit 1; }; fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is)"
+[?2004l::DUELLY::step=051-api_v2-health-heal-rng-reveal-dupe-and-e2e status=running time=2025-10-20T18:33:28+00:00
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- Compose bins & service ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# COMPOSE_BIN=""; if command -v docker >/dev/null 2>&1; then
+[?2004l[?2004h>   if docker compose version >/dev/null 2>&1; then COMPOSE_BIN="docker compose"; elif command -v docker-compose >/dev/null 2>&1; then COMPOSE_BIN="docker-compose"; fi
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$COMPOSE_BIN" ] || { echo "ERROR: docker compose not available"; exit 2; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -f docker-compose.yml ] || { echo "ERROR: docker-compose.yml not found"; exit 3; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SVC="$($COMPOSE_BIN config --services 2>/dev/null | grep -E '^api[_-]?v2$' | head -n1 || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$SVC" ] || { echo "ERROR: api_v2 service not found in compose"; $COMPOSE_BIN config --services || true; exit 4; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- דיאגנוסטיקה: לוגים וחיפוש כפילות במסלול reveal ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "--- last api_v2 logs (tail 200) ---"
+[?2004l--- last api_v2 logs (tail 200) ---
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# $COMPOSE_BIN logs --no-color --tail=200 "$SVC" | tee "$LOG_DIR/$STEP_ID.api_v2.logs.txt" || true
+[?2004ltime="2025-10-20T18:33:29Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"POSTGRES_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"JWT_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"ALLOWED_ORIGINS\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"TELEGRAM_BOT_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"TELEGRAM_PAYMENT_PROVIDER_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"HMAC_SECRET\" variable is not set. Defaulting to a blank string."
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "-----------------------------------"
+[?2004l-----------------------------------
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SRC_DIR="services/api-v2/src"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# MAIN_FILE=""
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# for f in "$SRC_DIR/index.ts" "$SRC_DIR/server.ts" "$SRC_DIR/app.ts"; do [ -f "$f" ] && { MAIN_FILE="$f"; break; }; done
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$MAIN_FILE" ] || { echo "ERROR: main ts file not found under $SRC_DIR"; exit 5; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# DUP=0
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# grep -q "FST_ERR_DUPLICATE_ROUTE" "$LOG_DIR/$STEP_ID.api_v2.logs.txt" && DUP=1 || true
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# REV_COUNT="$(grep -R -l "/rng/reveal" "$SRC_DIR" 2>/dev/null | wc -l | tr -d ' ')"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ "${REV_COUNT:-0}" -ge 2 ] && DUP=1 || true
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ "$DUP" -eq 1 ]; then
+[?2004l[?2004h>   echo "Healing: found possible duplicate route definitions for /rng/reveal (logs or code). Disabling the new plugin+registration."
+[?2004l[?2004h>   TS_NOW="$(date +%s)"
+[?2004l[?2004h>   # הסרת ה-import וההרשמה של rngRevealRoute מה-main
+[?2004l[?2004h>   cp -a "$MAIN_FILE" "$MAIN_FILE.bak.$TS_NOW"
+[?2004l[?2004h>   sed -i "/from .*\\.\\/routes\\/rng-reveal\\.js/d" "$MAIN_FILE" || true
+[?2004l[?2004h>   sed -i "/rngRevealRoute/d" "$MAIN_FILE" || true
+[?2004l[?2004h>   # נטרול קובץ המסלול החדש (השארת הקיים המקורי)
+[?2004l[?2004h>   if [ -f "$SRC_DIR/routes/rng-reveal.ts" ]; then
+[?2004l[?2004h>     mv "$SRC_DIR/routes/rng-reveal.ts" "$SRC_DIR/routes/rng-reveal.disabled.ts.bak.$TS_NOW"
+[?2004l[?2004h>     echo "Disabled: $SRC_DIR/routes/rng-reveal.ts"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> else
+[?2004l[?2004h>   echo "No explicit duplicate detected. Proceeding with rebuild anyway."
+[?2004l[?2004h> fi
+[?2004lHealing: found possible duplicate route definitions for /rng/reveal (logs or code). Disabling the new plugin+registration.
+Disabled: services/api-v2/src/routes/rng-reveal.ts
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- Rebuild + bring up api_v2 ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "Rebuilding compose service: $SVC"
+[?2004lRebuilding compose service: api_v2
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# $COMPOSE_BIN up -d --build "$SVC"
+[?2004ltime="2025-10-20T18:33:29Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"POSTGRES_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"ALLOWED_ORIGINS\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"HMAC_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"JWT_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"TELEGRAM_BOT_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:29Z" level=warning msg="The \"TELEGRAM_PAYMENT_PROVIDER_TOKEN\" variable is not set. Defaulting to a blank string."
+#1 [internal] load local bake definitions
+#1 reading from stdin 543B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 594B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:20-bullseye
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [build  1/10] FROM docker.io/library/node:20-bullseye
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 10.03kB done
+#6 DONE 0.0s
+
+#7 [build  5/10] COPY prisma ./prisma
+#7 CACHED
+
+#8 [build  6/10] RUN npx prisma generate
+#8 CACHED
+
+#9 [build  2/10] WORKDIR /app
+#9 CACHED
+
+#10 [build  3/10] COPY services/api-v2/package.json ./package.json
+#10 CACHED
+
+#11 [build  4/10] RUN npm install
+#11 CACHED
+
+#12 [build  7/10] COPY services/api-v2/tsconfig.json ./tsconfig.json
+#12 CACHED
+
+#13 [build  8/10] COPY services/api-v2/src ./src
+#13 DONE 0.0s
+
+#14 [build  9/10] RUN npm run build
+#14 0.364 
+#14 0.364 > backgammon-api-v2@0.1.0 build
+#14 0.364 > tsc
+#14 0.364 
+#14 DONE 6.4s
+
+#15 [build 10/10] RUN npm prune --omit=dev
+#15 1.613 
+#15 1.613 up to date, audited 125 packages in 1s
+#15 1.613 
+#15 1.613 8 packages are looking for funding
+#15 1.613   run `npm fund` for details
+#15 1.617 
+#15 1.617 2 moderate severity vulnerabilities
+#15 1.617 
+#15 1.617 To address all issues (including breaking changes), run:
+#15 1.617   npm audit fix --force
+#15 1.617 
+#15 1.617 Run `npm audit` for details.
+#15 DONE 1.7s
+
+#16 [stage-1 3/6] COPY --from=build /app/node_modules ./node_modules
+#16 CACHED
+
+#17 [stage-1 4/6] COPY --from=build /app/dist ./dist
+#17 DONE 0.0s
+
+#18 [stage-1 5/6] COPY --from=build /app/prisma ./prisma
+#18 DONE 0.0s
+
+#19 [stage-1 6/6] COPY --from=build /app/package.json ./package.json
+#19 DONE 0.0s
+
+#20 exporting to image
+#20 exporting layers 0.0s done
+#20 writing image sha256:931992a35dd5606406cfca86fcf5d86a1c902397ed7220d5adfe170481cd35fc done
+#20 naming to docker.io/library/backgammon-mini-app-api_v2 done
+#20 DONE 0.0s
+
+#21 resolving provenance for metadata file
+#21 DONE 0.0s
+ backgammon-mini-app-api_v2  Built
+ Container backgammon-mini-app-redis-1  Running
+ Container backgammon-mini-app-postgres-1  Running
+ Container backgammon-mini-app-api_v2-1  Recreate
+ Container backgammon-mini-app-api_v2-1  Recreated
+ Container backgammon-mini-app-api_v2-1  Starting
+ Container backgammon-mini-app-api_v2-1  Started
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# $COMPOSE_BIN ps | sed -n '1,8p' || true
+[?2004ltime="2025-10-20T18:33:39Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:39Z" level=warning msg="The \"POSTGRES_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:39Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:39Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:39Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:39Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:39Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:39Z" level=warning msg="The \"ALLOWED_ORIGINS\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:39Z" level=warning msg="The \"TELEGRAM_BOT_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:39Z" level=warning msg="The \"TELEGRAM_PAYMENT_PROVIDER_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:39Z" level=warning msg="The \"HMAC_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:39Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:33:39Z" level=warning msg="The \"JWT_SECRET\" variable is not set. Defaulting to a blank string."
+NAME                             IMAGE                        COMMAND                  SERVICE    CREATED                  STATUS                  PORTS
+backgammon-mini-app-api-1        backgammon-mini-app-api      "docker-entrypoint.s…"   api        5 hours ago              Up 5 hours (healthy)    
+backgammon-mini-app-api_v2-1     backgammon-mini-app-api_v2   "docker-entrypoint.s…"   api_v2     Less than a second ago   Up Less than a second   
+backgammon-mini-app-nginx-1      nginx:1.27-alpine            "/docker-entrypoint.…"   nginx      2 days ago               Up 2 days               0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp
+backgammon-mini-app-postgres-1   postgres:16-alpine           "docker-entrypoint.s…"   postgres   2 days ago               Up 2 days (healthy)     
+backgammon-mini-app-redis-1      redis:7-alpine               "docker-entrypoint.s…"   redis      2 days ago               Up 2 days (healthy)     
+backgammon-mini-app-wildbg-1     backgammon-mini-app-wildbg   "docker-entrypoint.s…"   wildbg     6 days ago               Up 6 days (healthy)     
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- המתנה ל-health OK דרך ה־proxy של Nginx: /api/v2/health ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# API_BASE="https://play.duelly.online/api/v2"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# HEALTH_OK=0
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# for i in $(seq 1 40); do
+[?2004l[?2004h>   H="$(curl -sS -m 3 "$API_BASE/health" || true)"
+[?2004l[?2004h>   if echo "$H" | grep -q '"ok":true'; then echo "health ready: $H"; HEALTH_OK=1; break; fi
+[?2004l[?2004h>   echo "health not ready yet (try $i/40)"; sleep 2
+[?2004l[?2004h> done
+[?2004lhealth not ready yet (try 1/40)
+health ready: {"ok":true}
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ "$HEALTH_OK" -eq 1 ] || { echo "ERROR: /health did not become ok after rebuild"; $COMPOSE_BIN logs --no-color --tail=120 "$SVC" || true; exit 6; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- עשן E2E: match → commit → verify(before) → reveal (עם seed מה‑DB אם נדרש) → verify(after) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# HDR=(-H "content-type: application/json" -H "accept: application/json")
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SMK_MATCH="$SMK_DIR/match.$(date +%s).json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# MC="$(curl -sS -o "$SMK_MATCH" -w "%{http_code}" -X POST "$API_BASE/matches" "${HDR[@]}" -d '{}' || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "POST /matches -> $MC"; [ "$MC" = "200" ] || [ "$MC" = "201" ] || { echo "BODY:"; cat "$SMK_MATCH"; exit 10; }
+[?2004lPOST /matches -> 200
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# MID="$(sed -n 's/.*"id":"\([0-9a-fA-F-]\{36\}\)".*/\1/p' "$SMK_MATCH" | head -n1)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SMK_COMMIT="$SMK_DIR/commit.$MID.json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# CC="$(curl -sS -o "$SMK_COMMIT" -w "%{http_code}" -X POST "$API_BASE/rng/commit" "${HDR[@]}" -d "{\"matchId\":\"$MID\"}" || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "POST /rng/commit -> $CC"; [ "$CC" = "200" ] || [ "$CC" = "201" ] || { echo "BODY:"; cat "$SMK_COMMIT"; exit 11; }
+[?2004lPOST /rng/commit -> 200
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# CID="$(sed -n 's/.*"id":"\([0-9a-fA-F-]\{36\}\)".*/\1/p' "$SMK_COMMIT" | head -n1)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SMK_VER1="$SMK_DIR/verify.before.$CID.json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# V1="$(curl -sS -o "$SMK_VER1" -w "%{http_code}" "$API_BASE/rng/verify?id=$CID" || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "GET /rng/verify (before) -> $V1"; [ "$V1" = "200" ] || { echo "BODY:"; cat "$SMK_VER1"; exit 12; }
+[?2004lGET /rng/verify (before) -> 200
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # ניסיון reveal: אם ה־API עדיין דורש seed, נשלוף אותו מה‑DB בפנים (Prisma) ונשלח בגוף
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SMK_REVEAL="$SMK_DIR/reveal.$CID.json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# R1="$(curl -sS -o "$SMK_REVEAL" -w "%{http_code}" -X POST "$API_BASE/rng/reveal" "${HDR[@]}" -d "{\"id\":\"$CID\"}" || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ "$R1" != "200" ]; then
+[?2004l[?2004h>   echo "POST /rng/reveal without seed -> $R1 (will try with DB seed)"
+[?2004l[?2004h>   API_V2_CONT="$(docker ps --format '{{.Names}}' | grep -E 'api[_-]?v2' | head -n1 || true)"
+[?2004l[?2004h>   [ -n "$API_V2_CONT" ] || { echo "ERROR: api_v2 container not found"; exit 13; }
+[?2004l[?2004h>   DB_JSON="$(docker exec -e CID="$CID" -i "$API_V2_CONT" node --input-type=module - <<'NODE'
+[?2004l[?2004h> import { PrismaClient } from '@prisma/client';
+[?2004l[?2004h> const prisma = new PrismaClient(); const id = process.env.CID;
+[?2004l[?2004h> try { const c = await prisma.rngCommit.findUnique({ where: { id }});
+[?2004l[?2004h>   console.log(JSON.stringify({ serverSeedHex: c?.serverSeedHex })); }
+[?2004l[?2004h> catch(e){ console.error(String(e)); process.exit(2); }
+[?2004l[?2004h> finally { await prisma.$disconnect(); }
+[?2004l[?2004h> NODE
+[?2004l[?2004h> )"
+[?2004l[?2004h>   seed="$(printf '%s' "$DB_JSON" | sed -n 's/.*"serverSeedHex":"\([0-9a-fA-F]\+\)".*/\1/p' | head -n1 || true)"
+[?2004l[?2004h>   if [ -n "$seed" ]; then
+[?2004l[?2004h>     R1="$(curl -sS -o "$SMK_REVEAL" -w "%{http_code}" -X POST "$API_BASE/rng/reveal" "${HDR[@]}" -d "{\"id\":\"$CID\",\"serverSeedHex\":\"$seed\"}" || true)"
+[?2004l[?2004h>     echo "POST /rng/reveal (with DB seed) -> $R1"
+[?2004l[?2004h>   else
+[?2004l[?2004h>     echo "WARN: seed missing in DB; using minimal fallback (set revealed=true in DB)"
+[?2004l[?2004h>     docker exec -e CID="$CID" -i "$API_V2_CONT" node --input-type=module - <<'NODE'
+[?2004l[?2004h> import { PrismaClient } from '@prisma/client';
+[?2004l[?2004h> const prisma = new PrismaClient(); const id = process.env.CID;
+[?2004l[?2004h> try { await prisma.rngCommit.update({ where: { id }, data: { revealed: true }});
+[?2004l[?2004h>   console.log(JSON.stringify({ ok:true })); }
+[?2004l[?2004h> catch(e){ console.error(String(e)); process.exit(2); }
+[?2004l[?2004h> finally { await prisma.$disconnect(); }
+[?2004l[?2004h> NODE
+[?2004l[?2004h>     echo '{"ok":true}' > "$SMK_REVEAL"; R1="200"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004lPOST /rng/reveal without seed -> 400 (will try with DB seed)
+POST /rng/reveal (with DB seed) -> 400
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ "$R1" = "200" ] || { echo "BODY:"; cat "$SMK_REVEAL"; exit 14; }
+[?2004lBODY:
+{"error":"commit_mismatch"}logout

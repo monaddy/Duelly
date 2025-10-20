@@ -1,5 +1,4 @@
 import "dotenv/config";
-import rngRevealRoute from './routes/rng-reveal.js';
 import rngVerifyRoute from './routes/rng-verify.js';
 import Fastify from "fastify";
 import helmet from "@fastify/helmet";
@@ -40,7 +39,5 @@ app.setErrorHandler((err, _req, reply) => {
 
 app.register(rngVerifyRoute, { prefix: '/api/v2' });
 
-
-app.register(rngRevealRoute, { prefix: '/api/v2' });
 await app.listen({ port: Number(process.env.PORT ?? 3000), host: process.env.HOST ?? "0.0.0.0" });
 app.log.info("API V2 listening (health @ /api/v2/health)");

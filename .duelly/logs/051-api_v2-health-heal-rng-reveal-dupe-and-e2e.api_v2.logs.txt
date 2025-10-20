@@ -1,0 +1,200 @@
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
+api_v2-1  | 
+api_v2-1  | /app/node_modules/fastify/lib/route.js:371
+api_v2-1  |             throw new FST_ERR_DUPLICATED_ROUTE(opts.method, opts.url)
+api_v2-1  |                   ^
+api_v2-1  | FastifyError [Error]: Method 'POST' already declared for route '/api/v2/rng/reveal'
+api_v2-1  |     at Object.addNewRoute (/app/node_modules/fastify/lib/route.js:371:19)
+api_v2-1  |     at Object.route (/app/node_modules/fastify/lib/route.js:265:19)
+api_v2-1  |     at Object.prepareRoute (/app/node_modules/fastify/lib/route.js:167:18)
+api_v2-1  |     at Object._post [as post] (/app/node_modules/fastify/fastify.js:271:34)
+api_v2-1  |     at rngRevealRoute (file:///app/dist/routes/rng-reveal.js:27:9)
+api_v2-1  |     at Plugin.exec (/app/node_modules/avvio/lib/plugin.js:125:28)
+api_v2-1  |     at Boot._loadPlugin (/app/node_modules/avvio/boot.js:432:10)
+api_v2-1  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+api_v2-1  |   code: 'FST_ERR_DUPLICATED_ROUTE',
+api_v2-1  |   statusCode: 500
+api_v2-1  | }
+api_v2-1  | 
+api_v2-1  | Node.js v20.19.5
