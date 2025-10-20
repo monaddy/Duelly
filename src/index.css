@@ -30,5 +30,10 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
 
 .btn { @apply min-h-12 h-12 px-5 rounded-xl text-lg font-medium bg-surface text-fg hover:opacity-90 active:opacity-80; }
 .btn-accent { @apply bg-accent text-black; }
-.btn-danger { @apply bg-danger text-white; }
+.btn-danger { @apply bg-accent text-white; }
 .card { @apply rounded-2xl p-4 bg-surface/60 backdrop-blur border border-white/5; }
+
+/* DUELLY legacy alias: bg-danger→bg-accent (tailwind @apply safe) */
+@layer utilities {
+  .bg-danger { @apply bg-accent; } /* maps to theme accent until dedicated 'danger' token exists */
+}
