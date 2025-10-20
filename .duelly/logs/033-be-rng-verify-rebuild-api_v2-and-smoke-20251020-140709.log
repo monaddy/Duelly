@@ -1,0 +1,117 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step=$STEP_ID status=error code=$code line=$LINENO log=$LOG_FILE" >&2; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # נעילה למניעת ריצה מקבילה
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"; mkdir -p "$(dirname "$LOCK_FILE")"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if command -v flock >/dev/null 2>&1; then exec 9>"$LOCK_FILE"; flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED notes=another step running"; exit 1; }; fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is)"
+[?2004l::DUELLY::step=033-be-rng-verify-rebuild-api_v2-and-smoke status=running time=2025-10-20T14:07:09+00:00
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 1) Rebuild שירות api_v2 (המקבל את תעבורת /api/v2/* דרך Nginx) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# COMPOSE_BIN=""
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if command -v docker >/dev/null 2>&1; then
+[?2004l[?2004h>   if docker compose version >/dev/null 2>&1; then COMPOSE_BIN="docker compose"; elif command -v docker-compose >/dev/null 2>&1; then COMPOSE_BIN="docker-compose"; fi
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$COMPOSE_BIN" ] || { echo "ERROR: docker compose not available"; exit 2; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -f docker-compose.yml ] || { echo "ERROR: docker-compose.yml not found"; exit 3; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # איתור שירות api_v2 במפורש (עדיפות לדיוק)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SVC="$($COMPOSE_BIN config --services 2>/dev/null | awk '$0=="api_v2"{print; exit} END{ if(!seen && 0) print "" }')"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -z "$SVC" ]; then
+[?2004l[?2004h>   SVC="$($COMPOSE_BIN config --services 2>/dev/null | grep -E '^api[_-]?v2$' | head -n1 || true)"
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$SVC" ] || { echo "ERROR: api_v2 service not found in compose"; $COMPOSE_BIN config --services || true; exit 4; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "Rebuilding compose service: $SVC"
+[?2004lRebuilding compose service: api_v2
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# $COMPOSE_BIN up -d --build "$SVC"
+[?2004ltime="2025-10-20T14:07:09Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:07:09Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:07:09Z" level=warning msg="The \"POSTGRES_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:07:09Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:07:09Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:07:09Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:07:09Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:07:09Z" level=warning msg="The \"TELEGRAM_PAYMENT_PROVIDER_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:07:09Z" level=warning msg="The \"HMAC_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:07:09Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:07:09Z" level=warning msg="The \"JWT_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:07:09Z" level=warning msg="The \"ALLOWED_ORIGINS\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:07:09Z" level=warning msg="The \"TELEGRAM_BOT_TOKEN\" variable is not set. Defaulting to a blank string."
+#1 [internal] load local bake definitions
+#1 reading from stdin 543B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 594B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:20-bullseye
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [build  1/10] FROM docker.io/library/node:20-bullseye
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 51.69kB 0.0s done
+#6 DONE 0.0s
+
+#7 [build  6/10] RUN npx prisma generate
+#7 CACHED
+
+#8 [build  4/10] RUN npm install
+#8 CACHED
+
+#9 [build  3/10] COPY services/api-v2/package.json ./package.json
+#9 CACHED
+
+#10 [build  5/10] COPY prisma ./prisma
+#10 CACHED
+
+#11 [build  2/10] WORKDIR /app
+#11 CACHED
+
+#12 [build  7/10] COPY services/api-v2/tsconfig.json ./tsconfig.json
+#12 CACHED
+
+#13 [build  8/10] COPY services/api-v2/src ./src
+#13 DONE 0.0s
+
+#14 [build  9/10] RUN npm run build
+#14 0.435 
+#14 0.435 > backgammon-api-v2@0.1.0 build
+#14 0.435 > tsc
+#14 0.435 
+#14 6.354 src/index.ts(2,28): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './routes/rng-verify.js'?
+#14 ERROR: process "/bin/sh -c npm run build" did not complete successfully: exit code: 2
+------
+ > [build  9/10] RUN npm run build:
+0.435 
+0.435 > backgammon-api-v2@0.1.0 build
+0.435 > tsc
+0.435 
+6.354 src/index.ts(2,28): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './routes/rng-verify.js'?
+------
+Dockerfile:9
+
+--------------------
+
+   7 |     COPY services/api-v2/tsconfig.json ./tsconfig.json
+
+   8 |     COPY services/api-v2/src ./src
+
+   9 | >>> RUN npm run build
+
+  10 |     RUN npm prune --omit=dev
+
+  11 |     FROM node:20-bullseye
+
+--------------------
+
+failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 2
+
+::DUELLY::step=033-be-rng-verify-rebuild-api_v2-and-smoke status=error code=1 line=34 log=.duelly/logs/033-be-rng-verify-rebuild-api_v2-and-smoke-20251020-140709.log

@@ -56,4 +56,22 @@
 [?2004l[?2004h>     git commit -m "DUELLY FE: eliminate undefined in PixiBoard move target; add early non-null guard + alias in Game.tsx; redirect prop/arg uses"
 [?2004l[?2004h>   fi
 [?2004l[?2004h> fi
-[?2004l
+[?2004l[feat/qa-stage7-perf-fairness 44cc8be] DUELLY FE: eliminate undefined in PixiBoard move target; add early non-null guard + alias in Game.tsx; redirect prop/arg uses
+ 12 files changed, 967 insertions(+), 31 deletions(-)
+ create mode 100644 .duelly/logs/032-be-rng-verify-register-with-prefix-20251020-132646.log
+ create mode 100644 .duelly/logs/fe-next3-fix-to-and-gamestate-guard-v7-20251020-140641.log
+ create mode 100644 .duelly/smoke/commit.891f179a-78a9-495f-96d7-b73ef8881305.json
+ create mode 100644 .duelly/smoke/match.1760966829.json
+ create mode 100644 .duelly/smoke/verify.before.530fdbca-3768-4e2d-b474-b9b21bcc1a7e.json
+ create mode 100644 services/api-v2/src/index.ts.bak.1760966806.r
+ create mode 100644 services/api-v2/src/routes/rng-verify.ts.bak.1760966806
+ create mode 100644 src/components/PixiBoard.tsx.bak.1760969201
+ create mode 100644 src/routes/Game.tsx.bak.1760969201
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 4) Build + theme ops + QA ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# npm run -s build
+[?2004lsrc/components/PixiBoard.tsx(124,58): error TS2322: Type 'number | "bar" | "bearoff-white" | "bearoff-black" | undefined' is not assignable to type 'number | "bar" | "bearoff-white" | "bearoff-black"'.
+  Type 'undefined' is not assignable to type 'number | "bar" | "bearoff-white" | "bearoff-black"'.
+src/routes/Game.tsx(26,16): error TS2345: Argument of type 'GameState | null' is not assignable to parameter of type 'GameState'.
+  Type 'null' is not assignable to type 'GameState'.
+::DUELLY::step=fe-next3-fix-to-and-gamestate-guard-v7 status=error code=1 line=72 log=/root/backgammon-mini-app/.duelly/logs/fe-next3-fix-to-and-gamestate-guard-v7-20251020-140641.log
