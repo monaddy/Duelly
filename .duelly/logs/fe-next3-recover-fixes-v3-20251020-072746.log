@@ -118,4 +118,29 @@
 [?2004l[?2004h>     git commit -m "DUELLY FE: Pixi v7 shim + TS augments; polygon arg fix; eventMode/cursor; destroy options; FpsOverlay cleanup; Game nullable state; fairness normalizeForSign"
 [?2004l[?2004h>   fi
 [?2004l[?2004h> fi
-[?2004l
+[?2004l[feat/qa-stage7-perf-fairness 04d658a] DUELLY FE: Pixi v7 shim + TS augments; polygon arg fix; eventMode/cursor; destroy options; FpsOverlay cleanup; Game nullable state; fairness normalizeForSign
+ 12 files changed, 631 insertions(+), 3 deletions(-)
+ create mode 100644 .duelly/.rng_verify_last.json
+ create mode 100644 .duelly/be_state.json
+ create mode 100644 .duelly/env
+ create mode 100644 .duelly/logs/010-be-init-adopt-smoke-20251020-071807.log
+ create mode 100644 .duelly/logs/fe-next3-recover-fixes-v3-20251020-072746.log
+ create mode 100644 .duelly/plan.yml
+ create mode 100644 .duelly/smoke-20251020-071808.json
+ create mode 100644 src/types/global.d.ts
+ create mode 100644 src/utils/fairness.ts.bak.1760945266
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 7) Build + theme ops + QA probes ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# npm run -s build
+[?2004lsrc/components/FpsOverlay.tsx(13,13): error TS2345: Argument of type '() => () => void | 0 | undefined' is not assignable to parameter of type 'EffectCallback'.
+  Type '() => void | 0 | undefined' is not assignable to type 'void | Destructor'.
+    Type '() => void | 0 | undefined' is not assignable to type 'Destructor'.
+      Type 'void | 0 | undefined' is not assignable to type 'void | { [UNDEFINED_VOID_ONLY]: never; }'.
+        Type 'number' is not assignable to type 'void | { [UNDEFINED_VOID_ONLY]: never; }'.
+src/components/PixiBoard.tsx(123,58): error TS2322: Type 'number | "bar" | "bearoff-white" | "bearoff-black" | undefined' is not assignable to type 'number | "bar" | "bearoff-white" | "bearoff-black"'.
+  Type 'undefined' is not assignable to type 'number | "bar" | "bearoff-white" | "bearoff-black"'.
+src/routes/Game.tsx(26,16): error TS2345: Argument of type 'GameState | null' is not assignable to parameter of type 'GameState'.
+  Type 'null' is not assignable to type 'GameState'.
+src/shims/pixi-graphics-polygon.ts(1,20): error TS2724: '"pixi.js"' has no exported member named 'IPointData'. Did you mean 'PointData'?
+src/shims/pixi-graphics-polygon.ts(4,3): error TS2578: Unused '@ts-expect-error' directive.
+::DUELLY::step=fe-next3-recover-fixes-v3 status=error code=1 line=134 log=/root/backgammon-mini-app/.duelly/logs/fe-next3-recover-fixes-v3-20251020-072746.log

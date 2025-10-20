@@ -1,0 +1,181 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step='$STEP_ID' status=error code=$code line=$LINENO log=$LOG_FILE"; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # Lock to serialize with other chats
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"; exec 9>"$LOCK_FILE"; flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED notes=\"another step running\""; exit 1; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is) notes=\"apply FPS/Pixi/Game/fairness fixes; rebuild + theme ops + QA\""
+[?2004l::DUELLY::step=fe-next3-recover-fixes-v4 status=running time=2025-10-20T07:44:02+00:00 notes="apply FPS/Pixi/Game/fairness fixes; rebuild + theme ops + QA"
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 1) Prepare patch (idempotent) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# PATCH_FILE="$TMP_DIR/$STEP_ID.patch"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cat >"$PATCH_FILE" <<'PATCH'
+[?2004l[?2004h> diff --git a/src/shims/pixi-graphics-polygon.ts b/src/shims/pixi-graphics-polygon.ts
+[?2004l[?2004h> --- a/src/shims/pixi-graphics-polygon.ts
+[?2004l[?2004h> +++ b/src/shims/pixi-graphics-polygon.ts
+[?2004l[?2004h> @@
+[?2004l[?2004h> -import { Graphics, IPointData } from 'pixi.js';
+[?2004l[?2004h> +import { Graphics } from 'pixi.js';
+[?2004l[?2004h>  declare module 'pixi.js' {
+[?2004l[?2004h>    interface Graphics {
+[?2004l[?2004h> -    polygon(points: number[] | IPointData[], close?: boolean): this;
+[?2004l[?2004h> +    polygon(points: number[] | { x: number; y: number }[], close?: boolean): this;
+[?2004l[?2004h>    }
+[?2004l[?2004h>  }
+[?2004l[?2004h>  (function attachPolygon() {
+[?2004l[?2004h> -  // @ts-expect-error augment at runtime
+[?2004l[?2004h> -  const proto = (Graphics as any).prototype;
+[?2004l[?2004h> +  const proto = (Graphics as any).prototype;
+[?2004l[?2004h>    if (typeof proto.polygon === 'function') return;
+[?2004l[?2004h> -  proto.polygon = function(points: number[] | IPointData[], close: boolean = true) {
+[?2004l[?2004h> +  proto.polygon = function(points: number[] | { x: number; y: number }[], close: boolean = true) {
+[?2004l[?2004h>      const g = this as Graphics;
+[?2004l[?2004h>      const arr: any[] = Array.isArray(points) ? (points as any[]) : [];
+[?2004l[?2004h> @@
+[?2004l[?2004h> -      } else {
+[?2004l[?2004h> -        for (let i = 0; i < arr.length; i++) { const p = arr[i] as IPointData; pushPoint(p.x, p.y, i); }
+[?2004l[?2004h> -      }
+[?2004l[?2004h> +      } else {
+[?2004l[?2004h> +        for (let i = 0; i < arr.length; i++) { const p = arr[i] as { x: number; y: number }; pushPoint(p.x, p.y, i); }
+[?2004l[?2004h> +      }
+[?2004l[?2004h>      }
+[?2004l[?2004h>      if (close && firstX != null && firstY != null) { g.lineTo(firstX, firstY); }
+[?2004l[?2004h>      return g;
+[?2004l[?2004h>    };
+[?2004l[?2004h>  })();
+[?2004l[?2004h> diff --git a/src/types/pixi-v7-augment.d.ts b/src/types/pixi-v7-augment.d.ts
+[?2004l[?2004h> --- a/src/types/pixi-v7-augment.d.ts
+[?2004l[?2004h> +++ b/src/types/pixi-v7-augment.d.ts
+[?2004l[?2004h> @@
+[?2004l[?2004h>  import 'pixi.js';
+[?2004l[?2004h>  declare module 'pixi.js' {
+[?2004l[?2004h>    interface Graphics {
+[?2004l[?2004h> -    polygon(points: number[] | import('pixi.js').IPointData[], close?: boolean): this;
+[?2004l[?2004h> +    polygon(points: number[] | { x: number; y: number }[], close?: boolean): this;
+[?2004l[?2004h>    }
+[?2004l[?2004h>    interface DestroyOptions {
+[?2004l[?2004h>      /** Pixi v7 uses textureSource instead of baseTexture */
+[?2004l[?2004h>      textureSource?: boolean;
+[?2004l[?2004h>    }
+[?2004l[?2004h>  }
+[?2004l[?2004h> diff --git a/src/components/FpsOverlay.tsx b/src/components/FpsOverlay.tsx
+[?2004l[?2004h> --- a/src/components/FpsOverlay.tsx
+[?2004l[?2004h> +++ b/src/components/FpsOverlay.tsx
+[?2004l[?2004h> @@
+[?2004l[?2004h> -import React, { useEffect } from 'react'
+[?2004l[?2004h> -// existing implementation …
+[?2004l[?2004h> +import React, { useEffect, useRef, useState } from 'react';
+[?2004l[?2004h> +
+[?2004l[?2004h> +export default function FpsOverlay() {
+[?2004l[?2004h> +  const rafRef = useRef<number | null>(null);
+[?2004l[?2004h> +  const [fps, setFps] = useState(0);
+[?2004l[?2004h> +
+[?2004l[?2004h> +  useEffect(() => {
+[?2004l[?2004h> +    let last = performance.now();
+[?2004l[?2004h> +    let frames = 0;
+[?2004l[?2004h> +    let acc = 0;
+[?2004l[?2004h> +    const loop = (now: number) => {
+[?2004l[?2004h> +      const dt = now - last;
+[?2004l[?2004h> +      last = now;
+[?2004l[?2004h> +      frames++;
+[?2004l[?2004h> +      acc += dt;
+[?2004l[?2004h> +      if (acc >= 500) {
+[?2004l[?2004h> +        setFps(Math.round((frames * 1000) / acc));
+[?2004l[?2004h> +        frames = 0;
+[?2004l[?2004h> +        acc = 0;
+[?2004l[?2004h> +      }
+[?2004l[?2004h> +      rafRef.current = requestAnimationFrame(loop);
+[?2004l[?2004h> +    };
+[?2004l[?2004h> +    rafRef.current = requestAnimationFrame(loop);
+[?2004l[?2004h> +    return () => {
+[?2004l[?2004h> +      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+[?2004l[?2004h> +      rafRef.current = null;
+[?2004l[?2004h> +    };
+[?2004l[?2004h> +  }, []);
+[?2004l[?2004h> +
+[?2004l[?2004h> +  return <div className="fps-overlay">{fps} FPS</div>;
+[?2004l[?2004h> +}
+[?2004l[?2004h> diff --git a/src/components/PixiBoard.tsx b/src/components/PixiBoard.tsx
+[?2004l[?2004h> --- a/src/components/PixiBoard.tsx
+[?2004l[?2004h> +++ b/src/components/PixiBoard.tsx
+[?2004l[?2004h> @@
+[?2004l[?2004h> -  const to = (moveAttempt && typeof moveAttempt.to === 'number') ? moveAttempt.to : from;
+[?2004l[?2004h> +  const to = (moveAttempt?.to ?? from);
+[?2004l[?2004h> diff --git a/src/routes/Game.tsx b/src/routes/Game.tsx
+[?2004l[?2004h> --- a/src/routes/Game.tsx
+[?2004l[?2004h> +++ b/src/routes/Game.tsx
+[?2004l[?2004h> @@
+[?2004l[?2004h> -const [gameState, setGameState] = useState<GameState>(null)
+[?2004l[?2004h> +const [gameState, setGameState] = useState<GameState | null>(null)
+[?2004l[?2004h> PATCH
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # Try to apply patch; if not clean, perform targeted edits
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if git apply --check "$PATCH_FILE" >/dev/null 2>&1; then
+[?2004l[?2004h>   git apply --whitespace=fix "$PATCH_FILE"
+[?2004l[?2004h> else
+[?2004l[?2004h>   echo "git apply did not cleanly apply; performing targeted edits."
+[?2004l[?2004h>   # 1) Pixi shim: remove IPointData & @ts-expect-error; use structural type
+[?2004l[?2004h>   SHIM="src/shims/pixi-graphics-polygon.ts"
+[?2004l[?2004h>   if [ -f "$SHIM" ]; then
+[?2004l[?2004h>     sed -E -i "s/import \{[[:space:]]*Graphics,[[:space:]]*IPointData[[:space:]]*\} from 'pixi\.js';/import { Graphics } from 'pixi.js';/g" "$SHIM" || true
+[?2004l[?2004h>     perl -0777 -i -pe 's/\bIPointData\b/\{ x: number; y: number \}/g' "$SHIM" || true
+[?2004l[?2004h>     sed -i "/@ts-expect-error/d" "$SHIM" || true
+[?2004l[?2004h>   fi
+[?2004l[?2004h>   AUG="src/types/pixi-v7-augment.d.ts"
+[?2004l[?2004h>   if [ -f "$AUG" ]; then
+[?2004l[?2004h>     perl -0777 -i -pe "s/import\\('pixi\\.js'\\)\\.IPointData/\\{ x: number; y: number \\}/g" "$AUG" || true
+[?2004l[?2004h>   fi
+[?2004l[?2004h> 
+[?2004l[?2004h>   # 2) FPS overlay: force safe cleanup implementation
+[?2004l[?2004h>   FPS="src/components/FpsOverlay.tsx"
+[?2004l[?2004h>   if [ -f "$FPS" ]; then
+[?2004l[?2004h>     cp -a "$FPS" "$FPS.bak.$(date +%s)"
+[?2004l[?2004h>     cat >"$FPS" <<'TS'
+[?2004l[?2004h> import React, { useEffect, useRef, useState } from 'react';
+[?2004l[?2004h> export default function FpsOverlay() {
+[?2004l[?2004h>   const rafRef = useRef<number | null>(null);
+[?2004l[?2004h>   const [fps, setFps] = useState(0);
+[?2004l[?2004h>   useEffect(() => {
+[?2004l[?2004h>     let last = performance.now();
+[?2004l[?2004h>     let frames = 0;
+[?2004l[?2004h>     let acc = 0;
+[?2004l[?2004h>     const loop = (now: number) => {
+[?2004l[?2004h>       const dt = now - last;
+[?2004l[?2004h>       last = now;
+[?2004l[?2004h>       frames++;
+[?2004l[?2004h>       acc += dt;
+[?2004l[?2004h>       if (acc >= 500) {
+[?2004l[?2004h>         setFps(Math.round((frames * 1000) / acc));
+[?2004l[?2004h>         frames = 0; acc = 0;
+[?2004l[?2004h>       }
+[?2004l[?2004h>       rafRef.current = requestAnimationFrame(loop);
+[?2004l[?2004h>     };
+[?2004l[?2004h>     rafRef.current = requestAnimationFrame(loop);
+[?2004l[?2004h>     return () => { if (rafRef.current != null) cancelAnimationFrame(rafRef.current); rafRef.current = null; };
+[?2004l[?2004h>   }, []);
+[?2004l[?2004h>   return <div className="fps-overlay">{fps} FPS</div>;
+[?2004l[?2004h> }
+[?2004l[?2004h> TS
+[?2004l[?2004h>   fi
+[?2004l[?2004h> 
+[?2004l[?2004h>   # 3) PixiBoard: guard any use of moveAttempt.to; keep previously added import/other fixes
+[?2004l[?2004h>   PB="src/components/PixiBoard.tsx"
+[?2004l[?2004h>   if [ -f "$PB" ]; then
+[?2004l[?2004h>     perl -0777 -i -pe 's/\bmoveAttempt\.to\b/(moveAttempt?.to ?? from)/g' "$PB" || true
+[?2004l[?2004h>   fi
+[?2004l[?2004h> 
+[?2004l[?2004h>   # 4) Game.tsx: widen any useState<T>(null) to union with null
+[?2004l[?2004h>   GAME="src/routes/Game.tsx"
+[?2004l[?2004h>   if [ -f "$GAME" ]; then
+[?2004l[?2004h>     perl -0777 -i -pe 's/useState<\s*([A-Za-z0-9_]+)\s*>\(\s*null\s*\)/useState<$1 | null>(null)/g' "$GAME" || true
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004lgit apply did not cleanly apply; performing targeted edits.
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # Commit if changes exist
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if git rev-parse --git-dir >/dev/null 2>&1; then
+[?2004l[?2004h>   git add -A
+[?2004l[?2004h>   if ! git diff --cached --quiet --ignore-submodules --; then
+[?2004l[?2004h>     git commit -m "DUELLY FE: fix Pixi shim types (no IPointData), safe FPS cleanup, guard moveAttempt.to usages, widen useState<T>(null) to T|null"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004l

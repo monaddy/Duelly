@@ -1,0 +1,48 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step=$STEP_ID status=error code=$code line=$LINENO log=$LOG_FILE" >&2; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # נעילה להרצות מתואמות (אם flock קיים)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if command -v flock >/dev/null 2>&1; then
+[?2004l[?2004h>   exec 9>"$LOCK_FILE"
+[?2004l[?2004h>   flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED notes=another step running"; exit 1; }
+[?2004l[?2004h> else
+[?2004l[?2004h>   echo "WARN: flock not found; continuing without lock"
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is)"
+[?2004l::DUELLY::step=020-be-rng-verify-e2e status=running time=2025-10-20T07:28:53+00:00
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# API="https://play.duelly.online/api/v2"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# HDR=(-H "content-type: application/json" -H "accept: application/json")
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 1) Health
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# HEALTH_JSON="$(curl -sS "$API/health" | tr -d '\n' || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "health: $HEALTH_JSON"
+[?2004lhealth: {"ok":true}
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "$HEALTH_JSON" | grep -q '"ok":true' || { echo "ERROR: /health not ok"; exit 3; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 2) יצירת match
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# MATCH_BODY="$SMOKE_DIR/match.$(date +%s).json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# MC="$(curl -sS -o "$MATCH_BODY" -w "%{http_code}" -X POST "$API/matches" "${HDR[@]}" -d '{}' || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# case "$MC" in 200|201) ;; *) echo "ERROR: POST /matches → HTTP $MC"; cat "$MATCH_BODY"; exit 4;; esac
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# match_id="$(sed -n 's/.*"id":"\([0-9a-fA-F-]\{36\}\)".*/\1/p' "$MATCH_BODY" | head -n1)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$match_id" ] || { echo "ERROR: match id missing"; cat "$MATCH_BODY"; exit 5; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "match_id=$match_id (http=$MC)"
+[?2004lmatch_id=9dbf88b2-82fe-4b5c-a4eb-f21ce1944a36 (http=200)
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 3) commit (שרת מחזיר id + serverCommitHex)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# COMMIT_BODY="$SMOKE_DIR/commit.$match_id.json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# CC="$(curl -sS -o "$COMMIT_BODY" -w "%{http_code}" -X POST "$API/rng/commit" "${HDR[@]}" -d "{\"matchId\":\"$match_id\"}" || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# case "$CC" in 200|201) ;; *) echo "ERROR: POST /rng/commit → HTTP $CC"; cat "$COMMIT_BODY"; exit 6;; esac
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# commit_id="$(sed -n 's/.*"id":"\([0-9a-fA-F-]\{36\}\)".*/\1/p' "$COMMIT_BODY" | head -n1)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# server_commit="$(sed -n 's/.*"serverCommitHex":"\([0-9a-fA-F]\+\)".*/\1/p' "$COMMIT_BODY" | head -n1)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$commit_id" ] && [ -n "$server_commit" ] || { echo "ERROR: commit fields missing"; cat "$COMMIT_BODY"; exit 7; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "commit_id=$commit_id serverCommitHex=${server_commit:0:8}… (http=$CC)"
+[?2004lcommit_id=a770e16a-a77c-4bb7-a0e0-70d64a52ab4e serverCommitHex=6800a4ee… (http=200)
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 4) verify לפני reveal (מצופה 200 + revealed=false)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# VER1_BODY="$SMOKE_DIR/verify.before.$commit_id.json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# V1="$(curl -sS -o "$VER1_BODY" -w "%{http_code}" "$API/rng/verify?id=$commit_id" || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ "$V1" = "200" ] || { echo "ERROR: GET /rng/verify (before) → HTTP $V1"; cat "$VER1_BODY"; exit 8; }
+[?2004lERROR: GET /rng/verify (before) → HTTP 404
+{"message":"Route GET:/api/v2/rng/verify?id=a770e16a-a77c-4bb7-a0e0-70d64a52ab4e not found","error":"Not Found","statusCode":404}logout
