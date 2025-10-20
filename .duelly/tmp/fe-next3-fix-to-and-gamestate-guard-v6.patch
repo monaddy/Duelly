@@ -1,0 +1,29 @@
+diff --git a/src/components/PixiBoard.tsx b/src/components/PixiBoard.tsx
+--- a/src/components/PixiBoard.tsx
++++ b/src/components/PixiBoard.tsx
+@@
++// Local alias to match move targets without 'undefined'
++type MoveTarget = number | 'bar' | 'bearoff-white' | 'bearoff-black';
+@@
+-  // Ensure 'to' is never undefined for downstream typing/logic.
+-  const to = (moveAttempt?.to ?? from);
++  // Ensure 'to' is never undefined for downstream typing/logic.
++  const to: MoveTarget = (moveAttempt?.to ?? from) as MoveTarget;
+diff --git a/src/routes/Game.tsx b/src/routes/Game.tsx
+--- a/src/routes/Game.tsx
++++ b/src/routes/Game.tsx
+@@
+-const [gameState, setGameState] = useState<GameState | null>(null)
++const [gameState, setGameState] = useState<GameState | null>(null)
++// Narrowing guard: until we have a concrete GameState, render nothing (or a loader),
++// so all subsequent usages see non-null GameState via control-flow analysis.
++if (gameState == null) {
++  return null; // or a lightweight placeholder UI
++}
+@@
+-// When passing setGameState into callbacks that expect (gs: GameState) => void,
+-// wrap to satisfy the narrower parameter type:
+-const setGameStateStrict: (gs: GameState) => void = (gs) => setGameState(gs);
++// When passing setGameState into callbacks that expect (gs: GameState) => void,
++// wrap to satisfy the narrower parameter type:
++const setGameStateStrict: (gs: GameState) => void = (gs) => setGameState(gs);

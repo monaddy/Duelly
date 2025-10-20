@@ -6,6 +6,7 @@ import { useUIStore } from '../store/useUIStore';
 import { randomDicePips } from '../utils/dice';
 import '../shims/pixi-graphics-polygon';
 
+type MoveTarget = number | 'bar' | 'bearoff-white' | 'bearoff-black';
 const BOARD_W = 900;
 const BOARD_H = 600;
 const PADDING = 16;

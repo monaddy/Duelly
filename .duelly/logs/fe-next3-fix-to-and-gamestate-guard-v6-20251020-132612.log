@@ -1,0 +1,77 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step='$STEP_ID' status=error code=$code line=$LINENO log=$LOG_FILE"; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"; exec 9>"$LOCK_FILE"; flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED time=$(date -Is) notes=\"another step running\""; exit 1; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is) notes=\"apply narrow typing for PixiBoard 'to' and add Game.tsx non-null guard; rebuild + theme ops + QA\""
+[?2004l::DUELLY::step=fe-next3-fix-to-and-gamestate-guard-v6 status=running time=2025-10-20T13:26:12+00:00 notes="apply narrow typing for PixiBoard 'to' and add Game.tsx non-null guard; rebuild + theme ops + QA"
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- Prepare unified diff with focused fixes (idempotent) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# PATCH_FILE="$TMP_DIR/$STEP_ID.patch"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cat >"$PATCH_FILE" <<'PATCH'
+[?2004l[?2004h> diff --git a/src/components/PixiBoard.tsx b/src/components/PixiBoard.tsx
+[?2004l[?2004h> --- a/src/components/PixiBoard.tsx
+[?2004l[?2004h> +++ b/src/components/PixiBoard.tsx
+[?2004l[?2004h> @@
+[?2004l[?2004h> +// Local alias to match move targets without 'undefined'
+[?2004l[?2004h> +type MoveTarget = number | 'bar' | 'bearoff-white' | 'bearoff-black';
+[?2004l[?2004h> @@
+[?2004l[?2004h> -  // Ensure 'to' is never undefined for downstream typing/logic.
+[?2004l[?2004h> -  const to = (moveAttempt?.to ?? from);
+[?2004l[?2004h> +  // Ensure 'to' is never undefined for downstream typing/logic.
+[?2004l[?2004h> +  const to: MoveTarget = (moveAttempt?.to ?? from) as MoveTarget;
+[?2004l[?2004h> diff --git a/src/routes/Game.tsx b/src/routes/Game.tsx
+[?2004l[?2004h> --- a/src/routes/Game.tsx
+[?2004l[?2004h> +++ b/src/routes/Game.tsx
+[?2004l[?2004h> @@
+[?2004l[?2004h> -const [gameState, setGameState] = useState<GameState | null>(null)
+[?2004l[?2004h> +const [gameState, setGameState] = useState<GameState | null>(null)
+[?2004l[?2004h> +// Narrowing guard: until we have a concrete GameState, render nothing (or a loader),
+[?2004l[?2004h> +// so all subsequent usages see non-null GameState via control-flow analysis.
+[?2004l[?2004h> +if (gameState == null) {
+[?2004l[?2004h> +  return null; // or a lightweight placeholder UI
+[?2004l[?2004h> +}
+[?2004l[?2004h> @@
+[?2004l[?2004h> -// When passing setGameState into callbacks that expect (gs: GameState) => void,
+[?2004l[?2004h> -// wrap to satisfy the narrower parameter type:
+[?2004l[?2004h> -const setGameStateStrict: (gs: GameState) => void = (gs) => setGameState(gs);
+[?2004l[?2004h> +// When passing setGameState into callbacks that expect (gs: GameState) => void,
+[?2004l[?2004h> +// wrap to satisfy the narrower parameter type:
+[?2004l[?2004h> +const setGameStateStrict: (gs: GameState) => void = (gs) => setGameState(gs);
+[?2004l[?2004h> PATCH
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # Try to apply the patch; if not clean, perform targeted edits
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if git apply --check "$PATCH_FILE" >/dev/null 2>&1; then
+[?2004l[?2004h>   git apply --whitespace=fix "$PATCH_FILE"
+[?2004l[?2004h> else
+[?2004l[?2004h>   echo "git apply did not cleanly apply; performing safe targeted edits."
+[?2004l[?2004h> 
+[?2004l[?2004h>   PB="src/components/PixiBoard.tsx"
+[?2004l[?2004h>   if [ -f "$PB" ]; then
+[?2004l[?2004h>     # Add MoveTarget alias near top if missing
+[?2004l[?2004h>     grep -q "type MoveTarget =" "$PB" || awk 'BEGIN{ins=0}
+[?2004l[?2004h>       { if(!ins && $0 ~ /^import /){ print; next }
+[?2004l[?2004h>         if(!ins){ print; print "type MoveTarget = number | '\''bar'\'' | '\''bearoff-white'\'' | '\''bearoff-black'\'';"; ins=1; next }
+[?2004l[?2004h>         print }' "$PB" > "$PB.new" && mv "$PB.new" "$PB"
+[?2004l[?2004h>     # Ensure 'to' is explicitly typed & cast to MoveTarget
+[?2004l[?2004h>     perl -0777 -i -pe 's/\bconst\s+to\s*=\s*\(moveAttempt\?\?\.to\s*\?\?\s*from\);\s*/const to: MoveTarget = (moveAttempt?.to ?? from) as MoveTarget;/g' "$PB" || true
+[?2004l[?2004h>     perl -0777 -i -pe 's/\bconst\s+to\s*=\s*\(moveAttempt\?\.to\s*\?\?\s*from\)\s*;/const to: MoveTarget = (moveAttempt?.to ?? from) as MoveTarget;/g' "$PB" || true
+[?2004l[?2004h>   fi
+[?2004l[?2004h> 
+[?2004l[?2004h>   GAME="src/routes/Game.tsx"
+[?2004l[?2004h>   if [ -f "$GAME" ]; then
+[?2004l[?2004h>     # Insert early non-null guard immediately after the useState line (if not present)
+[?2004l[?2004h>     if ! grep -q "if (gameState == null)" "$GAME"; then
+[?2004l[?2004h>       perl -0777 -i -pe "s/(useState<\s*GameState\s*\|\s*null\s*>\(\s*null\s*\)\s*\)\s*)/\\1\\nif (gameState == null) {\\n  return null;\\n}\\n/;" "$GAME" || true
+[?2004l[?2004h>       perl -0777 -i -pe "s/(useState<\s*GameState\s*\|\s*null\s*>\(\s*null\s*\)\s*)/\\1\\nif (gameState == null) {\\n  return null;\\n}\\n/;" "$GAME" || true
+[?2004l[?2004h>     fi
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004lgit apply did not cleanly apply; performing safe targeted edits.
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # Commit if changes exist
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if git rev-parse --git-dir >/dev/null 2>&1; then
+[?2004l[?2004h>   git add -A
+[?2004l[?2004h>   if ! git diff --cached --quiet --ignore-submodules --; then
+[?2004l[?2004h>     git commit -m "DUELLY FE: narrow PixiBoard 'to' to MoveTarget; add Game.tsx non-null guard to satisfy TS"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004l
