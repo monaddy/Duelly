@@ -1,4 +1,3 @@
-/* @ts-nocheck */
 import { useEffect, useMemo, useRef } from 'react';
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import { useGameStore } from '../store/useGameStore';
