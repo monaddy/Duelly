@@ -1,0 +1,421 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step=$STEP_ID status=error code=$code line=$LINENO log=$LOG_FILE" >&2; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # נעילה למניעת התנגשויות בין צעדים
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"; mkdir -p "$(dirname "$LOCK_FILE")"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if command -v flock >/dev/null 2>&1; then exec 9>"$LOCK_FILE"; flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED notes=another step running"; exit 1; }; fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is)"
+[?2004l::DUELLY::step=032-be-rng-verify-register-with-prefix status=running time=2025-10-20T13:26:46+00:00
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# API_DIR="services/api-v2"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SRC_DIR="$API_DIR/src"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# ROUTES_DIR="$SRC_DIR/routes"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# MAIN_CAND=( "$SRC_DIR/index.ts" "$SRC_DIR/server.ts" "$SRC_DIR/app.ts" )
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# ROUTE_FILE="$ROUTES_DIR/rng-verify.ts"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# test -d "$API_DIR" || { echo "ERROR: $API_DIR not found"; exit 2; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# mkdir -p "$ROUTES_DIR"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # הקשר: הצצה ללוג הכשל האחרון (מסייע להבין למה 031 נפל)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LF="$(ls -1t .duelly/logs/031-be-rng-verify-autoheal-*.log 2>/dev/null | head -n1 || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$LF" ] && { echo "--- tail last fail log: $LF ---"; tail -n 80 "$LF" || true; echo "------"; }
+[?2004l--- tail last fail log: .duelly/logs/031-be-rng-verify-autoheal-20251020-080708.log ---
+register present in services/api-v2/src/index.ts
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 4) Build & Deploy (Compose אם קיים; אחרת build מקומי; PM2 אם קיים) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# COMPOSE_BIN=""
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if command -v docker >/dev/null 2>&1; then
+[?2004l[?2004h>   if docker compose version >/dev/null 2>&1; then COMPOSE_BIN="docker compose"; elif command -v docker-compose >/dev/null 2>&1; then COMPOSE_BIN="docker-compose"; fi
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -n "$COMPOSE_BIN" ] && [ -f "docker-compose.yml" ]; then [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Kn
+[?2004l[?2004h>   # מציאת שירות api המתאים
+[?2004l[?2004h>   SVC_CAND="$($COMPOSE_BIN config --services 2>/dev/null | grep -E 'api|api[_-]?v2|server|backend' | head -n1 || true)"
+[?2004l[?2004h>   if [ -z "$SVC_CAND" ]; then
+[?2004l[?2004h>     echo "WARN: no api-like service found; rebuilding all"
+[?2004l[?2004h>     $COMPOSE_BIN up -d --build
+[?2004l[?2004h>   else
+[?2004l[?2004h>     echo "Rebuilding compose service: $SVC_CAND"
+[?2004l[?2004h>     $COMPOSE_BIN up -d --build "$SVC_CAND"
+[?2004l[?2004h>     echo "Recent logs ($SVC_CAND):"
+[?2004l[?2004h>     $COMPOSE_BIN logs --no-color --tail=120 "$SVC_CAND" || true
+[?2004l[?2004h>   fi
+[?2004l[?2004h> else
+[?2004l[?2004h>   echo "No compose detected — local build"
+[?2004l[?2004h>   if [ -f "$API_DIR/package.json" ]; then
+[?2004l[?2004h>     pushd "$API_DIR" >/dev/null
+[?2004l[?2004h>     PKG_MGR="npm"
+[?2004l[?2004h>     command -v pnpm >/dev/null 2>&1 && [ -f pnpm-lock.yaml ] && PKG_MGR="pnpm"
+[?2004l[?2004h>     if [ "$PKG_MGR" = "pnpm" ]; then pnpm i --frozen-lockfile || pnpm install; else npm ci || npm install; fi
+[?2004l[?2004h>     if [ -f "tsconfig.json" ]; then npx tsc -v >/dev/null 2>&1 || (npm i -D typescript && npx tsc -v >/dev/null); npx tsc; fi
+[?2004l[?2004h>     popd >/dev/null
+[?2004l[?2004h>   fi
+[?2004l[?2004h>   if command -v pm2 >/dev/null 2>&1 && [ -f "pm2/ecosystem.config.cjs" ]; then
+[?2004l[?2004h>     pm2 startOrReload pm2/ecosystem.config.cjs --only api-v2 || pm2 start pm2/ecosystem.config.cjs [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Ks
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004lRebuilding compose service: api
+time="2025-10-20T08:07:08Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"TELEGRAM_BOT_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"HMAC_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"JWT_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"ALLOWED_ORIGINS\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"TELEGRAM_PAYMENT_PROVIDER_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"POSTGRES_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+#1 [internal] load local bake definitions
+#1 reading from stdin 984B done
+#1 DONE 0.0s
+
+#2 [wildbg internal] load build definition from Dockerfile
+#2 transferring dockerfile: 253B done
+#2 DONE 0.0s
+
+#3 [api internal] load build definition from Dockerfile
+#3 transferring dockerfile: 818B done
+#3 DONE 0.0s
+
+#4 [wildbg internal] load metadata for docker.io/library/node:20-alpine
+#4 ERROR: failed to authorize: failed to fetch anonymous token: unexpected status from GET request to https://auth.docker.io/token?scope=repository%3Alibrary%2Fnode%3Apull&service=registry.docker.io: 503 Service Unavailable
+------
+ > [api internal] load metadata for docker.io/library/node:20-alpine:
+------
+Dockerfile:1
+
+--------------------
+
+   1 | >>> FROM node:20-alpine
+
+   2 |     
+
+   3 |     WORKDIR /app
+
+--------------------
+
+target wildbg: failed to solve: failed to fetch anonymous token: unexpected status from GET request to https://auth.docker.io/token?scope=repository%3Alibrary%2Fnode%3Apull&service=registry.docker.io: 503 Service Unavailable
+
+::DUELLY::step=031-be-rng-verify-autoheal status=error code=1 line=179 log=.duelly/logs/031-be-rng-verify-autoheal-20251020-080708.log
+------
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 1) קובץ מסלול — נתיב פנימי קבוע /rng/verify; ה-prefix /api/v2 ייכתב בזמן הרישום
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# TS_NOW="$(date +%s)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cat >"$ROUTE_FILE.new" <<'TS'
+[?2004l[?2004h> // DUELLY — RNG Verify (expects registration with { prefix: "/api/v2" })
+[?2004l[?2004h> import type { FastifyPluginAsync } from 'fastify';
+[?2004l[?2004h> import { PrismaClient } from '@prisma/client';
+[?2004l[?2004h> import { createHash } from 'node:crypto';
+[?2004l[?2004h> 
+[?2004l[?2004h> const prisma = new PrismaClient();
+[?2004l[?2004h> 
+[?2004l[?2004h> const rngVerifyRoute: FastifyPluginAsync = async (app) => {
+[?2004l[?2004h>   app.get('/rng/verify', {
+[?2004l[?2004h>     schema: {
+[?2004l[?2004h>       querystring: {
+[?2004l[?2004h>         type: 'object',
+[?2004l[?2004h>         properties: { id: { type: 'string', format: 'uuid' } },
+[?2004l[?2004h>         required: ['id']
+[?2004l[?2004h>       }
+[?2004l[?2004h>     }
+[?2004l[?2004h>   }, async (req, reply) => {
+[?2004l[?2004h>     const { id } = (req.query as any);
+[?2004l[?2004h>     const c = await prisma.rngCommit.findUnique({ where: { id } });
+[?2004l[?2004h>     if (!c) return reply.code(404).send({ ok:false, error:'NOT_FOUND', message:'RngCommit not found' });
+[?2004l[?2004h> 
+[?2004l[?2004h>     const payload: any = {
+[?2004l[?2004h>       id: (c as any).id,
+[?2004l[?2004h>       matchId: (c as any).matchId,
+[?2004l[?2004h>       serverCommitHex: (c as any).serverCommitHex,
+[?2004l[?2004h>       revealed: Boolean((c as any).revealed)
+[?2004l[?2004h>     };
+[?2004l[?2004h> 
+[?2004l[?2004h>     if (payload.revealed) {
+[?2004l[?2004h>       const seed: string | null = (c as any).serverSeedHex ?? null;
+[?2004l[?2004h>       payload.serverSeedHex = seed;
+[?2004l[?2004h>       let dice: number[] | null = Array.isArray((c as any).dice) ? (c as any).dice : null;
+[?2004l[?2004h>       if (!dice && seed) {
+[?2004l[?2004h>         const h = createHash('sha256').update(Buffer.from(seed, 'hex')).digest();
+[?2004l[?2004h>         dice = [ (h[0] % 6) + 1, (h[1] % 6) + 1 ];
+[?2004l[?2004h>       }
+[?2004l[?2004h>       if (dice) payload.dice = dice;
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     return payload;
+[?2004l[?2004h>   });
+[?2004l[?2004h> };
+[?2004l[?2004h> 
+[?2004l[?2004h> export default rngVerifyRoute;
+[?2004l[?2004h> TS
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ ! -f "$ROUTE_FILE" ] || ! cmp -s "$ROUTE_FILE.new" "$ROUTE_FILE"; then
+[?2004l[?2004h>   [ -f "$ROUTE_FILE" ] && cp -a "$ROUTE_FILE" "$ROUTE_FILE.bak.$TS_NOW"
+[?2004l[?2004h>   mv "$ROUTE_FILE.new" "$ROUTE_FILE"
+[?2004l[?2004h>   echo "wrote route: $ROUTE_FILE"
+[?2004l[?2004h> else
+[?2004l[?2004h>   rm -f "$ROUTE_FILE.new"
+[?2004l[?2004h>   echo "route unchanged: $ROUTE_FILE"
+[?2004l[?2004h> fi
+[?2004lwrote route: services/api-v2/src/routes/rng-verify.ts
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 2) רישום הפלאגין עם prefix '/api/v2' בקובץ main (מנרמל רישומים קודמים, מסיר await אם הופיע)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# found_main=""
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# for f in "${MAIN_CAND[@]}"; do
+[?2004l[?2004h>   [ -f "$f" ] && { found_main="$f"; break; }
+[?2004l[?2004h> done
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$found_main" ] || { echo "ERROR: main file not found under $SRC_DIR"; exit 3; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # import (חד-פעמי)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if ! grep -q "from './routes/rng-verify'" "$found_main"; then [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Kn
+[?2004l[?2004h>   cp -a "$found_main" "$found_main.bak.$TS_NOW"
+[?2004l[?2004h>   awk '{
+[?2004l[?2004h>     if (!did && /^import /) { print; print "import rngVerifyRoute from \x27./routes/rng-verify\x27;"; did=1; next }
+[?2004l[?2004h>     print
+[?2004l[?2004h>   } END { if (!did) print "import rngVerifyRoute from \x27./routes/rng-verify\x27;" }' "$found_main" > "$found_main.new" && mv "$found_main.new" "$found_main"
+[?2004l[?2004h>   echo "import injected into $found_main"
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # normalize register → app.register(rngVerifyRoute, { prefix: '/api/v2' })
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if grep -q "app\.register(.*rngVerifyRoute" "$found_main"; then
+[?2004l[?2004h>   cp -a "$found_main" "$found_main.bak.$TS_NOW.r"
+[?2004l[?2004h>   sed -E -i "s@app\.register\([[:space:]]*rngVerifyRoute[^)]*\)@app.register(rngVerifyRoute, { prefix: '/api/v2' })@g" "$found_main"
+[?2004l[?2004h>   echo "register normalized (prefixed) in $found_main"
+[?2004l[?2004h> else
+[?2004l[?2004h>   cp -a "$found_main" "$found_main.bak.$TS_NOW.i"
+[?2004l[?2004h>   if grep -n -E "app\.listen|app\.ready" "$found_main" >/dev/null 2>&1; then
+[?2004l[?2004h>     line="$(grep -n -E "app\.listen|app\.ready" "$found_main" | head -n1 | cut -d: -f1)"
+[?2004l[?2004h>     head -n $((line-1)) "$found_main" > "$found_main.head"
+[?2004l[?2004h>     tail -n +$((line)) "$found_main" > "$found_main.tail"
+[?2004l[?2004h>     printf '\napp.register(rngVerifyRoute, { prefix: \x27/api/v2\x27 });\n' >> "$found_main.head"
+[?2004l[?2004h>     cat "$found_main.head" "$found_main.tail" > "$found_main"
+[?2004l[?2004h>     rm -f "$found_main.head" "$found_main.tail"
+[?2004l[?2004h>     echo "register inserted with prefix in $found_main"
+[?2004l[?2004h>   else
+[?2004l[?2004h>     echo -e "\napp.register(rngVerifyRoute, { prefix: '/api/v2' });" >> "$found_main"
+[?2004l[?2004h>     echo "register appended with prefix in $found_main"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004lregister normalized (prefixed) in services/api-v2/src/index.ts
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # הורדת await בטופ-לבל אם קיים
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if grep -q "await[[:space:]]\+app\.register\(.*rngVerifyRoute" "$found_main"; then
+[?2004l[?2004h>   cp -a "$found_main" "$found_main.bak.$TS_NOW.await"
+[?2004l[?2004h>   sed -i "s/await[[:space:]]\+app\.register/app.register/g" "$found_main"
+[?2004l[?2004h>   echo "removed top-level await before register in $found_main"
+[?2004l[?2004h> fi
+[?2004lgrep: Unmatched ( or \(
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 3) Build & Deploy — docker compose אם קיים; אחרת build מקומי ו-PM2 אם זמין
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# COMPOSE_BIN=""
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if command -v docker >/dev/null 2>&1; then
+[?2004l[?2004h>   if docker compose version >/dev/null 2>&1; then COMPOSE_BIN="docker compose"; elif command -v docker-compose >/dev/null 2>&1; then COMPOSE_BIN="docker-compose"; fi
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -n "$COMPOSE_BIN" ] && [ -f docker-compose.yml ]; then
+[?2004l[?2004h>   SVC="$($COMPOSE_BIN config --services 2>/dev/null | grep -E 'api|api[_-]?v2|server|backend' | head -n1 || true)"
+[?2004l[?2004h>   if [ -z "$SVC" ]; then
+[?2004l[?2004h>     echo "WARN: no api-like service found; rebuilding all"
+[?2004l[?2004h>     $COMPOSE_BIN up -d --build
+[?2004l[?2004h>   else
+[?2004l[?2004h>     echo "Rebuilding compose service: $SVC"
+[?2004l[?2004h>     $COMPOSE_BIN up -d --build "$SVC"
+[?2004l[?2004h>   fi
+[?2004l[?2004h>   echo "Compose ps:"; $COMPOSE_BIN ps || true
+[?2004l[?2004h>   echo "Recent logs:"; [ -n "$SVC" ] && $COMPOSE_BIN logs --no-color --tail=120 "$SVC" || $COMPOSE_BIN logs --no-color --tail=120 || true
+[?2004l[?2004h> else
+[?2004l[?2004h>   echo "WARN: docker compose not available or no compose file — attempting local build"
+[?2004l[?2004h>   if [ -f "$API_DIR/package.json" ]; then
+[?2004l[?2004h>     pushd "$API_DIR" >/dev/null
+[?2004l[?2004h>     if command -v pnpm >/dev/null 2>&1 && [ -f pnpm-lock.yaml ]; then pnpm i --frozen-lockfile || pnpm install; else npm ci || npm install; fi
+[?2004l[?2004h>     if [ -f tsconfig.json ]; then npx tsc -v >/dev/null 2>&1 || (npm i -D typescript && npx tsc -v >/dev/null); npx tsc; fi
+[?2004l[?2004h>     popd >/dev/null
+[?2004l[?2004h>     if command -v pm2 >/dev/null 2>&1 && [ -f pm2/ecosystem.config.cjs ]; then
+[?2004l[?2004h>       pm2 startOrReload pm2/ecosystem.config.cjs --only api-v2 || pm2 start pm2/ecosystem.config.cjs
+[?2004l[?2004h>     fi
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004lRebuilding compose service: api
+time="2025-10-20T13:26:46Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:26:46Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:26:46Z" level=warning msg="The \"TELEGRAM_BOT_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:26:46Z" level=warning msg="The \"HMAC_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:26:46Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:26:46Z" level=warning msg="The \"JWT_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:26:46Z" level=warning msg="The \"ALLOWED_ORIGINS\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:26:46Z" level=warning msg="The \"TELEGRAM_PAYMENT_PROVIDER_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:26:46Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:26:46Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:26:46Z" level=warning msg="The \"POSTGRES_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:26:46Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:26:46Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+#1 [internal] load local bake definitions
+#1 reading from stdin 984B done
+#1 DONE 0.0s
+
+#2 [wildbg internal] load build definition from Dockerfile
+#2 transferring dockerfile: 253B done
+#2 DONE 0.0s
+
+#3 [api internal] load build definition from Dockerfile
+#3 transferring dockerfile: 818B done
+#3 DONE 0.0s
+
+#4 [api internal] load metadata for docker.io/library/node:20-alpine
+#4 DONE 0.6s
+
+#5 [wildbg internal] load .dockerignore
+#5 transferring context: 2B done
+#5 DONE 0.0s
+
+#6 [wildbg 1/4] FROM docker.io/library/node:20-alpine@sha256:1ab6fc5a31d515dc7b6b25f6acfda2001821f2c2400252b6cb61044bd9f9ad48
+#6 DONE 0.0s
+
+#7 [wildbg internal] load build context
+#7 transferring context: 1.39kB 0.0s done
+#7 DONE 0.0s
+
+#8 [wildbg 2/4] WORKDIR /app
+#8 CACHED
+
+#9 [wildbg 3/4] RUN apk add --no-cache wget
+#9 CACHED
+
+#10 [api internal] load build context
+#10 transferring context: 34.52kB done
+#10 DONE 0.0s
+
+#11 [wildbg 4/4] COPY services/wildbg/server.js /app/server.js
+#11 CACHED
+
+#12 [api  3/10] WORKDIR /app
+#12 CACHED
+
+#13 [api  4/10] COPY pm2 /app/pm2
+#13 CACHED
+
+#14 [api  5/10] COPY services/api/package.json /app/services/api/package.json
+#14 CACHED
+
+#15 [api  2/10] RUN apk add --no-cache wget openssl
+#15 CACHED
+
+#16 [api  6/10] RUN npm --prefix /app/services/api install --omit=dev
+#16 CACHED
+
+#17 [wildbg] exporting to image
+#17 exporting layers done
+#17 writing image sha256:0a438778641e05464cf210cc29e3594ad178efa6f014c6574f6a42ec7d8a9829 done
+#17 naming to docker.io/library/backgammon-mini-app-wildbg done
+#17 DONE 0.0s
+
+#18 [api  7/10] COPY prisma /app/prisma
+#18 DONE 0.0s
+
+#19 [wildbg] resolving provenance for metadata file
+#19 DONE 0.0s
+
+#20 [api  8/10] COPY services/api /app/services/api
+#20 DONE 0.0s
+
+#21 [api  9/10] WORKDIR /app/services/api
+#21 DONE 0.0s
+
+#22 [api 10/10] RUN npx --yes prisma generate --schema=/app/prisma/schema.prisma
+#22 2.588 Prisma schema loaded from ../../prisma/schema.prisma
+#22 3.132 Warning: [Prisma auto-install on generate] Prisma could not find a package.json file in the inferred project root /app. During the next step, when an auto-install of Prisma package(s) will be attempted, it will then be created by your package manager on the appropriate level if necessary.
+#22 15.25 
+#22 15.25 ✔ Installed the @prisma/client and prisma packages in your project
+#22 15.95 
+#22 15.95 ✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 258ms
+#22 15.95 
+#22 15.95 Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+#22 15.95 
+#22 15.95 Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+#22 15.95 
+#22 DONE 16.7s
+
+#23 [api] exporting to image
+#23 exporting layers
+#23 exporting layers 2.0s done
+#23 writing image sha256:7476ea86d9fb2b92d0246a1e6d9f7292397d21b5a13950b030e9de4ef160bd92 done
+#23 naming to docker.io/library/backgammon-mini-app-api done
+#23 DONE 2.0s
+
+#24 [api] resolving provenance for metadata file
+#24 DONE 0.0s
+ backgammon-mini-app-wildbg  Built
+ backgammon-mini-app-api  Built
+ Container backgammon-mini-app-wildbg-1  Running
+ Container backgammon-mini-app-postgres-1  Running
+ Container backgammon-mini-app-redis-1  Running
+ Container backgammon-mini-app-api-1  Recreate
+ Container backgammon-mini-app-api-1  Recreated
+ Container backgammon-mini-app-postgres-1  Waiting
+ Container backgammon-mini-app-postgres-1  Healthy
+ Container backgammon-mini-app-api-1  Starting
+ Container backgammon-mini-app-api-1  Started
+Compose ps:
+time="2025-10-20T13:27:07Z" level=warning msg="The \"HMAC_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"JWT_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"ALLOWED_ORIGINS\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"TELEGRAM_PAYMENT_PROVIDER_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"TELEGRAM_BOT_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"POSTGRES_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+NAME                             IMAGE                        COMMAND                  SERVICE    CREATED        STATUS                                     PORTS
+backgammon-mini-app-api-1        backgammon-mini-app-api      "docker-entrypoint.s…"   api        1 second ago   Up Less than a second (health: starting)   
+backgammon-mini-app-api_v2-1     backgammon-mini-app-api_v2   "docker-entrypoint.s…"   api_v2     5 days ago     Up 5 days                                  
+backgammon-mini-app-nginx-1      nginx:1.27-alpine            "/docker-entrypoint.…"   nginx      2 days ago     Up 2 days                                  0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp
+backgammon-mini-app-postgres-1   postgres:16-alpine           "docker-entrypoint.s…"   postgres   2 days ago     Up 2 days (healthy)                        
+backgammon-mini-app-redis-1      redis:7-alpine               "docker-entrypoint.s…"   redis      2 days ago     Up 2 days (healthy)                        
+backgammon-mini-app-wildbg-1     backgammon-mini-app-wildbg   "docker-entrypoint.s…"   wildbg     6 days ago     Up 6 days (healthy)                        
+Recent logs:
+time="2025-10-20T13:27:07Z" level=warning msg="The \"JWT_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"TELEGRAM_PAYMENT_PROVIDER_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"HMAC_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"ALLOWED_ORIGINS\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"TELEGRAM_BOT_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"POSTGRES_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T13:27:07Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 4) בדיקות עשן: commit→verify(before)→reveal→verify(after)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# sleep 2
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# API="https://play.duelly.online/api/v2"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# HDR=(-H "content-type: application/json" -H "accept: application/json")
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# HEALTH="$(curl -sS "$API/health" | tr -d '\n' || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "health: $HEALTH"
+[?2004lhealth: {"ok":true}
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "$HEALTH" | grep -q '"ok":true' || { echo "ERROR: /health not ok"; exit 10; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SMK="$DUELLY_DIR/smoke"; mkdir -p "$SMK"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# MATCH_BODY="$SMK/match.$(date +%s).json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# MC="$(curl -sS -o "$MATCH_BODY" -w "%{http_code}" -X POST "$API/matches" "${HDR[@]}" -d '{}' || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "POST /matches -> $MC"; [ "$MC" = "200" ] || [ "$MC" = "201" ] || { cat "$MATCH_BODY"; exit 11; }
+[?2004lPOST /matches -> 200
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# match_id="$(sed -n 's/.*"id":"\([0-9a-fA-F-]\{36\}\)".*/\1/p' "$MATCH_BODY" | head -n1)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# COMMIT_BODY="$SMK/commit.$match_id.json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# CC="$(curl -sS -o "$COMMIT_BODY" -w "%{http_code}" -X POST "$API/rng/commit" "${HDR[@]}" -d "{\"matchId\":\"$match_id\"}" || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "POST /rng/commit -> $CC"; [ "$CC" = "200" ] || [ "$CC" = "201" ] || { cat "$COMMIT_BODY"; exit 12; }
+[?2004lPOST /rng/commit -> 200
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# commit_id="$(sed -n 's/.*"id":"\([0-9a-fA-F-]\{36\}\)".*/\1/p' "$COMMIT_BODY" | head -n1)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# VER1_BODY="$SMK/verify.before.$commit_id.json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# V1="$(curl -sS -o "$VER1_BODY" -w "%{http_code}" "$API/rng/verify?id=$commit_id" || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "GET /rng/verify (before) -> $V1"; [ "$V1" = "200" ] || { cat "$VER1_BODY"; exit 13; }
+[?2004lGET /rng/verify (before) -> 404
+{"message":"Route GET:/api/v2/rng/verify?id=530fdbca-3768-4e2d-b474-b9b21bcc1a7e not found","error":"Not Found","statusCode":404}logout

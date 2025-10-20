@@ -1,4 +1,4 @@
-// DUELLY — RNG Verify (expects registration with { prefix: "/api/v2" })
+// DUELLY — RNG Verify (auto-heal 1760947628)
 import type { FastifyPluginAsync } from 'fastify';
 import { PrismaClient } from '@prisma/client';
 import { createHash } from 'node:crypto';
@@ -12,6 +12,34 @@ const rngVerifyRoute: FastifyPluginAsync = async (app) => {
         type: 'object',
         properties: { id: { type: 'string', format: 'uuid' } },
         required: ['id']
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            matchId: { type: 'string', format: 'uuid' },
+            serverCommitHex: { type: 'string' },
+            revealed: { type: 'boolean' },
+            serverSeedHex: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+            dice: {
+              anyOf: [
+                { type: 'null' },
+                {
+                  type: 'array',
+                  items: { type: 'integer', minimum: 1, maximum: 6 },
+                  minItems: 2, maxItems: 2
+                }
+              ]
+            }
+          },
+          required: ['id','matchId','serverCommitHex','revealed']
+        },
+        404: {
+          type: 'object',
+          properties: { ok: { type: 'boolean' }, error: { type: 'string' }, message: { type: 'string' } },
+          required: ['ok','error','message']
+        }
       }
     }
   }, async (req, reply) => {

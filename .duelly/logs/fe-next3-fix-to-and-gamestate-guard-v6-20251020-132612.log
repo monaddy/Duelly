@@ -74,4 +74,15 @@
 [?2004l[?2004h>     git commit -m "DUELLY FE: narrow PixiBoard 'to' to MoveTarget; add Game.tsx non-null guard to satisfy TS"
 [?2004l[?2004h>   fi
 [?2004l[?2004h> fi
-[?2004l
+[?2004l[feat/qa-stage7-perf-fairness acc163c] DUELLY FE: narrow PixiBoard 'to' to MoveTarget; add Game.tsx non-null guard to satisfy TS
+ 4 files changed, 126 insertions(+), 1 deletion(-)
+ create mode 100644 .duelly/logs/fe-next3-fix-to-and-gamestate-guard-v6-20251020-132612.log
+ create mode 100644 .duelly/tmp/fe-next3-fix-to-and-gamestate-guard-v6.patch
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # Rebuild + theme ops + QA probes
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# npm run -s build
+[?2004lsrc/components/PixiBoard.tsx(124,58): error TS2322: Type 'number | "bar" | "bearoff-white" | "bearoff-black" | undefined' is not assignable to type 'number | "bar" | "bearoff-white" | "bearoff-black"'.
+  Type 'undefined' is not assignable to type 'number | "bar" | "bearoff-white" | "bearoff-black"'.
+src/routes/Game.tsx(26,16): error TS2345: Argument of type 'GameState | null' is not assignable to parameter of type 'GameState'.
+  Type 'null' is not assignable to type 'GameState'.
+::DUELLY::step=fe-next3-fix-to-and-gamestate-guard-v6 status=error code=1 line=90 log=/root/backgammon-mini-app/.duelly/logs/fe-next3-fix-to-and-gamestate-guard-v6-20251020-132612.log

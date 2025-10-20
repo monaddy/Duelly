@@ -37,6 +37,6 @@ app.setErrorHandler((err, _req, reply) => {
 });
 
 
-app.register(rngVerifyRoute, { prefix: '/api/v2' });
+app.register(rngVerifyRoute);
 await app.listen({ port: Number(process.env.PORT ?? 3000), host: process.env.HOST ?? "0.0.0.0" });
 app.log.info("API V2 listening (health @ /api/v2/health)");

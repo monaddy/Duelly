@@ -1,0 +1,59 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step='$STEP_ID' status=error code=$code line=$LINENO log=$LOG_FILE"; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"; exec 9>"$LOCK_FILE"; flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED time=$(date -Is) notes=\"another step running\""; exit 1; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is) notes=\"tighten PixiBoard 'to' and harden Game.tsx nullability; then build + theme ops + QA\""
+[?2004l::DUELLY::step=fe-next3-fix-to-and-gamestate-guard-v7 status=running time=2025-10-20T14:06:41+00:00 notes="tighten PixiBoard 'to' and harden Game.tsx nullability; then build + theme ops + QA"
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 1) PixiBoard.tsx: ensure NO usage can yield undefined ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# PB="src/components/PixiBoard.tsx"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f "$PB" ]; then
+[?2004l[?2004h>   cp -a "$PB" "$PB.bak.$(date +%s)"
+[?2004l[?2004h>   # Add a local alias type (once) so we can as-cast confidently
+[?2004l[?2004h>   if ! grep -q "type MoveTarget =" "$PB"; then
+[?2004l[?2004h>     # Insert right after import block
+[?2004l[?2004h>     awk 'BEGIN{ins=0}
+[?2004l[?2004h>       { if(!ins && $0 !~ /^import /){ print "type MoveTarget = number | '\''bar'\'' | '\''bearoff-white'\'' | '\''bearoff-black'\'';"; ins=1 }
+[?2004l[?2004h>         print }' "$PB" > "$PB.new" && mv "$PB.new" "$PB"
+[?2004l[?2004h>   fi
+[?2004l[?2004h>   # Replace any direct read of moveAttempt.to with a safe fallback
+[?2004l[?2004h>   perl -0777 -i -pe 's/\bmoveAttempt\.to\b/(moveAttempt?.to ?? from)/g' "$PB" || true
+[?2004l[?2004h>   # If a line declares "const to = moveAttempt.to;" make it typed & safe
+[?2004l[?2004h>   perl -0777 -i -pe 's/\bconst\s+to\s*=\s*\(moveAttempt\?\.\s*to\s*\?\?\s*from\)\s*;/const to: MoveTarget = (moveAttempt?.to ?? from) as MoveTarget;/g' "$PB" || true
+[?2004l[?2004h>   perl -0777 -i -pe 's/\bconst\s+to\s*=\s*moveAttempt\.to\s*;/const to: MoveTarget = (moveAttempt?.to ?? from) as MoveTarget;/g' "$PB" || true
+[?2004l[?2004h>   # If a destructure exists, provide an immediately-following safe alias for use in args
+[?2004l[?2004h>   if grep -qE 'const\s*\{\s*to\s*\}\s*=\s*moveAttempt' "$PB" && ! grep -q "const toSafe:" "$PB"; then
+[?2004l[?2004h>     perl -0777 -i -pe 's/(const\s*\{\s*to\s*\}\s*=\s*moveAttempt\s*;)/$1\nconst toSafe: MoveTarget = (typeof to !== "undefined" ? (to as MoveTarget) : (from as MoveTarget));/g' "$PB"
+[?2004l[?2004h>     # Opportunistically use toSafe in most obvious call sites (argument positions)
+[?2004l[?2004h>     perl -0777 -i -pe 's/(\(|,|\[|\s)to(\s*(\)|,|\]))/\1toSafe\2/g' "$PB" || true
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 2) Game.tsx: enforce early non-null guard and alias; redirect prop/arg uses to NN alias ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# GAME="src/routes/Game.tsx"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f "$GAME" ]; then
+[?2004l[?2004h>   cp -a "$GAME" "$GAME.bak.$(date +%s)"
+[?2004l[?2004h>   # Ensure state is nullable type (idempotent)
+[?2004l[?2004h>   perl -0777 -i -pe 's/useState<\s*GameState\s*>\(\s*null\s*\)/useState<GameState | null>(null)/g' "$GAME" || true
+[?2004l[?2004h>   # Insert early guard immediately after useState line (once)
+[?2004l[?2004h>   if ! grep -q "if (gameState == null)" "$GAME"; then
+[?2004l[?2004h>     perl -0777 -i -pe "s/(useState<\s*GameState\s*\|\s*null\s*>\(\s*null\s*\)\s*\)\s*;?)/\\1\nif (gameState == null) { return null; }\n/;" "$GAME" || true
+[?2004l[?2004h>   fi
+[?2004l[?2004h>   # Add a strong non-null alias right after the guard (once)
+[?2004l[?2004h>   if ! grep -q "const gameStateNN" "$GAME"; then
+[?2004l[?2004h>     perl -0777 -i -pe 's/(if\s*\(\s*gameState\s*==\s*null\s*\)\s*\{\s*return\s+null;\s*\}\s*)/\1\nconst gameStateNN: GameState = gameState as GameState;\n/;' "$GAME" || true
+[?2004l[?2004h>   fi
+[?2004l[?2004h>   # Replace safe, common prop/arg uses of gameState -> gameStateNN (keep declarations & guard intact)
+[?2004l[?2004h>   sed -E -i 's/=\{gameState\}/={gameStateNN}/g' "$GAME" || true
+[?2004l[?2004h>   sed -E -i 's/\(gameState\)/(gameStateNN)/g' "$GAME" || true
+[?2004l[?2004h>   sed -E -i 's/, gameState\)/, gameStateNN)/g' "$GAME" || true
+[?2004l[?2004h>   sed -E -i 's/\(gameState,/(gameStateNN,/g' "$GAME" || true
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 3) Commit if changes exist ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if git rev-parse --git-dir >/dev/null 2>&1; then
+[?2004l[?2004h>   git add -A
+[?2004l[?2004h>   if ! git diff --cached --quiet --ignore-submodules --; then
+[?2004l[?2004h>     git commit -m "DUELLY FE: eliminate undefined in PixiBoard move target; add early non-null guard + alias in Game.tsx; redirect prop/arg uses"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004l
