@@ -1,0 +1,1 @@
+{"ts":"2025-10-20T21:00:33+00:00","http":{"matches":"200","commit":"200","verify_before":"200","reveal":"200","verify_after":"200"},"dice":[3,2],"verify_file":"services/api-v2/src/routes/rng-verify.ts","main_file":"services/api-v2/src/index.ts"}
