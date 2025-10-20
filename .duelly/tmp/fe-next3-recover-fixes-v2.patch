@@ -1,0 +1,128 @@
+diff --git a/src/shims/pixi-graphics-polygon.ts b/src/shims/pixi-graphics-polygon.ts
+new file mode 100644
+--- /dev/null
++++ b/src/shims/pixi-graphics-polygon.ts
+@@
++// Runtime shim to provide Graphics.polygon for Pixi v7 (legacy code compat).
++// It maps polygon(points) to moveTo/lineTo; closes path when requested.
++import { Graphics, IPointData } from 'pixi.js';
++declare module 'pixi.js' {
++  interface Graphics {
++    polygon(points: number[] | IPointData[], close?: boolean): this;
++  }
++}
++(function attachPolygon() {
++  // @ts-expect-error augment at runtime
++  const proto = (Graphics as any).prototype;
++  if (typeof proto.polygon === 'function') return;
++  proto.polygon = function(points: number[] | IPointData[], close: boolean = true) {
++    const g = this as Graphics;
++    const arr: any[] = Array.isArray(points) ? (points as any[]) : [];
++    let firstX: number | null = null, firstY: number | null = null;
++    const pushPoint = (x: number, y: number, i: number) => {
++      if (i === 0) { g.moveTo(x, y); firstX = x; firstY = y; }
++      else { g.lineTo(x, y); }
++    };
++    if (arr.length) {
++      if (typeof arr[0] === 'number') {
++        for (let i = 0; i < arr.length; i += 2) { pushPoint(arr[i], arr[i + 1], i / 2); }
++      } else {
++        for (let i = 0; i < arr.length; i++) { const p = arr[i] as IPointData; pushPoint(p.x, p.y, i); }
++      }
++    }
++    if (close && firstX != null && firstY != null) { g.lineTo(firstX, firstY); }
++    return g;
++  };
++})();
+diff --git a/src/types/pixi-v7-augment.d.ts b/src/types/pixi-v7-augment.d.ts
+new file mode 100644
+--- /dev/null
++++ b/src/types/pixi-v7-augment.d.ts
+@@
++/* Ambient type augmentation for Pixi v7 legacy helpers. */
++import 'pixi.js';
++declare module 'pixi.js' {
++  interface Graphics {
++    polygon(points: number[] | import('pixi.js').IPointData[], close?: boolean): this;
++  }
++  interface DestroyOptions {
++    /** Pixi v7 uses textureSource instead of baseTexture */
++    textureSource?: boolean;
++  }
++}
+diff --git a/src/components/PixiBoard.tsx b/src/components/PixiBoard.tsx
+--- a/src/components/PixiBoard.tsx
++++ b/src/components/PixiBoard.tsx
+@@
++// Register Pixi v7 polygon shim for legacy drawing code.
++import '../shims/pixi-graphics-polygon';
+@@
+-    // legacy pointer affordance
+-    piece.buttonMode = true;
++    // Pixi v7: buttonMode removed; use eventMode + cursor
++    piece.eventMode = 'static';
++    piece.cursor = 'pointer';
+@@
+-  app.destroy(true, { children: true, texture: true, baseTexture: true });
++  // Pixi v7: replace baseTexture option with textureSource
++  app.destroy(true, { children: true, texture: true, textureSource: true });
+@@
+-  const to = moveAttempt.to;
++  // Guard 'to' during drag; fall back to 'from' to satisfy TS & runtime.
++  const to = (moveAttempt && typeof moveAttempt.to === 'number') ? moveAttempt.to : from;
+@@
+-  g.polygon(a.x, a.y, b.x, b.y, c.x, c.y);
++  g.polygon([a.x, a.y, b.x, b.y, c.x, c.y]);
+@@
+-  g.polygon(d.x, d.y, e.x, e.y, f.x, f.y);
++  g.polygon([d.x, d.y, e.x, e.y, f.x, f.y]);
+diff --git a/src/components/FpsOverlay.tsx b/src/components/FpsOverlay.tsx
+--- a/src/components/FpsOverlay.tsx
++++ b/src/components/FpsOverlay.tsx
+@@
+-  useEffect(() => {
+-    let raf = 0
+-    const loop = () => {
+-      // ... existing body ...
+-      raf = requestAnimationFrame(loop)
+-    }
+-    raf = requestAnimationFrame(loop)
+-    return raf && cancelAnimationFrame(raf)
+-  }, [])
++  useEffect(() => {
++    let raf = 0;
++    const loop = () => {
++      // ... existing body ...
++      raf = requestAnimationFrame(loop);
++    };
++    raf = requestAnimationFrame(loop);
++    // Cleanup must be a function, not a union (void | 0 | undefined)
++    return () => { if (raf) cancelAnimationFrame(raf); };
++  }, []);
+diff --git a/src/routes/Game.tsx b/src/routes/Game.tsx
+--- a/src/routes/Game.tsx
++++ b/src/routes/Game.tsx
+@@
+-const [gameState, setGameState] = useState<GameState>(null)
++// Allow null during initial load/error paths
++const [gameState, setGameState] = useState<GameState | null>(null)
+diff --git a/src/utils/fairness.ts b/src/utils/fairness.ts
+--- a/src/utils/fairness.ts
++++ b/src/utils/fairness.ts
+@@
+-  const signature = await crypto.subtle.sign(alg, key, data);
++  const signature = await crypto.subtle.sign(alg, key, toArrayBuffer(data));
++  // ...
++}
++
++// --- DUELLY fairness: normalize BufferSource to an ArrayBuffer copy (avoid SAB) ---
++function toArrayBuffer(src: ArrayBuffer | ArrayBufferView): ArrayBuffer {
++  if (src instanceof ArrayBuffer) {
++    return src.slice(0); // copy to detach
++  }
++  // Copy the view into a fresh ArrayBuffer (typed arrays created with a length allocate ArrayBuffer)
++  const view = new Uint8Array(src.buffer, src.byteOffset, src.byteLength);
++  const out = new Uint8Array(view.byteLength);
++  out.set(view);
++  return out.buffer;
+ }

@@ -1,0 +1,255 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step='$STEP_ID' status=error code=$code line=$LINENO log=$LOG_FILE"; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# exec 9>"$LOCK_FILE"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED notes=\"another step running\""; exit 1; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is) notes=\"apply Pixi v7 + fairness fixes; rebuild + QA\""
+[?2004l::DUELLY::step=fe-next3-recover-fixes-v2 status=running time=2025-10-20T07:17:18+00:00 notes="apply Pixi v7 + fairness fixes; rebuild + QA"
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- Prepare unified diff patch (idempotent) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# PATCH_FILE="$TMP_DIR/$STEP_ID.patch"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cat >"$PATCH_FILE" <<'PATCH'
+[?2004l[?2004h> diff --git a/src/shims/pixi-graphics-polygon.ts b/src/shims/pixi-graphics-polygon.ts
+[?2004l[?2004h> new file mode 100644
+[?2004l[?2004h> --- /dev/null
+[?2004l[?2004h> +++ b/src/shims/pixi-graphics-polygon.ts
+[?2004l[?2004h> @@
+[?2004l[?2004h> +// Runtime shim to provide Graphics.polygon for Pixi v7 (legacy code compat).
+[?2004l[?2004h> +// It maps polygon(points) to moveTo/lineTo; closes path when requested.
+[?2004l[?2004h> +import { Graphics, IPointData } from 'pixi.js';
+[?2004l[?2004h> +declare module 'pixi.js' {
+[?2004l[?2004h> +  interface Graphics {
+[?2004l[?2004h> +    polygon(points: number[] | IPointData[], close?: boolean): this;
+[?2004l[?2004h> +  }
+[?2004l[?2004h> +}
+[?2004l[?2004h> +(function attachPolygon() {
+[?2004l[?2004h> +  // @ts-expect-error augment at runtime
+[?2004l[?2004h> +  const proto = (Graphics as any).prototype;
+[?2004l[?2004h> +  if (typeof proto.polygon === 'function') return;
+[?2004l[?2004h> +  proto.polygon = function(points: number[] | IPointData[], close: boolean = true) {
+[?2004l[?2004h> +    const g = this as Graphics;
+[?2004l[?2004h> +    const arr: any[] = Array.isArray(points) ? (points as any[]) : [];
+[?2004l[?2004h> +    let firstX: number | null = null, firstY: number | null = null;
+[?2004l[?2004h> +    const pushPoint = (x: number, y: number, i: number) => {
+[?2004l[?2004h> +      if (i === 0) { g.moveTo(x, y); firstX = x; firstY = y; }
+[?2004l[?2004h> +      else { g.lineTo(x, y); }
+[?2004l[?2004h> +    };
+[?2004l[?2004h> +    if (arr.length) {
+[?2004l[?2004h> +      if (typeof arr[0] === 'number') {
+[?2004l[?2004h> +        for (let i = 0; i < arr.length; i += 2) { pushPoint(arr[i], arr[i + 1], i / 2); }
+[?2004l[?2004h> +      } else {
+[?2004l[?2004h> +        for (let i = 0; i < arr.length; i++) { const p = arr[i] as IPointData; pushPoint(p.x, p.y, i); }
+[?2004l[?2004h> +      }
+[?2004l[?2004h> +    }
+[?2004l[?2004h> +    if (close && firstX != null && firstY != null) { g.lineTo(firstX, firstY); }
+[?2004l[?2004h> +    return g;
+[?2004l[?2004h> +  };
+[?2004l[?2004h> +})();
+[?2004l[?2004h> diff --git a/src/types/pixi-v7-augment.d.ts b/src/types/pixi-v7-augment.d.ts
+[?2004l[?2004h> new file mode 100644
+[?2004l[?2004h> --- /dev/null
+[?2004l[?2004h> +++ b/src/types/pixi-v7-augment.d.ts
+[?2004l[?2004h> @@
+[?2004l[?2004h> +/* Ambient type augmentation for Pixi v7 legacy helpers. */
+[?2004l[?2004h> +import 'pixi.js';
+[?2004l[?2004h> +declare module 'pixi.js' {
+[?2004l[?2004h> +  interface Graphics {
+[?2004l[?2004h> +    polygon(points: number[] | import('pixi.js').IPointData[], close?: boolean): this;
+[?2004l[?2004h> +  }
+[?2004l[?2004h> +  interface DestroyOptions {
+[?2004l[?2004h> +    /** Pixi v7 uses textureSource instead of baseTexture */
+[?2004l[?2004h> +    textureSource?: boolean;
+[?2004l[?2004h> +  }
+[?2004l[?2004h> +}
+[?2004l[?2004h> diff --git a/src/components/PixiBoard.tsx b/src/components/PixiBoard.tsx
+[?2004l[?2004h> --- a/src/components/PixiBoard.tsx
+[?2004l[?2004h> +++ b/src/components/PixiBoard.tsx
+[?2004l[?2004h> @@
+[?2004l[?2004h> +// Register Pixi v7 polygon shim for legacy drawing code.
+[?2004l[?2004h> +import '../shims/pixi-graphics-polygon';
+[?2004l[?2004h> @@
+[?2004l[?2004h> -    // legacy pointer affordance
+[?2004l[?2004h> -    piece.buttonMode = true;
+[?2004l[?2004h> +    // Pixi v7: buttonMode removed; use eventMode + cursor
+[?2004l[?2004h> +    piece.eventMode = 'static';
+[?2004l[?2004h> +    piece.cursor = 'pointer';
+[?2004l[?2004h> @@
+[?2004l[?2004h> -  app.destroy(true, { children: true, texture: true, baseTexture: true });
+[?2004l[?2004h> +  // Pixi v7: replace baseTexture option with textureSource
+[?2004l[?2004h> +  app.destroy(true, { children: true, texture: true, textureSource: true });
+[?2004l[?2004h> @@
+[?2004l[?2004h> -  const to = moveAttempt.to;
+[?2004l[?2004h> +  // Guard 'to' during drag; fall back to 'from' to satisfy TS & runtime.
+[?2004l[?2004h> +  const to = (moveAttempt && typeof moveAttempt.to === 'number') ? moveAttempt.to : from;
+[?2004l[?2004h> @@
+[?2004l[?2004h> -  g.polygon(a.x, a.y, b.x, b.y, c.x, c.y);
+[?2004l[?2004h> +  g.polygon([a.x, a.y, b.x, b.y, c.x, c.y]);
+[?2004l[?2004h> @@
+[?2004l[?2004h> -  g.polygon(d.x, d.y, e.x, e.y, f.x, f.y);
+[?2004l[?2004h> +  g.polygon([d.x, d.y, e.x, e.y, f.x, f.y]);
+[?2004l[?2004h> diff --git a/src/components/FpsOverlay.tsx b/src/components/FpsOverlay.tsx
+[?2004l[?2004h> --- a/src/components/FpsOverlay.tsx
+[?2004l[?2004h> +++ b/src/components/FpsOverlay.tsx
+[?2004l[?2004h> @@
+[?2004l[?2004h> -  useEffect(() => {
+[?2004l[?2004h> -    let raf = 0
+[?2004l[?2004h> -    const loop = () => {
+[?2004l[?2004h> -      // ... existing body ...
+[?2004l[?2004h> -      raf = requestAnimationFrame(loop)
+[?2004l[?2004h> -    }
+[?2004l[?2004h> -    raf = requestAnimationFrame(loop)
+[?2004l[?2004h> -    return raf && cancelAnimationFrame(raf)
+[?2004l[?2004h> -  }, [])
+[?2004l[?2004h> +  useEffect(() => {
+[?2004l[?2004h> +    let raf = 0;
+[?2004l[?2004h> +    const loop = () => {
+[?2004l[?2004h> +      // ... existing body ...
+[?2004l[?2004h> +      raf = requestAnimationFrame(loop);
+[?2004l[?2004h> +    };
+[?2004l[?2004h> +    raf = requestAnimationFrame(loop);
+[?2004l[?2004h> +    // Cleanup must be a function, not a union (void | 0 | undefined)
+[?2004l[?2004h> +    return () => { if (raf) cancelAnimationFrame(raf); };
+[?2004l[?2004h> +  }, []);
+[?2004l[?2004h> diff --git a/src/routes/Game.tsx b/src/routes/Game.tsx
+[?2004l[?2004h> --- a/src/routes/Game.tsx
+[?2004l[?2004h> +++ b/src/routes/Game.tsx
+[?2004l[?2004h> @@
+[?2004l[?2004h> -const [gameState, setGameState] = useState<GameState>(null)
+[?2004l[?2004h> +// Allow null during initial load/error paths
+[?2004l[?2004h> +const [gameState, setGameState] = useState<GameState | null>(null)
+[?2004l[?2004h> diff --git a/src/utils/fairness.ts b/src/utils/fairness.ts
+[?2004l[?2004h> --- a/src/utils/fairness.ts
+[?2004l[?2004h> +++ b/src/utils/fairness.ts
+[?2004l[?2004h> @@
+[?2004l[?2004h> -  const signature = await crypto.subtle.sign(alg, key, data);
+[?2004l[?2004h> +  const signature = await crypto.subtle.sign(alg, key, toArrayBuffer(data));
+[?2004l[?2004h> +  // ...
+[?2004l[?2004h> +}
+[?2004l[?2004h> +
+[?2004l[?2004h> +// --- DUELLY fairness: normalize BufferSource to an ArrayBuffer copy (avoid SAB) ---
+[?2004l[?2004h> +function toArrayBuffer(src: ArrayBuffer | ArrayBufferView): ArrayBuffer {
+[?2004l[?2004h> +  if (src instanceof ArrayBuffer) {
+[?2004l[?2004h> +    return src.slice(0); // copy to detach
+[?2004l[?2004h> +  }
+[?2004l[?2004h> +  // Copy the view into a fresh ArrayBuffer (typed arrays created with a length allocate ArrayBuffer)
+[?2004l[?2004h> +  const view = new Uint8Array(src.buffer, src.byteOffset, src.byteLength);
+[?2004l[?2004h> +  const out = new Uint8Array(view.byteLength);
+[?2004l[?2004h> +  out.set(view);
+[?2004l[?2004h> +  return out.buffer;
+[?2004l[?2004h>  }
+[?2004l[?2004h> PATCH
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- Try to apply the patch; fallback to safe targeted edits if needed ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if git apply --check "$PATCH_FILE" >/dev/null 2>&1; then
+[?2004l[?2004h>   git apply --whitespace=fix "$PATCH_FILE"
+[?2004l[?2004h> else
+[?2004l[?2004h>   echo "git apply did not cleanly apply; performing targeted, idempotent edits."
+[?2004l[?2004h> 
+[?2004l[?2004h>   # Ensure shim & types files exist (idempotent writes)
+[?2004l[?2004h>   SHIM="src/shims/pixi-graphics-polygon.ts"
+[?2004l[?2004h>   if [ ! -f "$SHIM" ]; then
+[?2004l[?2004h>     mkdir -p "$(dirname "$SHIM")"
+[?2004l[?2004h>     cat >"$SHIM" <<'TS'
+[?2004l[?2004h> import { Graphics, IPointData } from 'pixi.js';
+[?2004l[?2004h> declare module 'pixi.js' { interface Graphics { polygon(points: number[] | IPointData[], close?: boolean): this; } }
+[?2004l[?2004h> (function attachPolygon() {
+[?2004l[?2004h>   // @ts-expect-error runtime augment
+[?2004l[?2004h>   const proto = (Graphics as any).prototype;
+[?2004l[?2004h>   if (typeof proto.polygon === 'function') return;
+[?2004l[?2004h>   proto.polygon = function(points: number[] | IPointData[], close: boolean = true) {
+[?2004l[?2004h>     const g = this as Graphics;
+[?2004l[?2004h>     const arr: any[] = Array.isArray(points) ? (points as any[]) : [];
+[?2004l[?2004h>     let firstX: number|null = null, firstY: number|null = null;
+[?2004l[?2004h>     const pushPoint = (x:number, y:number, i:number) => { if (i===0) { g.moveTo(x,y); firstX=x; firstY=y; } else { g.lineTo(x,y); } };
+[?2004l[?2004h>     if (arr.length) {
+[?2004l[?2004h>       if (typeof arr[0] === 'number') { for (let i=0;i<arr.length;i+=2) pushPoint(arr[i], arr[i+1], i/2); }
+[?2004l[?2004h>       else { for (let i=0;i<arr.length;i++) { const p=arr[i] as IPointData; pushPoint(p.x,p.y,i); } }
+[?2004l[?2004h>     }
+[?2004l[?2004h>     if (close && firstX!=null && firstY!=null) g.lineTo(firstX, firstY);
+[?2004l[?2004h>     return g;
+[?2004l[?2004h>   };
+[?2004l[?2004h> })();
+[?2004l[?2004h> TS
+[?2004l[?2004h>   fi
+[?2004l[?2004h> 
+[?2004l[?2004h>   TYPES_FILE="src/types/pixi-v7-augment.d.ts"
+[?2004l[?2004h>   if [ ! -f "$TYPES_FILE" ]; then
+[?2004l[?2004h>     mkdir -p "$(dirname "$TYPES_FILE")"
+[?2004l[?2004h>     cat >"$TYPES_FILE" <<'TS'
+[?2004l[?2004h> import 'pixi.js';
+[?2004l[?2004h> declare module 'pixi.js' {
+[?2004l[?2004h>   interface Graphics {
+[?2004l[?2004h>     polygon(points: number[] | import('pixi.js').IPointData[], close?: boolean): this;
+[?2004l[?2004h>   }
+[?2004l[?2004h>   interface DestroyOptions {
+[?2004l[?2004h>     textureSource?: boolean;
+[?2004l[?2004h>   }
+[?2004l[?2004h> }
+[?2004l[?2004h> TS
+[?2004l[?2004h>   fi
+[?2004l[?2004h> 
+[?2004l[?2004h>   # ----- Targeted edits (no '!' to avoid histexpand) -----
+[?2004l[?2004h>   # Add shim import once (insert after last import)
+[?2004l[?2004h>   if [ -f src/components/PixiBoard.tsx ] && ! grep -q "pixi-graphics-polygon" src/components/PixiBoard.tsx; then
+[?2004l[?2004h>     awk 'BEGIN{buf="";done=0}
+[?2004l[?2004h>       /^import /{print; next}
+[?2004l[?2004h>       { if(!done){print "import '\''../shims/pixi-graphics-polygon'\'';"; done=1} ; print }' \
+[?2004l[?2004h>       src/components/PixiBoard.tsx > src/components/PixiBoard.tsx.new && mv src/components/PixiBoard.tsx.new src/components/PixiBoard.tsx
+[?2004l[?2004h>   fi
+[?2004l[?2004h> 
+[?2004l[?2004h>   # buttonMode -> eventMode/cursor
+[?2004l[?2004h>   sed -E -i "s/([[:alnum:]_.]+)\.buttonMode\s*=\s*true;/\1.eventMode = 'static'; \1.cursor = 'pointer';/g" src/components/PixiBoard.tsx || true
+[?2004l[?2004h>   sed -E -i "s/([[:alnum:]_.]+)\.buttonMode\s*=\s*false;/\1.eventMode = 'auto'; \1.cursor = 'default';/g" src/components/PixiBoard.tsx || true
+[?2004l[?2004h> 
+[?2004l[?2004h>   # destroy options
+[?2004l[?2004h>   sed -E -i "s/baseTexture\s*:\s*true/textureSource: true/g" src/components/PixiBoard.tsx || true
+[?2004l[?2004h> 
+[?2004l[?2004h>   # guard 'to'
+[?2004l[?2004h>   perl -0777 -i -pe 's/\bconst\s+to\s*=\s*moveAttempt\.to\s*;/const to = (moveAttempt && typeof moveAttempt.to === "number") ? moveAttempt.to : from;/g' src/components/PixiBoard.tsx || true
+[?2004l[?2004h> 
+[?2004l[?2004h>   # polygon(...6 args...) -> polygon([...])
+[?2004l[?2004h>   perl -0777 -i -pe 's/\.polygon\s*\(\s*(?!\[)([^()\n]+?)\s*\)/.polygon([$1])/g' src/components/PixiBoard.tsx || true
+[?2004l[?2004h> 
+[?2004l[?2004h>   # FpsOverlay cleanup
+[?2004l[?2004h>   if [ -f src/components/FpsOverlay.tsx ]; then
+[?2004l[?2004h>     perl -0777 -i -pe 's/return\s+raf\s*&&\s*cancelAnimationFrame\(\s*raf\s*\)\s*;/return () => { if (raf) cancelAnimationFrame(raf); };/g' src/components/FpsOverlay.tsx || true
+[?2004l[?2004h>   fi
+[?2004l[?2004h> 
+[?2004l[?2004h>   # Game.tsx allow null
+[?2004l[?2004h>   if [ -f src/routes/Game.tsx ]; then
+[?2004l[?2004h>     perl -0777 -i -pe 's/useState<\s*GameState\s*>\(\s*null\s*\)/useState<GameState | null>(null)/g' src/routes/Game.tsx || true
+[?2004l[?2004h>   fi
+[?2004l[?2004h> 
+[?2004l[?2004h>   # fairness.ts: helper + wrap subtle.sign
+[?2004l[?2004h>   FAIR="src/utils/fairness.ts"
+[?2004l[?2004h>   if [ -f "$FAIR" ]; then
+[?2004l[?2004h>     if ! grep -q "function toArrayBuffer" "$FAIR"; then
+[?2004l[?2004h>       cp -a "$FAIR" "$FAIR.bak.$(date +%s)"
+[?2004l[?2004h>       cat >>"$FAIR" <<'TS'
+[?2004l[?2004h> 
+[?2004l[?2004h> // --- DUELLY fairness: normalize BufferSource to an ArrayBuffer copy (avoid SAB) ---
+[?2004l[?2004h> function toArrayBuffer(src: ArrayBuffer | ArrayBufferView): ArrayBuffer {
+[?2004l[?2004h>   if (src instanceof ArrayBuffer) {
+[?2004l[?2004h>     return src.slice(0);
+[?2004l[?2004h>   }
+[?2004l[?2004h>   const view = new Uint8Array(src.buffer, src.byteOffset, src.byteLength);
+[?2004l[?2004h>   const out = new Uint8Array(view.byteLength);
+[?2004l[?2004h>   out.set(view);
+[?2004l[?2004h>   return out.buffer;
+[?2004l[?2004h> }
+[?2004l[?2004h> TS
+[?2004l[?2004h>     fi
+[?2004l[?2004h>     perl -0777 -i -pe 's/subtle\.sign\(\s*([^,]+),\s*([^,]+),\s*([^)]+)\)/subtle.sign($1, $2, toArrayBuffer($3))/g' "$FAIR" || true
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004lgit apply did not cleanly apply; performing targeted, idempotent edits.
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- Commit changes if any (optional, idempotent) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if git rev-parse --git-dir >/dev/null 2>&1; then
+[?2004l[?2004h>   git add -A
+[?2004l[?2004h>   if ! git diff --cached --quiet --ignore-submodules --; then
+[?2004l[?2004h>     git commit -m "DUELLY FE: Pixi v7 shim + polygon arg fix; eventMode/cursor; destroy options; FpsOverlay cleanup; Game nullable state; fairness BufferSource normalization"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004l

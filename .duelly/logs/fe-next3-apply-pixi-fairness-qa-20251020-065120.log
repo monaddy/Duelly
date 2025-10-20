@@ -1,0 +1,182 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step='$STEP_ID' status=error code=$code line=$LINENO log=$LOG_FILE"; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"; exec 9>"$LOCK_FILE"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED notes=\"another step running\""; exit 1; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is) notes=\"apply patches + build + QA\""
+[?2004l::DUELLY::step=fe-next3-apply-pixi-fairness-qa status=running time=2025-10-20T06:51:20+00:00 notes="apply patches + build + QA"
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- ensure branch (non-destructive) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if git rev-parse --git-dir >/dev/null 2>&1; then
+[?2004l[?2004h>   current_branch="$(git rev-parse --abbrev-ref HEAD)"
+[?2004l[?2004h>   if [ "$current_branch" != "$BRANCH" ]; then
+[?2004l[?2004h>     git switch "$BRANCH" 2>/dev/null || git checkout -B "$BRANCH"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004lM	certs/renewal/play.duelly.online.conf
+M	client/dist/index.html
+M	index.html
+M	package-lock.json
+M	public/theme.css
+Your branch is up to date with 'origin/feat/qa-stage7-perf-fairness'.
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- backups of target files (idempotent) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# ts=$(date +%s)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# for f in src/components/PixiBoard.tsx src/utils/fairness.ts ; do
+[?2004l[?2004h>   if [ -f "$f" ] && [ ! -f "$f.bak.$ts" ]; then cp -a "$f" "$f.bak.$ts"; fi
+[?2004l[?2004h> done
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# mkdir -p src/types
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- proposed unified diff (will try to apply; otherwise fall back to targeted edits) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cat >"$PATCH_FILE" <<'PATCH'
+[?2004l[?2004h> diff --git a/src/components/PixiBoard.tsx b/src/components/PixiBoard.tsx
+[?2004l[?2004h> --- a/src/components/PixiBoard.tsx
+[?2004l[?2004h> +++ b/src/components/PixiBoard.tsx
+[?2004l[?2004h> @@
+[?2004l[?2004h> +// Ensure Pixi v7 polygon shim is registered for legacy code paths.
+[?2004l[?2004h> +import '../shims/pixi-graphics-polygon';
+[?2004l[?2004h> @@
+[?2004l[?2004h> -    // legacy pointer affordance
+[?2004l[?2004h> -    piece.buttonMode = true;
+[?2004l[?2004h> +    // Pixi v7: buttonMode removed; use eventMode/cursor
+[?2004l[?2004h> +    piece.eventMode = 'static';
+[?2004l[?2004h> +    piece.cursor = 'pointer';
+[?2004l[?2004h> @@
+[?2004l[?2004h> -  app.destroy(true, { children: true, texture: true, baseTexture: true });
+[?2004l[?2004h> +  // Pixi v7: 'baseTexture' option renamed to 'textureSource'
+[?2004l[?2004h> +  app.destroy(true, { children: true, texture: true, textureSource: true });
+[?2004l[?2004h> @@
+[?2004l[?2004h> -  // draw triangles using Graphics.polygon (v6 API)
+[?2004l[?2004h> -  g.polygon([a.x, a.y, b.x, b.y, c.x, c.y]);
+[?2004l[?2004h> -  g.polygon([d.x, d.y, e.x, e.y, f.x, f.y]);
+[?2004l[?2004h> +  // Keep polygon calls; runtime shim provides .polygon in v7 and we add TS augmentation.
+[?2004l[?2004h> +  g.polygon([a.x, a.y, b.x, b.y, c.x, c.y]);
+[?2004l[?2004h> +  g.polygon([d.x, d.y, e.x, e.y, f.x, f.y]);
+[?2004l[?2004h> @@
+[?2004l[?2004h> -  const to = moveAttempt.to;
+[?2004l[?2004h> +  // Guard: 'to' can be undefined during drag; avoid TS2322/runtime errors.
+[?2004l[?2004h> +  const to = moveAttempt?.to ?? from;
+[?2004l[?2004h> diff --git a/src/types/pixi-v7-augment.d.ts b/src/types/pixi-v7-augment.d.ts
+[?2004l[?2004h> new file mode 100644
+[?2004l[?2004h> --- /dev/null
+[?2004l[?2004h> +++ b/src/types/pixi-v7-augment.d.ts
+[?2004l[?2004h> @@
+[?2004l[?2004h> +/* Ambient type augmentation for Pixi v7 to keep legacy code compiling.
+[?2004l[?2004h> + * Runtime implementation is provided by src/shims/pixi-graphics-polygon.ts.
+[?2004l[?2004h> + */
+[?2004l[?2004h> +import 'pixi.js';
+[?2004l[?2004h> +declare module 'pixi.js' {
+[?2004l[?2004h> +  interface Graphics {
+[?2004l[?2004h> +    polygon(points: number[] | import('pixi.js').IPointData[], close?: boolean): this;
+[?2004l[?2004h> +  }
+[?2004l[?2004h> +  interface DestroyOptions {
+[?2004l[?2004h> +    textureSource?: boolean;
+[?2004l[?2004h> +  }
+[?2004l[?2004h> +}
+[?2004l[?2004h> diff --git a/src/utils/fairness.ts b/src/utils/fairness.ts
+[?2004l[?2004h> --- a/src/utils/fairness.ts
+[?2004l[?2004h> +++ b/src/utils/fairness.ts
+[?2004l[?2004h> @@
+[?2004l[?2004h> -  const signature = await crypto.subtle.sign(alg, key, data);
+[?2004l[?2004h> +  const signature = await crypto.subtle.sign(alg, key, toUint8(data));
+[?2004l[?2004h> @@
+[?2004l[?2004h> +// --- DUELLY fairness: normalize BufferSource for WebCrypto ---
+[?2004l[?2004h> +function toUint8(src: ArrayBufferView | ArrayBufferLike): Uint8Array {
+[?2004l[?2004h> +  if (src instanceof Uint8Array) return new Uint8Array(src); // copy to detach
+[?2004l[?2004h> +  if (ArrayBuffer.isView(src)) {
+[?2004l[?2004h> +    const v = src as ArrayBufferView;
+[?2004l[?2004h> +    return new Uint8Array(new Uint8Array(v.buffer, v.byteOffset, v.byteLength));
+[?2004l[?2004h> +  }
+[?2004l[?2004h> +  return new Uint8Array(new Uint8Array(src as ArrayBufferLike));
+[?2004l[?2004h> +}
+[?2004l[?2004h> PATCH
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- apply patch idempotently or fall back to targeted edits ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if git apply --check "$PATCH_FILE" >/dev/null 2>&1; then
+[?2004l[?2004h>   git apply "$PATCH_FILE"
+[?2004l[?2004h> else
+[?2004l[?2004h>   if git apply --reverse --check "$PATCH_FILE" >/dev/null 2>&1; then
+[?2004l[?2004h>     echo "Patch already applied; continuing."
+[?2004l[?2004h>   else
+[?2004l[?2004h>     echo "git apply failed; attempting targeted edits (sed/perl)."
+[?2004l[?2004h>     # 1) ensure shim import exists near imports
+[?2004l[?2004h>     if [ -f src/components/PixiBoard.tsx ] && ! grep -q "pixi-graphics-polygon" src/components/PixiBoard.tsx; then
+[?2004l[?2004h>       awk 'BEGIN{done=0}
+[?2004l[?2004h>         { if (!done && $0 !~ /^import /) { print "import '\''../shims/pixi-graphics-polygon'\'';"; done=1 } print }' \
+[?2004l[?2004h>         src/components/PixiBoard.tsx > src/components/PixiBoard.tsx.new && mv src/components/PixiBoard.tsx.new src/components/PixiBoard.tsx
+[?2004l[?2004h>     fi
+[?2004l[?2004h>     # 2) buttonMode -> eventMode/cursor (true/false)
+[?2004l[?2004h>     sed -E -i "s/([A-Za-z0-9_\.]+)\.buttonMode\s*=\s*true;/\1.eventMode = 'static'; \1.cursor = 'pointer';/g" src/components/PixiBoard.tsx || true
+[?2004l[?2004h>     sed -E -i "s/([A-Za-z0-9_\.]+)\.buttonMode\s*=\s*false;/\1.eventMode = 'auto'; \1.cursor = 'default';/g" src/components/PixiBoard.tsx || true
+[?2004l[?2004h>     # 3) destroy() options: baseTexture -> textureSource
+[?2004l[?2004h>     sed -E -i "s/baseTexture\s*:\s*true/textureSource: true/g" src/components/PixiBoard.tsx || true
+[?2004l[?2004h>     # 4) guard moveAttempt.to with optional chain
+[?2004l[?2004h>     perl -0777 -i -pe "s/moveAttempt\.to(?!\?)/moveAttempt?.to/g" src/components/PixiBoard.tsx || true
+[?2004l-bash: !\?: event not found
+[?2004h>     # 5) add types augmentation file if missing
+[?2004l[?2004h>     TYPES_FILE="src/types/pixi-v7-augment.d.ts"
+[?2004l[?2004h>     if [ ! -f "$TYPES_FILE" ]; then
+[?2004l[?2004h>       cat >"$TYPES_FILE" <<'TS'
+[?2004l[?2004h> import 'pixi.js';
+[?2004l[?2004h> declare module 'pixi.js' {
+[?2004l[?2004h>   interface Graphics {
+[?2004l[?2004h>     polygon(points: number[] | import('pixi.js').IPointData[], close?: boolean): this;
+[?2004l[?2004h>   }
+[?2004l[?2004h>   interface DestroyOptions {
+[?2004l[?2004h>     textureSource?: boolean;
+[?2004l[?2004h>   }
+[?2004l[?2004h> }
+[?2004l[?2004h> TS
+[?2004l[?2004h>     fi
+[?2004l[?2004h>     # 6) fairness.ts: inject toUint8 helper and wrap subtle.sign third arg
+[?2004l[?2004h>     FAIR="src/utils/fairness.ts"
+[?2004l[?2004h>     if [ -f "$FAIR" ]; then
+[?2004l[?2004h>       if ! grep -q "function toUint8" "$FAIR"; then
+[?2004l[?2004h>         cat >>"$FAIR" <<'TS'
+[?2004l[?2004h> 
+[?2004l[?2004h> // --- DUELLY fairness: normalize BufferSource for WebCrypto ---
+[?2004l[?2004h> function toUint8(src: ArrayBufferView | ArrayBufferLike): Uint8Array {
+[?2004l[?2004h>   if (src instanceof Uint8Array) return new Uint8Array(src);
+[?2004l[?2004h>   if (ArrayBuffer.isView(src)) {
+[?2004l[?2004h>     const v = src as ArrayBufferView;
+[?2004l[?2004h>     return new Uint8Array(new Uint8Array(v.buffer, v.byteOffset, v.byteLength));
+[?2004l[?2004h>   }
+[?2004l[?2004h>   return new Uint8Array(new Uint8Array(src as ArrayBufferLike));
+[?2004l[?2004h> }
+[?2004l[?2004h> TS
+[?2004l[?2004h>       fi
+[?2004l[?2004h>       perl -0777 -i -pe "s/subtle\.sign\(\s*([^,]+?),\s*([^,]+?),\s*(?!toUint8\()([^)]+)\)/subtle.sign($1, $2, toUint8($3))/g" "$FAIR" || true
+[?2004l-bash: !toUint8\: event not found
+[?2004h>     else
+[?2004l[?2004h>       echo "WARN: $FAIR not found; skipping fairness normalization"
+[?2004l[?2004h>     fi
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004lgit apply failed; attempting targeted edits (sed/perl).
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- build + theme ops (idempotent) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f package.json ]; then
+[?2004l[?2004h>   npm run -s build
+[?2004l[?2004h>   npm run -s ops:theme:canon
+[?2004l[?2004h>   npm run -s ops:theme:guard
+[?2004l[?2004h> else
+[?2004l[?2004h>   echo "No package.json present; skipping build/ops."
+[?2004l[?2004h> fi
+[?2004lsrc/components/FpsOverlay.tsx(13,13): error TS2345: Argument of type '() => () => void | 0 | undefined' is not assignable to parameter of type 'EffectCallback'.
+  Type '() => void | 0 | undefined' is not assignable to type 'void | Destructor'.
+    Type '() => void | 0 | undefined' is not assignable to type 'Destructor'.
+      Type 'void | 0 | undefined' is not assignable to type 'void | { [UNDEFINED_VOID_ONLY]: never; }'.
+        Type 'number' is not assignable to type 'void | { [UNDEFINED_VOID_ONLY]: never; }'.
+src/components/PixiBoard.tsx(123,58): error TS2322: Type 'number | "bar" | "bearoff-white" | "bearoff-black" | undefined' is not assignable to type 'number | "bar" | "bearoff-white" | "bearoff-black"'.
+  Type 'undefined' is not assignable to type 'number | "bar" | "bearoff-white" | "bearoff-black"'.
+src/components/PixiBoard.tsx(215,21): error TS2554: Expected 1-2 arguments, but got 6.
+src/components/PixiBoard.tsx(217,25): error TS2554: Expected 1-2 arguments, but got 6.
+src/routes/Game.tsx(26,16): error TS2345: Argument of type 'GameState | null' is not assignable to parameter of type 'GameState'.
+  Type 'null' is not assignable to type 'GameState'.
+src/utils/fairness.ts(33,53): error TS2345: Argument of type 'Uint8Array<ArrayBufferLike>' is not assignable to parameter of type 'BufferSource'.
+  Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'ArrayBufferView<ArrayBuffer>'.
+    Types of property 'buffer' are incompatible.
+      Type 'ArrayBufferLike' is not assignable to type 'ArrayBuffer'.
+        Type 'SharedArrayBuffer' is not assignable to type 'ArrayBuffer'.
+          Types of property '[Symbol.toStringTag]' are incompatible.
+            Type '"SharedArrayBuffer"' is not assignable to type '"ArrayBuffer"'.
+::DUELLY::step=fe-next3-apply-pixi-fairness-qa status=error code=1 line=160 log=/root/backgammon-mini-app/.duelly/logs/fe-next3-apply-pixi-fairness-qa-20251020-065120.log

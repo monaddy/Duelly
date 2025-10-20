@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+# UX/DesignOps — Theme Pack Publisher v7 (GitHub API)
+set -Eeuo pipefail
+STEP_ID="ux-theme-pack-publish"
+DUELLY_DIR="/root/duelly/.duelly"; LOG_DIR="$DUELLY_DIR/logs"; TMP_DIR="$DUELLY_DIR/tmp"
+mkdir -p "$LOG_DIR" "$TMP_DIR"
+LOG_FILE="$LOG_DIR/${STEP_ID}-$(date +%Y%m%d-%H%M%S).log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+trap 'c=$?; echo "::DUELLY::step='${STEP_ID}' status=error time=$(date -Is) code=$c log='${LOG_FILE}' notes=\"theme pack publish failed (v7)\""; exit $c' ERR
+
+# === קלט/הקשרים
+SRC_REPO="/root/backgammon-mini-app"
+cd "$SRC_REPO" || { echo "[ERR] missing repo $SRC_REPO"; exit 10; }
+ORIGIN_URL="$(git config --get remote.origin.url || true)"
+[ -n "$ORIGIN_URL" ] || { echo "[ERR] missing git remote 'origin'"; exit 11; }
+TOKEN="${GH_PAT:-${GITHUB_TOKEN:-}}"
+if [ -z "$TOKEN" ]; then
+  echo "::DUELLY::step=$STEP_ID status=error time=$(date -Is) code=MISSING_PAT log=$LOG_FILE notes=\"Set GH_PAT or GITHUB_TOKEN with 'repo' scope\""
+  exit 1
+fi
+
+REPO_PATH="$(printf '%s\n' "$ORIGIN_URL" | sed -E 's#(git@|https://)github.com[:/](.*?)(\.git)?$#\2#')"
+OWNER="$(printf '%s' "$REPO_PATH" | cut -d'/' -f1)"; REPO="$(printf '%s' "$REPO_PATH" | cut -d'/' -f2)"
+API="https://api.github.com"
+TS=$(date +%Y%m%d-%H%M%S)
+TARGET_BRANCH="ops/assets"
+STAGING_BRANCH="ops/assets-staging-$TS"
+FALLBACK_BRANCH="ux/theme-assets-$TS"
+OUT_PATH="dist/assets/theme.css"
+
+# === עזרי JSON (Node, ללא jq)
+json_get() { node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{let j=JSON.parse(s);let p='$1'.split('.');for(let k of p){if(!k) continue;j=j[k]} console.log(j??'');}catch(e){}})"; }
+
+# === 1) יצירת ה‑theme.css (CLI → fallback)
+ASSET_CFG="$TMP_DIR/tw.asset.cjs"; ASSET_IN="$TMP_DIR/theme.css"; ASSET_CONTENT="$TMP_DIR/theme-content-$TS.html"
+mkdir -p "$(dirname "$ASSET_IN")" "$(dirname "$OUT_PATH")"
+cat > "$ASSET_CFG" <<'CFG'
+module.exports = {
+  content: [process.env.ASSET_CONTENT || ""],
+  safelist: ["bg-accent","bg-accent/60","bg-surface/60","text-fg"],
+  theme: {
+    extend: {
+      colors: {
+        accent:  { DEFAULT: "#10B3B3" },
+        fg:      "#0F172A",
+        surface: { DEFAULT: "#121417" }
+      }
+    }
+  },
+  corePlugins: { preflight: false }
+};
+CFG
+echo '@tailwind utilities;' > "$ASSET_IN"
+echo '<div class="bg-accent bg-accent/60 bg-surface/60 text-fg"></div>' > "$ASSET_CONTENT"
+
+TAIL_OK="no"
+set +e
+npx --yes tailwindcss -v >/dev/null 2>&1
+if [ $? -ne 0 ]; then npm init -y >/dev/null 2>&1 || true; npm i -D tailwindcss@^3 >/dev/null 2>&1; fi
+ASSET_CONTENT="$ASSET_CONTENT" npx --yes tailwindcss -c "$ASSET_CFG" -i "$ASSET_IN" -o "$OUT_PATH" --minify --content "$ASSET_CONTENT"
+RC=$?
+set -e
+if [ $RC -eq 0 ] && [ -s "$OUT_PATH" ] && grep -q '\.bg-accent' "$OUT_PATH" && grep -q '\.text-fg' "$OUT_PATH" && grep -Eq '\.bg-surface(\\\/|/)60' "$OUT_PATH"; then
+  TAIL_OK="yes"
+else
+  # fallback ידני
+  cat > "$OUT_PATH" <<'CSS'
+.bg-accent{--tw-bg-opacity:1;background-color:rgb(16 179 179 / var(--tw-bg-opacity))}
+.bg-accent\/60{--tw-bg-opacity:.6;background-color:rgb(16 179 179 / var(--tw-bg-opacity))}
+.bg-surface\/60{--tw-bg-opacity:.6;background-color:rgb(18 20 23 / var(--tw-bg-opacity))}
+.text-fg{--tw-text-opacity:1;color:rgb(15 23 42 / var(--tw-text-opacity))}
+CSS
+fi
+
+# אימות מחלקות + AA
+grep -q '\.bg-accent' "$OUT_PATH" || { echo "[ERR] missing .bg-accent"; exit 21; }
+grep -q '\.text-fg'   "$OUT_PATH" || { echo "[ERR] missing .text-fg"; exit 21; }
+grep -Eq '\.bg-surface(\\\/|/)60' "$OUT_PATH" || { echo "[ERR] missing .bg-surface/60"; exit 21; }
+node - <<'JS'
+function hex(h){const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h);return m?{r:parseInt(m[1],16),g:parseInt(m[2],16),b:parseInt(m[3],16)}:null;}
+function lum({r,g,b}){const f=x=>{x/=255;return x<=0.03928?x/12.92:((x+0.055)/1.055)**2.4};return 0.2126*f(r)+0.7152*f(g)+0.0722*f(b);}
+const ratio=(L1,L2)=>{const hi=Math.max(L1,L2),lo=Math.min(L1,L2);return(hi+0.05)/(lo+0.05);};
+const r=ratio(lum(hex("#0F172A")),lum(hex("#10B3B3"))); if(r<4.5){process.exit(22)}
+JS
+
+SIZE=$(stat -c%s "$OUT_PATH" 2>/dev/null || wc -c < "$OUT_PATH")
+CONTENT_B64="$(base64 -w 0 "$OUT_PATH" 2>/dev/null || base64 "$OUT_PATH" | tr -d '\n')"
+COMMIT_MSG="ux(theme): publish theme pack A1/T1 (AA) — dist/assets/theme.css"
+
+# === 2) שאיבת default_branch
+REPO_JSON="$(curl -sS -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github+json" "$API/repos/$OWNER/$REPO")"
+DEFAULT_BRANCH="$(printf '%s' "$REPO_JSON" | json_get 'default_branch')"
+[ -n "$DEFAULT_BRANCH" ] || DEFAULT_BRANCH="main"
+
+# === 3) פונקציה שמוודאת ענף ומעלה קובץ דרך ה‑API
+publish_to_branch () {
+  local BR="$1"
+  # ענף קיים?
+  HTTP=$(curl -sS -o "$TMP_DIR/b.json" -w "%{http_code}" -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github+json" "$API/repos/$OWNER/$REPO/branches/$BR")
+  if [ "$HTTP" = "404" ]; then
+    # צור ענף מה‑default
+    REF_JSON="$(curl -sS -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github+json" "$API/repos/$OWNER/$REPO/git/ref/heads/$DEFAULT_BRANCH")"
+    BASE_SHA="$(printf '%s' "$REF_JSON" | json_get 'object.sha')"
+    [ -n "$BASE_SHA" ] || return 2
+    HTTP=$(curl -sS -o "$TMP_DIR/c.json" -w "%{http_code}" -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github+json" -X POST "$API/repos/$OWNER/$REPO/git/refs" -d "{\"ref\":\"refs/heads/$BR\",\"sha\":\"$BASE_SHA\"}")
+    [ "$HTTP" = "201" ] || return 3
+  elif [ "$HTTP" != "200" ]; then
+    return 4
+  fi
+  # בדוק אם הקובץ כבר קיים כדי להביא sha
+  HTTP=$(curl -sS -o "$TMP_DIR/file.json" -w "%{http_code}" -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github+json" "$API/repos/$OWNER/$REPO/contents/$OUT_PATH?ref=$BR")
+  FILE_SHA=""
+  if [ "$HTTP" = "200" ]; then FILE_SHA="$(cat "$TMP_DIR/file.json" | json_get 'sha')"; fi
+  # העלאה/עדכון
+  BODY="{\"message\":\"$COMMIT_MSG\",\"content\":\"$CONTENT_B64\",\"branch\":\"$BR\""
+  if [ -n "$FILE_SHA" ]; then BODY="$BODY,\"sha\":\"$FILE_SHA\""; fi
+  BODY="$BODY}"
+  HTTP=$(curl -sS -o "$TMP_DIR/put.json" -w "%{http_code}" -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github+json" -X PUT "$API/repos/$OWNER/$REPO/contents/$OUT_PATH" -d "$BODY")
+  if [ "$HTTP" = "201" ] || [ "$HTTP" = "200" ]; then
+    echo "$BR"
+    return 0
+  else
+    return 5
+  fi
+}
+
+# === 4) ניסיון פרסום ליעד / נפילות מסודרות
+BR_DONE=""
+for BR in "$TARGET_BRANCH" "$STAGING_BRANCH" "$FALLBACK_BRANCH"; do
+  if BR_RES="$(publish_to_branch "$BR")"; then BR_DONE="$BR_RES"; break; fi
+done
+
+if [ -z "$BR_DONE" ]; then
+  echo "::DUELLY::step=$STEP_ID status=error time=$(date -Is) code=PUBLISH_FAILED log=$LOG_FILE notes=\"GitHub API publish failed to ops/assets, staging and fallback. Check token permissions (repo:all).\""
+  exit 1
+fi
+
+RAW_URL="https://raw.githubusercontent.com/${OWNER}/${REPO}/${BR_DONE}/${OUT_PATH}"
+echo "::DUELLY::step=$STEP_ID status=ok time=$(date -Is) url=$RAW_URL branch=$BR_DONE path=$OUT_PATH size=$SIZE"
