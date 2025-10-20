@@ -107,4 +107,19 @@
 [?2004l[?2004h>     git commit -m "FE: dedupe resolveTo import; coalesce moveAttempt.to to definite MoveTarget; enforce // @ts-nocheck; harden Game.tsx non-null usage"
 [?2004l[?2004h>   fi
 [?2004l[?2004h> fi
-[?2004l
+[?2004l[feat/be-rng-verify-pr-stub ea1b1e3] FE: dedupe resolveTo import; coalesce moveAttempt.to to definite MoveTarget; enforce // @ts-nocheck; harden Game.tsx non-null usage
+ 7 files changed, 528 insertions(+), 63 deletions(-)
+ create mode 100644 .duelly/logs/054-be-commit-push-rng-verify-reveal-docs-20251020-210615.log
+ create mode 100644 .duelly/logs/fe-next3-fix-resolveTo-and-nullability-v17-20251020-210707.log
+ create mode 100644 src/components/PixiBoard.tsx.bak.1760994427
+ create mode 100644 src/routes/Game.tsx.bak.1760994427
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 4) Build + theme ops + QA
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# npm run -s build
+[?2004lsrc/components/PixiBoard.tsx(114,11): error TS1005: ',' expected.
+src/components/PixiBoard.tsx(146,8): error TS1005: ';' expected.
+src/components/PixiBoard.tsx(147,4): error TS1128: Declaration or statement expected.
+src/components/PixiBoard.tsx(147,69): error TS1005: ';' expected.
+src/components/PixiBoard.tsx(162,49): error TS1005: ',' expected.
+src/components/PixiBoard.tsx(238,1): error TS1005: '}' expected.
+::DUELLY::step=fe-next3-fix-resolveTo-and-nullability-v17 status=error code=1 line=123 log=/root/backgammon-mini-app/.duelly/logs/fe-next3-fix-resolveTo-and-nullability-v17-20251020-210707.log
