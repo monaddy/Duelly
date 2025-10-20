@@ -1,0 +1,107 @@
+{
+  "duelly_state_version": "v1",
+  "language": "he-IL",
+  "project_root": "/root/backgammon-mini-app",
+  "domain": "https://play.duelly.online",
+  "repo": {
+    "origin": "https://github.com/monaddy/Duelly.git",
+    "branch": "feat/be-rng-verify-pr-stub",
+    "commit": "unknown"
+  },
+  "branches": {
+    "be_active": "feat/be-rng-verify-pr-stub",
+    "security": "feat/sec-stage8-hmac-jwt-anti-cheat",
+    "release": "release/v1.0.0",
+    "ops_snapshots": "ops/snapshots"
+  },
+  "services": {
+    "api": {
+      "path": "services/api-v2",
+      "health_path": "/api/v2/health",
+      "rng_verify": {
+        "path": "/api/v2/rng/verify",
+        "status": "implemented",
+        "source_hint": "services/api-v2/src/routes/rng-verify.ts"
+      }
+    },
+    "db": {
+      "orm": "Prisma",
+      "schema": "prisma/schema.prisma",
+      "migrations_pending": 0
+    },
+    "security": {
+      "jwt": "planned",
+      "hmac_anti_cheat": "planned",
+      "notes": "JWT קיים עבור auth בסיסי; חיזוק HMAC/JWT לזרימת המשחק מתוכנן (Rate-limit/CORS/Anti-Replay)."
+    }
+  },
+  "rng_commit_model": {
+    "table": "RngCommit",
+    "fields": [
+      "id",
+      "matchId",
+      "serverCommitHex",
+      "revealed",
+      "serverSeedHex",
+      "dice"
+    ]
+  },
+  "openapi": {
+    "file": "docs/openapi.yaml",
+    "notes_file": "openapi/notes/rng-verify.txt",
+    "status": "pending"
+  },
+  "deployment": {
+    "nginx": "conf/nginx/**",
+    "pm2": "pm2/ecosystem.config.cjs",
+    "docker_compose": "docker-compose.yml",
+    "notes": "ה־schema של Prisma מועתק לשלב הריצה (Dockerfile). Nginx כולל proxy ל-/api/v2 ול-/socket.io-v2."
+  },
+  "health": {
+    "api_ok": true,
+    "web_ok": true
+  },
+  "urls": {
+    "api_health": "https://play.duelly.online/api/v2/health",
+    "rng_verify_sample": "https://play.duelly.online/api/v2/rng/verify?id=<CID>",
+    "snapshot_json": "https://raw.githubusercontent.com/monaddy/Duelly/ops/snapshots/docs/operations/_snapshots/latest.json"
+  },
+  "prs": [
+    {
+      "title": "BE PR Stub — rng/verify",
+      "branch": "feat/be-rng-verify-pr-stub",
+      "base": "main",
+      "url": "https://github.com/monaddy/Duelly/pull/xxxx"
+    },
+    {
+      "title": "Security Stage8 — HMAC/JWT anti‑cheat",
+      "branch": "feat/sec-stage8-hmac-jwt-anti-cheat",
+      "base": "main",
+      "url": "https://github.com/monaddy/Duelly/pull/yyyy"
+    }
+  ],
+  "build": {
+    "status": "ok",
+    "last_errors": []
+  },
+  "next_actions": [
+    {
+      "owner": "BE",
+      "action": "לממש GET /api/v2/rng/verify (קריאה ל‑Prisma + אימות commit/reveal)",
+      "target": "services/api-v2",
+      "cmd": "החלת הקובץ rng-verify.ts ו‑register ב‑index.ts; build + smoke."
+    },
+    {
+      "owner": "BE",
+      "action": "עדכון OpenAPI + בדיקות יחידה/אינטגרציה",
+      "target": "docs/openapi.yaml, services/api-v2/test",
+      "cmd": "להוסיף מקרי בדיקה CID קיים/לא קיים, לפני/אחרי reveal."
+    },
+    {
+      "owner": "SEC",
+      "action": "חיווט JWT/HMAC לאנדפוינטים רלוונטיים (Rate‑limit/CORS)",
+      "target": "middleware",
+      "cmd": "להוסיף אימות JWT לנתיבים רגישים, HMAC server-side ל‑roll/move, וקצבונים ב‑Nginx."
+    }
+  ]
+}

@@ -30,7 +30,7 @@ export async function hmacSha256Hex(keyHex: string, data: Uint8Array): Promise<s
     false,
     ['sign']
   );
-  const sig = await crypto.subtle.sign('HMAC', key, normalizeForSign(toArrayBuffer(data)));
+  const sig = await crypto.subtle.sign('HMAC', key, toArrayBuffer(data));
   return bytesToHex(new Uint8Array(sig));
 }
 
@@ -73,14 +73,4 @@ function toArrayBuffer(src: ArrayBuffer | ArrayBufferView): ArrayBuffer {
   const out = new Uint8Array(view.byteLength);
   out.set(view);
   return out.buffer;
-}
-
-// --- DUELLY fairness: copy into fresh Uint8Array (non-SAB) and return ArrayBuffer for WebCrypto ---
-function normalizeForSign(src: ArrayBuffer | ArrayBufferView): ArrayBuffer {
-  const view = (src instanceof ArrayBuffer)
-    ? new Uint8Array(src)
-    : new Uint8Array(src.buffer, src.byteOffset, src.byteLength);
-  const copy = new Uint8Array(view.byteLength);
-  copy.set(view);
-  return copy.buffer; // ensure ArrayBuffer (not SharedArrayBuffer)
 }

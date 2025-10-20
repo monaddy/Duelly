@@ -252,4 +252,88 @@
 [?2004l[?2004h>     git commit -m "DUELLY FE: Pixi v7 shim + polygon arg fix; eventMode/cursor; destroy options; FpsOverlay cleanup; Game nullable state; fairness BufferSource normalization"
 [?2004l[?2004h>   fi
 [?2004l[?2004h> fi
-[?2004l
+[?2004lwarning: adding embedded git repository: backgammon-mini-app
+hint: You've added another git repository inside your current repository.
+hint: Clones of the outer repository will not contain the contents of
+hint: the embedded repository and will not know how to obtain it.
+hint: If you meant to add a submodule, use:
+hint: 
+hint: 	git submodule add <url> backgammon-mini-app
+hint: 
+hint: If you added this path by mistake, you can remove it from the
+hint: index with:
+hint: 
+hint: 	git rm --cached backgammon-mini-app
+hint: 
+hint: See "git help submodule" for more information.
+[feat/qa-stage7-perf-fairness 19046b1] DUELLY FE: Pixi v7 shim + polygon arg fix; eventMode/cursor; destroy options; FpsOverlay cleanup; Game nullable state; fairness BufferSource normalization
+ 61 files changed, 4141 insertions(+), 108 deletions(-)
+ create mode 100644 -H
+ create mode 100644 .duelly/duelly.lock
+ create mode 100644 .duelly/logs/fe-next3-apply-pixi-fairness-qa-20251020-065120.log
+ create mode 100644 .duelly/logs/fe-next3-recover-fixes-20251020-070334.log
+ create mode 100644 .duelly/logs/fe-next3-recover-fixes-v2-20251020-071718.log
+ create mode 100644 .duelly/tmp/fe-next3-recover-fixes-v2.patch
+ create mode 100644 .duelly/tmp/fe-next3-recover-fixes.patch
+ create mode 100644 .duelly/tmp/fe-next3.patch
+ create mode 160000 backgammon-mini-app
+ create mode 100644 docs/Reports/FE-THEME-DELIVERY-LATEST.md.bak.1760825844
+ create mode 100644 docs/Reports/FE-THEME-DELIVERY-LATEST.md.bak.1760825987
+ create mode 100644 docs/Reports/FE-THEME-FREEZE.md
+ create mode 100644 docs/Reports/FE-THEME-SIGNOFF-LATEST.md.bak.1760826618
+ create mode 100644 docs/Reports/README.md.bak.1760826170
+ create mode 100644 docs/Reports/_issues/ISSUE-FE-THEME-FALLBACK-REMOVAL-20251019-053918.md
+ create mode 100644 docs/qa/_pr/QA-Stage7-PR.md.bak.1760852199
+ create mode 100644 echo
+ create mode 100644 else
+ create mode 100644 fi
+ create mode 100644 git
+ create mode 100644 jq
+ create mode 100644 public/theme-demo.html
+ create mode 100644 scripts/canonicalize-ops-theme.cjs
+ create mode 100644 scripts/ci-ops-theme-guard.cjs
+ create mode 100644 scripts/diag-ops-theme-links.cjs
+ create mode 100644 scripts/duelly-remote-theme-enforcer.cjs
+ create mode 100644 scripts/duelly-theme-cleaner.cjs
+ create mode 100644 scripts/enforce-remote-theme.mjs
+ create mode 100755 scripts/fe-ui-build-rescue-workclone-v5.sh
+ create mode 100755 scripts/fe-ui-build-rescue-workclone-v6.sh
+ create mode 100644 scripts/final-remote-enforce.cjs
+ create mode 100644 scripts/fix-ops-theme-links.cjs
+ create mode 100644 scripts/ops-theme-canonicalize-sri.cjs
+ create mode 100644 scripts/postbuild-theme-fallback.mjs
+ create mode 100644 scripts/remote-theme-cleaner.cjs
+ create mode 100755 scripts/ux-theme-pack-publish-v2.sh
+ create mode 100755 scripts/ux-theme-pack-publish-v3.sh
+ create mode 100755 scripts/ux-theme-pack-publish-v4.sh
+ create mode 100755 scripts/ux-theme-pack-publish-v5.sh
+ create mode 100755 scripts/ux-theme-pack-publish-v6.sh
+ create mode 100755 scripts/ux-theme-pack-publish-v7-api.sh
+ create mode 100755 scripts/ux-theme-pack-publish-v7.2-api.sh
+ create mode 100755 scripts/ux-theme-pack-publish-v7.3-api.sh
+ create mode 100755 scripts/ux-theme-pack-publish-v7.4-api.sh
+ create mode 100755 scripts/ux-theme-pack-publish-v7.5-api.sh
+ create mode 100755 scripts/ux-theme-pack-publish.sh
+ create mode 100644 src/components/PixiBoard.tsx.bak.1760943080
+ create mode 100644 src/shims/pixi-graphics-polygon.ts
+ create mode 100644 src/types/pixi-v7-augment.d.ts
+ create mode 100644 src/utils/fairness.ts.bak.1760943080
+ create mode 100644 src/utils/fairness.ts.bak.1760944638
+ create mode 100644 tailwind.config.js
+ create mode 100644 tools/theme/micro.css
+ create mode 100644 tsconfig.tsbuildinfo
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- Build & theme ops ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# npm run -s build
+[?2004lsrc/components/FpsOverlay.tsx(13,13): error TS2345: Argument of type '() => () => void | 0 | undefined' is not assignable to parameter of type 'EffectCallback'.
+  Type '() => void | 0 | undefined' is not assignable to type 'void | Destructor'.
+    Type '() => void | 0 | undefined' is not assignable to type 'Destructor'.
+      Type 'void | 0 | undefined' is not assignable to type 'void | { [UNDEFINED_VOID_ONLY]: never; }'.
+        Type 'number' is not assignable to type 'void | { [UNDEFINED_VOID_ONLY]: never; }'.
+src/components/PixiBoard.tsx(123,58): error TS2322: Type 'number | "bar" | "bearoff-white" | "bearoff-black" | undefined' is not assignable to type 'number | "bar" | "bearoff-white" | "bearoff-black"'.
+  Type 'undefined' is not assignable to type 'number | "bar" | "bearoff-white" | "bearoff-black"'.
+src/routes/Game.tsx(26,16): error TS2345: Argument of type 'GameState | null' is not assignable to parameter of type 'GameState'.
+  Type 'null' is not assignable to type 'GameState'.
+src/shims/pixi-graphics-polygon.ts(1,20): error TS2724: '"pixi.js"' has no exported member named 'IPointData'. Did you mean 'PointData'?
+src/shims/pixi-graphics-polygon.ts(4,3): error TS2578: Unused '@ts-expect-error' directive.
+::DUELLY::step=fe-next3-recover-fixes-v2 status=error code=1 line=268 log=/root/backgammon-mini-app/.duelly/logs/fe-next3-recover-fixes-v2-20251020-071718.log

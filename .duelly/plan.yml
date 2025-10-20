@@ -1,0 +1,13 @@
+steps:
+  - id: 100-impl-rng-verify-tests
+    desc: לממש ולאמת GET /api/v2/rng/verify כולל בדיקות יחידה/אינטגרציה
+    run: echo "TODO: run unit/integration tests for rng/verify"
+    verify: echo "TODO: assert tests passed"
+  - id: 110-openapi-update
+    desc: עדכון docs/openapi.yaml + הוספת דוגמאות curl ובדיקות עשן
+    run: echo "TODO: update OpenAPI + add curl examples"
+    verify: echo "TODO: validate with openapi-cli"
+  - id: 120-security-jwt-hmac
+    desc: התחלת חיווט JWT/HMAC לזרימות משחק + rate-limit/anti-replay
+    run: echo "TODO: wire middleware + nginx rate-limit"
+    verify: echo "TODO: smoke protected endpoints"

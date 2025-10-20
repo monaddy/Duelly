@@ -1,0 +1,208 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step=$STEP_ID status=error code=$code line=$LINENO log=$LOG_FILE"; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # נעילה להרצה מתואמת (אם flock קיים)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if command -v flock >/dev/null 2>&1; then
+[?2004l[?2004h>   mkdir -p "$(dirname "$LOCK_FILE")"
+[?2004l[?2004h>   exec 9>"$LOCK_FILE"
+[?2004l[?2004h>   flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED notes=another step running"; exit 1; }
+[?2004l[?2004h> else
+[?2004l[?2004h>   echo "WARN: flock not found; continuing without lock"
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is)"
+[?2004l::DUELLY::step=010-be-init-adopt-smoke status=running time=2025-10-20T07:18:07+00:00
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # זיהוי מערכת + SUDO
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# OS_FAMILY="unknown"; PKG=""; SUDO=""
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f /etc/os-release ]; then . /etc/os-release; fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# case "${ID:-}" in
+[?2004l[?2004h>   ubuntu|debian) OS_FAMILY="debian"; PKG="apt-get";;
+[?2004l[?2004h>   centos|rocky|rhel|amzn) OS_FAMILY="rhel"; PKG="$(command -v dnf >/dev/null 2>&1 && echo dnf || echo yum)";;
+[?2004l[?2004h>   fedora) OS_FAMILY="rhel"; PKG="dnf";;
+[?2004l[?2004h>   arch) OS_FAMILY="arch"; PKG="pacman";;
+[?2004l[?2004h> esac
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ "${EUID:-$(id -u)}" -ne 0 ]; then SUDO="sudo -n"; fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # שמירת ENV (עם גיבוי אם קיים ומשתנה)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# mkdir -p "$(dirname "$ENV_FILE")"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# TMP_ENV="$ENV_FILE.new"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cat >"$TMP_ENV" <<EOF
+[?2004l[?2004h> export PROJECT_ROOT="/root/backgammon-mini-app"
+[?2004l[?2004h> export LOG_DIR="$LOG_DIR"
+[?2004l[?2004h> export OS_FAMILY="$OS_FAMILY"
+[?2004l[?2004h> export PKG="$PKG"
+[?2004l[?2004h> export SUDO="$SUDO"
+[?2004l[?2004h> export ENV_FILE="$ENV_FILE"
+[?2004l[?2004h> EOF
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f "$ENV_FILE" ]; then
+[?2004l[?2004h>   if ! cmp -s "$TMP_ENV" "$ENV_FILE"; then cp -a "$ENV_FILE" "$ENV_FILE.bak.$(date +%s)"; mv "$TMP_ENV" "$ENV_FILE"; else rm -f "$TMP_ENV"; fi
+[?2004l[?2004h> else
+[?2004l[?2004h>   mv "$TMP_ENV" "$ENV_FILE"
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # כתיבת מצב BE מה‑JSON שסופק (עם גיבוי אידמפוטנטי)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# TMP_STATE="$STATE_FILE.new"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cat >"$TMP_STATE" <<'JSON'
+[?2004l[?2004h> {
+[?2004l[?2004h>   "duelly_state_version": "v1",
+[?2004l[?2004h>   "language": "he-IL",
+[?2004l[?2004h>   "project_root": "/root/backgammon-mini-app",
+[?2004l[?2004h>   "domain": "https://play.duelly.online",
+[?2004l[?2004h>   "repo": {
+[?2004l[?2004h>     "origin": "https://github.com/monaddy/Duelly.git",
+[?2004l[?2004h>     "branch": "feat/be-rng-verify-pr-stub",
+[?2004l[?2004h>     "commit": "unknown"
+[?2004l[?2004h>   },
+[?2004l[?2004h>   "branches": {
+[?2004l[?2004h>     "be_active": "feat/be-rng-verify-pr-stub",
+[?2004l[?2004h>     "security": "feat/sec-stage8-hmac-jwt-anti-cheat",
+[?2004l[?2004h>     "release": "release/v1.0.0",
+[?2004l[?2004h>     "ops_snapshots": "ops/snapshots"
+[?2004l[?2004h>   },
+[?2004l[?2004h>   "services": {
+[?2004l[?2004h>     "api": {
+[?2004l[?2004h>       "path": "services/api-v2",
+[?2004l[?2004h>       "health_path": "/api/v2/health",
+[?2004l[?2004h>       "rng_verify": {
+[?2004l[?2004h>         "path": "/api/v2/rng/verify",
+[?2004l[?2004h>         "status": "implemented",
+[?2004l[?2004h>         "source_hint": "services/api-v2/src/routes/rng-verify.ts"
+[?2004l[?2004h>       }
+[?2004l[?2004h>     },
+[?2004l[?2004h>     "db": {
+[?2004l[?2004h>       "orm": "Prisma",
+[?2004l[?2004h>       "schema": "prisma/schema.prisma",
+[?2004l[?2004h>       "migrations_pending": 0
+[?2004l[?2004h>     },
+[?2004l[?2004h>     "security": {
+[?2004l[?2004h>       "jwt": "planned",
+[?2004l[?2004h>       "hmac_anti_cheat": "planned",
+[?2004l[?2004h>       "notes": "JWT קיים עבור auth בסיסי; חיזוק HMAC/JWT לזרימת המשחק מתוכנן (Rate-limit/CORS/Anti-Replay)."
+[?2004l[?2004h>     }
+[?2004l[?2004h>   },
+[?2004l[?2004h>   "rng_commit_model": {
+[?2004l[?2004h>     "table": "RngCommit",
+[?2004l[?2004h>     "fields": [
+[?2004l[?2004h>       "id",
+[?2004l[?2004h>       "matchId",
+[?2004l[?2004h>       "serverCommitHex",
+[?2004l[?2004h>       "revealed",
+[?2004l[?2004h>       "serverSeedHex",
+[?2004l[?2004h>       "dice"
+[?2004l[?2004h>     ]
+[?2004l[?2004h>   },
+[?2004l[?2004h>   "openapi": {
+[?2004l[?2004h>     "file": "docs/openapi.yaml",
+[?2004l[?2004h>     "notes_file": "openapi/notes/rng-verify.txt",
+[?2004l[?2004h>     "status": "pending"
+[?2004l[?2004h>   },
+[?2004l[?2004h>   "deployment": {
+[?2004l[?2004h>     "nginx": "conf/nginx/**",
+[?2004l[?2004h>     "pm2": "pm2/ecosystem.config.cjs",
+[?2004l[?2004h>     "docker_compose": "docker-compose.yml",
+[?2004l[?2004h>     "notes": "ה־schema של Prisma מועתק לשלב הריצה (Dockerfile). Nginx כולל proxy ל-/api/v2 ול-/socket.io-v2."
+[?2004l[?2004h>   },
+[?2004l[?2004h>   "health": {
+[?2004l[?2004h>     "api_ok": true,
+[?2004l[?2004h>     "web_ok": true
+[?2004l[?2004h>   },
+[?2004l[?2004h>   "urls": {
+[?2004l[?2004h>     "api_health": "https://play.duelly.online/api/v2/health",
+[?2004l[?2004h>     "rng_verify_sample": "https://play.duelly.online/api/v2/rng/verify?id=<CID>",
+[?2004l[?2004h>     "snapshot_json": "https://raw.githubusercontent.com/monaddy/Duelly/ops/snapshots/docs/operations/_snapshots/latest.json"
+[?2004l[?2004h>   },
+[?2004l[?2004h>   "prs": [
+[?2004l[?2004h>     {
+[?2004l[?2004h>       "title": "BE PR Stub — rng/verify",
+[?2004l[?2004h>       "branch": "feat/be-rng-verify-pr-stub",
+[?2004l[?2004h>       "base": "main",
+[?2004l[?2004h>       "url": "https://github.com/monaddy/Duelly/pull/xxxx"
+[?2004l[?2004h>     },
+[?2004l[?2004h>     {
+[?2004l[?2004h>       "title": "Security Stage8 — HMAC/JWT anti‑cheat",
+[?2004l[?2004h>       "branch": "feat/sec-stage8-hmac-jwt-anti-cheat",
+[?2004l[?2004h>       "base": "main",
+[?2004l[?2004h>       "url": "https://github.com/monaddy/Duelly/pull/yyyy"
+[?2004l[?2004h>     }
+[?2004l[?2004h>   ],
+[?2004l[?2004h>   "build": {
+[?2004l[?2004h>     "status": "ok",
+[?2004l[?2004h>     "last_errors": []
+[?2004l[?2004h>   },
+[?2004l[?2004h>   "next_actions": [
+[?2004l[?2004h>     {
+[?2004l[?2004h>       "owner": "BE",
+[?2004l[?2004h>       "action": "לממש GET /api/v2/rng/verify (קריאה ל‑Prisma + אימות commit/reveal)",
+[?2004l[?2004h>       "target": "services/api-v2",
+[?2004l[?2004h>       "cmd": "החלת הקובץ rng-verify.ts ו‑register ב‑index.ts; build + smoke."
+[?2004l[?2004h>     },
+[?2004l[?2004h>     {
+[?2004l[?2004h>       "owner": "BE",
+[?2004l[?2004h>       "action": "עדכון OpenAPI + בדיקות יחידה/אינטגרציה",
+[?2004l[?2004h>       "target": "docs/openapi.yaml, services/api-v2/test",
+[?2004l[?2004h>       "cmd": "להוסיף מקרי בדיקה CID קיים/לא קיים, לפני/אחרי reveal."
+[?2004l[?2004h>     },
+[?2004l[?2004h>     {
+[?2004l[?2004h>       "owner": "SEC",
+[?2004l[?2004h>       "action": "חיווט JWT/HMAC לאנדפוינטים רלוונטיים (Rate‑limit/CORS)",
+[?2004l[?2004h>       "target": "middleware",
+[?2004l[?2004h>       "cmd": "להוסיף אימות JWT לנתיבים רגישים, HMAC server-side ל‑roll/move, וקצבונים ב‑Nginx."
+[?2004l[?2004h>     }
+[?2004l[?2004h>   ]
+[?2004l[?2004h> }
+[?2004l[?2004h> JSON
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f "$STATE_FILE" ]; then
+[?2004l[?2004h>   if ! cmp -s "$TMP_STATE" "$STATE_FILE"; then cp -a "$STATE_FILE" "$STATE_FILE.bak.$(date +%s)"; mv "$TMP_STATE" "$STATE_FILE"; else rm -f "$TMP_STATE"; fi
+[?2004l[?2004h> else
+[?2004l[?2004h>   mv "$TMP_STATE" "$STATE_FILE"
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # בדיקות עשן:
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# API_HEALTH_URL="https://play.duelly.online/api/v2/health"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# HEALTH_JSON="$(curl -sS "$API_HEALTH_URL" | tr -d '\n' || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "health response: $HEALTH_JSON"
+[?2004lhealth response: {"ok":true}
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "$HEALTH_JSON" | grep -q '"ok":true' || { echo "ERROR: Health check failed for $API_HEALTH_URL"; exit 2; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# CID="$(cat /proc/sys/kernel/random/uuid 2>/dev/null || echo 00000000-0000-4000-8000-000000000000)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# RNG_URL="https://play.duelly.online/api/v2/rng/verify?id=$CID"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# RNG_BODY_FILE="$DUELLY_DIR/.rng_verify_last.json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# HTTP_CODE="$(curl -sS -o "$RNG_BODY_FILE" -w "%{http_code}" "$RNG_URL" || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "rng/verify status=$HTTP_CODE cid=$CID body_file=$RNG_BODY_FILE"
+[?2004lrng/verify status=404 cid=e5759561-c3d0-46f8-b9fd-6585c12d6c5b body_file=.duelly/.rng_verify_last.json
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# case "$HTTP_CODE" in
+[?2004l[?2004h>   200|404) echo "rng/verify smoke OK (expected 200 if CID קיים, אחרת 404).";;
+[?2004l[?2004h>   *) echo "ERROR: Unexpected HTTP $HTTP_CODE from $RNG_URL"; exit 3;;
+[?2004l[?2004h> esac
+[?2004lrng/verify smoke OK (expected 200 if CID קיים, אחרת 404).
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # יצירת plan ראשוני ל-Next-3 (רק אם חסר)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ ! -f "$PLAN_FILE" ]; then
+[?2004l[?2004h>   cat >"$PLAN_FILE" <<'YAML'
+[?2004l[?2004h> steps:
+[?2004l[?2004h>   - id: 100-impl-rng-verify-tests
+[?2004l[?2004h>     desc: לממש ולאמת GET /api/v2/rng/verify כולל בדיקות יחידה/אינטגרציה
+[?2004l[?2004h>     run: echo "TODO: run unit/integration tests for rng/verify"
+[?2004l[?2004h>     verify: echo "TODO: assert tests passed"
+[?2004l[?2004h>   - id: 110-openapi-update
+[?2004l[?2004h>     desc: עדכון docs/openapi.yaml + הוספת דוגמאות curl ובדיקות עשן
+[?2004l[?2004h>     run: echo "TODO: update OpenAPI + add curl examples"
+[?2004l[?2004h>     verify: echo "TODO: validate with openapi-cli"
+[?2004l[?2004h>   - id: 120-security-jwt-hmac
+[?2004l[?2004h>     desc: התחלת חיווט JWT/HMAC לזרימות משחק + rate-limit/anti-replay
+[?2004l[?2004h>     run: echo "TODO: wire middleware + nginx rate-limit"
+[?2004l[?2004h>     verify: echo "TODO: smoke protected endpoints"
+[?2004l[?2004h> YAML
+[?2004l[?2004h>   echo "Created $PLAN_FILE"
+[?2004l[?2004h> fi
+[?2004lCreated .duelly/plan.yml
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # לוג תוצאות עשן כ-JSON
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SMOKE_FILE="$DUELLY_DIR/smoke-$(date +%Y%m%d-%H%M%S).json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cat >"$SMOKE_FILE" <<JSON
+[?2004l[?2004h> {"ts":"$(date -Is)","env":{"os_family":"$OS_FAMILY","pkg":"$PKG"},"health":{"url":"$API_HEALTH_URL","ok":true},"rng_verify":{"url":"$RNG_URL","cid":"$CID","http_code":"$HTTP_CODE","body_file":"$RNG_BODY_FILE"}}
+[?2004l[?2004h> JSON
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=ok time=$(date -Is) notes=\"health ok; rng_verify $HTTP_CODE; plan=$( [ -f "$PLAN_FILE" ] && echo present || echo created )\""
+[?2004l::DUELLY::step=010-be-init-adopt-smoke status=ok time=2025-10-20T07:18:08+00:00 notes="health ok; rng_verify 404; plan=present"
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [?2004l[?2004l

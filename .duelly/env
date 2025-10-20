@@ -1,0 +1,6 @@
+export PROJECT_ROOT="/root/backgammon-mini-app"
+export LOG_DIR=".duelly/logs"
+export OS_FAMILY="debian"
+export PKG="apt-get"
+export SUDO=""
+export ENV_FILE=".duelly/env"

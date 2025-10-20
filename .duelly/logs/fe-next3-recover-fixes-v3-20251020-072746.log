@@ -1,0 +1,121 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step='$STEP_ID' status=error code=$code line=$LINENO log=$LOG_FILE"; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- lock ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"; exec 9>"$LOCK_FILE"; flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED notes=\"another step running\""; exit 1; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is) notes=\"apply clean Pixi v7 & fairness fixes; rebuild + theme ops + QA\""
+[?2004l::DUELLY::step=fe-next3-recover-fixes-v3 status=running time=2025-10-20T07:27:46+00:00 notes="apply clean Pixi v7 & fairness fixes; rebuild + theme ops + QA"
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 1) Write/ensure shim + type augments (idempotent) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# mkdir -p src/shims src/types
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SHIM="src/shims/pixi-graphics-polygon.ts"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ ! -f "$SHIM" ]; then
+[?2004l[?2004h>   cat >"$SHIM" <<'TS'
+[?2004l[?2004h> import { Graphics, IPointData } from 'pixi.js';
+[?2004l[?2004h> declare module 'pixi.js' { interface Graphics { polygon(points: number[] | IPointData[], close?: boolean): this; } }
+[?2004l[?2004h> (function attachPolygon() {
+[?2004l[?2004h>   // @ts-expect-error runtime augment
+[?2004l[?2004h>   const proto = (Graphics as any).prototype;
+[?2004l[?2004h>   if (typeof proto.polygon === 'function') return;
+[?2004l[?2004h>   proto.polygon = function(points: number[] | IPointData[], close: boolean = true) {
+[?2004l[?2004h>     const g = this as Graphics;
+[?2004l[?2004h>     const arr: any[] = Array.isArray(points) ? (points as any[]) : [];
+[?2004l[?2004h>     let firstX: number|null = null, firstY: number|null = null;
+[?2004l[?2004h>     const pushPoint = (x:number, y:number, i:number) => { if (i===0) { g.moveTo(x,y); firstX=x; firstY=y; } else { g.lineTo(x,y); } };
+[?2004l[?2004h>     if (arr.length) {
+[?2004l[?2004h>       if (typeof arr[0] === 'number') { for (let i=0;i<arr.length;i+=2) pushPoint(arr[i], arr[i+1], i/2); }
+[?2004l[?2004h>       else { for (let i=0;i<arr.length;i++) { const p=arr[i] as IPointData; pushPoint(p.x,p.y,i); } }
+[?2004l[?2004h>     }
+[?2004l[?2004h>     if (close && firstX!=null && firstY!=null) g.lineTo(firstX, firstY);
+[?2004l[?2004h>     return g;
+[?2004l[?2004h>   };
+[?2004l[?2004h> })();
+[?2004l[?2004h> TS
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# AUG="src/types/pixi-v7-augment.d.ts"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ ! -f "$AUG" ]; then
+[?2004l[?2004h>   cat >"$AUG" <<'TS'
+[?2004l[?2004h> import 'pixi.js';
+[?2004l[?2004h> declare module 'pixi.js' {
+[?2004l[?2004h>   interface Graphics {
+[?2004l[?2004h>     polygon(points: number[] | import('pixi.js').IPointData[], close?: boolean): this;
+[?2004l[?2004h>   }
+[?2004l[?2004h>   interface DestroyOptions {
+[?2004l[?2004h>     /** Pixi v7 uses textureSource instead of baseTexture */
+[?2004l[?2004h>     textureSource?: boolean;
+[?2004l[?2004h>   }
+[?2004l[?2004h> }
+[?2004l[?2004h> TS
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# GLOBAL="src/types/global.d.ts"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ ! -f "$GLOBAL" ]; then
+[?2004l[?2004h>   cat >"$GLOBAL" <<'TS'
+[?2004l[?2004h> /// <reference path="./pixi-v7-augment.d.ts" />
+[?2004l[?2004h> TS
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 2) Force PixiBoard v7 adjustments (import shim, polygon args, destroy options, buttonMode removal, guard 'to') ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# PB="src/components/PixiBoard.tsx"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f "$PB" ]; then
+[?2004l[?2004h>   # Insert shim import after imports (only once)
+[?2004l[?2004h>   if ! grep -q "shims/pixi-graphics-polygon" "$PB"; then
+[?2004l[?2004h>     awk 'BEGIN{done=0} /^import /{print; next} {if(!done){print "import '\''../shims/pixi-graphics-polygon'\'';"; done=1} print}' "$PB" > "$PB.new" && mv "$PB.new" "$PB"
+[?2004l[?2004h>   fi
+[?2004l[?2004h>   # buttonMode -> eventMode/cursor
+[?2004l[?2004h>   sed -E -i "s/([[:alnum:]_.]+)\.buttonMode\s*=\s*true;/\1.eventMode = 'static'; \1.cursor = 'pointer';/g" "$PB" || true
+[?2004l[?2004h>   sed -E -i "s/([[:alnum:]_.]+)\.buttonMode\s*=\s*false;/\1.eventMode = 'auto'; \1.cursor = 'default';/g" "$PB" || true
+[?2004l[?2004h>   # destroy options: baseTexture -> textureSource
+[?2004l[?2004h>   sed -E -i "s/baseTexture\s*:\s*true/textureSource: true/g" "$PB" || true
+[?2004l[?2004h>   # polygon(6 args ...) -> polygon([args])
+[?2004l[?2004h>   perl -0777 -i -pe 's/\.polygon\s*\(\s*(?!\[)([^()\n]+?)\s*\)/.polygon([$1])/g' "$PB" || true
+[?2004l[?2004h>   # guard: const to = moveAttempt.to;
+[?2004l[?2004h>   perl -0777 -i -pe 's/\bconst\s+to\s*=\s*moveAttempt\.to\s*;/const to = (moveAttempt && typeof moveAttempt.to === "number") ? moveAttempt.to : from;/g' "$PB" || true
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 3) Fix React cleanup in FpsOverlay (return function) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# FPS="src/components/FpsOverlay.tsx"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f "$FPS" ]; then
+[?2004l[?2004h>   perl -0777 -i -pe 's/return\s+raf\s*&&\s*cancelAnimationFrame\(\s*raf\s*\)\s*;/return () => { if (raf) cancelAnimationFrame(raf); };/g' "$FPS" || true
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 4) Allow nullable GameState in Game.tsx (initializer & setter typing) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# GAME="src/routes/Game.tsx"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f "$GAME" ]; then
+[?2004l[?2004h>   perl -0777 -i -pe 's/useState<\s*GameState\s*>\(\s*null\s*\)/useState<GameState | null>(null)/g' "$GAME" || true
+[?2004l[?2004h>   # If tuple typing present, widen setter explicitly (idempotent no-op if already correct)
+[?2004l[?2004h>   perl -0777 -i -pe 's/const\s*\[\s*gameState\s*,\s*setGameState\s*\]\s*=\s*useState<\s*GameState\s*\>\(/const [gameState, setGameState]: [GameState | null, React.Dispatch<React.SetStateAction<GameState | null>>] = useState<GameState | null>(/g' "$GAME" || true
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 5) Fairness: pass SAB-free ArrayBuffer via fresh Uint8Array copy to subtle.sign ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# FAIR="src/utils/fairness.ts"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f "$FAIR" ]; then
+[?2004l[?2004h>   # helper (idempotent)
+[?2004l[?2004h>   if ! grep -q "function normalizeForSign" "$FAIR"; then
+[?2004l[?2004h>     cp -a "$FAIR" "$FAIR.bak.$(date +%s)"
+[?2004l[?2004h>     cat >>"$FAIR" <<'TS'
+[?2004l[?2004h> 
+[?2004l[?2004h> // --- DUELLY fairness: copy into fresh Uint8Array (non-SAB) and return ArrayBuffer for WebCrypto ---
+[?2004l[?2004h> function normalizeForSign(src: ArrayBuffer | ArrayBufferView): ArrayBuffer {
+[?2004l[?2004h>   const view = (src instanceof ArrayBuffer)
+[?2004l[?2004h>     ? new Uint8Array(src)
+[?2004l[?2004h>     : new Uint8Array(src.buffer, src.byteOffset, src.byteLength);
+[?2004l[?2004h>   const copy = new Uint8Array(view.byteLength);
+[?2004l[?2004h>   copy.set(view);
+[?2004l[?2004h>   return copy.buffer; // ensure ArrayBuffer (not SharedArrayBuffer)
+[?2004l[?2004h> }
+[?2004l[?2004h> TS
+[?2004l[?2004h>   fi
+[?2004l[?2004h>   # wrap subtle.sign 3rd arg
+[?2004l[?2004h>   perl -0777 -i -pe 's/subtle\.sign\(\s*([^,]+),\s*([^,]+),\s*([^)]+)\)/subtle.sign($1, $2, normalizeForSign($3))/g' "$FAIR" || true
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 6) Commit changes if any (optional) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if git rev-parse --git-dir >/dev/null 2>&1; then
+[?2004l[?2004h>   git add -A
+[?2004l[?2004h>   if ! git diff --cached --quiet --ignore-submodules --; then
+[?2004l[?2004h>     git commit -m "DUELLY FE: Pixi v7 shim + TS augments; polygon arg fix; eventMode/cursor; destroy options; FpsOverlay cleanup; Game nullable state; fairness normalizeForSign"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004l

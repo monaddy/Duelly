@@ -1,0 +1,1 @@
+{"ts":"2025-10-20T07:18:08+00:00","env":{"os_family":"debian","pkg":"apt-get"},"health":{"url":"https://play.duelly.online/api/v2/health","ok":true},"rng_verify":{"url":"https://play.duelly.online/api/v2/rng/verify?id=e5759561-c3d0-46f8-b9fd-6585c12d6c5b","cid":"e5759561-c3d0-46f8-b9fd-6585c12d6c5b","http_code":"404","body_file":".duelly/.rng_verify_last.json"}}
