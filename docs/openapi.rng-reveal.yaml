@@ -1,0 +1,44 @@
+openapi: 3.1.0
+info: { title: DUELLY API — RNG Reveal (fragment), version: "0.1.0" }
+servers: [ { url: https://play.duelly.online/api/v2 } ]
+paths:
+  /rng/reveal:
+    post:
+      summary: Reveal RNG seed and dice
+      description: |
+        מקבל מזהה commit (חובה) ו-`serverSeedHex` (אופציונלי). אם לא נשלח seed בבקשה — השרת יישאב מה-DB.
+        מאמת התאמה ל-`serverCommitHex`, מעדכן `revealed=true`, ומחזיר `dice`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ id ]
+              additionalProperties: false
+              properties:
+                id: { type: string, format: uuid }
+                serverSeedHex: { type: string, pattern: '^[0-9a-fA-F]+$' }
+      responses:
+        '200':
+          description: Revealed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, matchId, serverCommitHex, revealed, serverSeedHex, dice]
+                properties:
+                  id: { type: string, format: uuid }
+                  matchId: { type: string, format: uuid }
+                  serverCommitHex: { type: string }
+                  revealed: { type: boolean, const: true }
+                  serverSeedHex: { type: string }
+                  dice:
+                    type: array
+                    minItems: 2
+                    maxItems: 2
+                    items: { type: integer, minimum: 1, maximum: 6 }
+        '400':
+          description: Bad Request (seed missing or commit mismatch)
+        '404':
+          description: Commit not found

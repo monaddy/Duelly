@@ -1,0 +1,4 @@
+- POST /api/v2/rng/reveal: body={ id: UUID, serverSeedHex?: hex }.
+- אם serverSeedHex לא נשלח – השרת מנסה לשלוף seed מה-DB.
+- אימות: sha256(seed) חייב להתאים ל-serverCommitHex; אחרת 400 COMMIT_MISMATCH.
+- פלט 200: { id, matchId, serverCommitHex, revealed:true, serverSeedHex, dice }.

@@ -87,4 +87,23 @@
 [?2004l[?2004h>     git commit -m "FE: centralize MoveTarget/resolveTo; clean PixiBoard duplicates; coalesce moveAttempt.to; enforce non-null GameState usages"
 [?2004l[?2004h>   fi
 [?2004l[?2004h> fi
-[?2004l
+[?2004l[feat/qa-stage7-perf-fairness 5676ac7] FE: centralize MoveTarget/resolveTo; clean PixiBoard duplicates; coalesce moveAttempt.to; enforce non-null GameState usages
+ 12 files changed, 742 insertions(+), 4 deletions(-)
+ create mode 100644 .duelly/logs/040-openapi-and-smoke-artifacts-for-rng-verify-20251020-174636.log
+ create mode 100644 .duelly/logs/fe-next3-dedupe-movetarget-import-v12-20251020-180932.log
+ create mode 100644 docs/openapi.rng-verify.yaml
+ create mode 100644 docs/smoke/last-rng-verify-summary.json
+ create mode 100755 docs/smoke/rng-verify-examples.sh
+ create mode 100644 openapi/notes/rng-verify.txt.bak.1760982396
+ create mode 100644 src/components/PixiBoard.tsx.bak.1760983773
+ create mode 100644 src/routes/Game.tsx.bak.1760983773
+ create mode 100644 src/types/moves.ts
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 5) Rebuild + theme ops + QA ---------------------------------------------
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# npm run -s build
+[?2004lsrc/components/PixiBoard.tsx(2,10): error TS2440: Import declaration conflicts with local declaration of 'resolveTo'.
+src/components/PixiBoard.tsx(129,58): error TS2322: Type 'number | "bar" | "bearoff-white" | "bearoff-black" | undefined' is not assignable to type 'number | "bar" | "bearoff-white" | "bearoff-black"'.
+  Type 'undefined' is not assignable to type 'number | "bar" | "bearoff-white" | "bearoff-black"'.
+src/routes/Game.tsx(27,16): error TS2345: Argument of type 'GameState | null' is not assignable to parameter of type 'GameState'.
+  Type 'null' is not assignable to type 'GameState'.
+::DUELLY::step=fe-next3-dedupe-movetarget-import-v12 status=error code=1 line=105 log=/root/backgammon-mini-app/.duelly/logs/fe-next3-dedupe-movetarget-import-v12-20251020-180932.log

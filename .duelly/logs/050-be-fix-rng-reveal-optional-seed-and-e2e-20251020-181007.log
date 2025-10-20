@@ -1,0 +1,422 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step=$STEP_ID status=error code=$code line=$LINENO log=$LOG_FILE" >&2; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # נעילה
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"; mkdir -p "$(dirname "$LOCK_FILE")"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if command -v flock >/dev/null 2>&1; then exec 9>"$LOCK_FILE"; flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED notes=another step running"; exit 1; }; fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is)"
+[?2004l::DUELLY::step=050-be-fix-rng-reveal-optional-seed-and-e2e status=running time=2025-10-20T18:10:07+00:00
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# API_DIR="services/api-v2"; SRC_DIR="$API_DIR/src"; ROUTES_DIR="$SRC_DIR/routes"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# test -d "$SRC_DIR" || { echo "ERROR: $SRC_DIR not found"; exit 2; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# mkdir -p "$ROUTES_DIR"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 1) קובץ מסלול reveal (מאפשר serverSeedHex אופציונלי; אימות commit + dice) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# REVEAL_FILE="$(find "$SRC_DIR" -maxdepth 2 -type f -name '*rng*reveal*.ts' 2>/dev/null | head -n1 || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$REVEAL_FILE" ] || REVEAL_FILE="$ROUTES_DIR/rng-reveal.ts"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# TS_NOW="$(date +%s)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cat >"$REVEAL_FILE.new" <<'TS'
+[?2004l[?2004h> // DUELLY — RNG Reveal (accepts serverSeedHex optionally; expects { prefix: '/api/v2' } registration)
+[?2004l[?2004h> import type { FastifyPluginAsync } from 'fastify';
+[?2004l[?2004h> import { PrismaClient } from '@prisma/client';
+[?2004l[?2004h> import { createHash } from 'node:crypto';
+[?2004l[?2004h> 
+[?2004l[?2004h> const prisma = new PrismaClient();
+[?2004l[?2004h> 
+[?2004l[?2004h> function sha256Hex(buf: Buffer): string {
+[?2004l[?2004h>   return createHash('sha256').update(buf).digest('hex');
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> // rejection sampling לגלגול קוביות מתוך בלוק ביטים דטרמיניסטי
+[?2004l[?2004h> function rollTwoDiceFromSeed(seedHex: string): [number, number] {
+[?2004l[?2004h>   let block = createHash('sha256').update(Buffer.from(seedHex, 'hex')).digest();
+[?2004l[?2004h>   let i = 0;
+[?2004l[?2004h>   const nextByte = () => {
+[?2004l[?2004h>     if (i >= block.length) { block = createHash('sha256').update(block).digest(); i = 0; }
+[?2004l[?2004h>     return block[i++];
+[?2004l[?2004h>   };
+[?2004l[?2004h>   const nextDie = () => {
+[?2004l[?2004h>     let b = nextByte();
+[?2004l[?2004h>     while (b >= 252) b = nextByte(); // 252..255 נדחים כדי לבטל bias
+[?2004l[?2004h>     return (b % 6) + 1;
+[?2004l[?2004h>   };
+[?2004l[?2004h>   return [nextDie(), nextDie()];
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> const rngRevealRoute: FastifyPluginAsync = async (app) => {
+[?2004l[?2004h>   app.post('/rng/reveal', {
+[?2004l[?2004h>     schema: {
+[?2004l[?2004h>       body: {
+[?2004l[?2004h>         type: 'object',
+[?2004l[?2004h>         properties: {
+[?2004l[?2004h>           id: { type: 'string', format: 'uuid' },
+[?2004l[?2004h>           serverSeedHex: { type: 'string', pattern: '^[0-9a-fA-F]+$' }
+[?2004l[?2004h>         },
+[?2004l[?2004h>         required: ['id'],
+[?2004l[?2004h>         additionalProperties: false
+[?2004l[?2004h>       },
+[?2004l[?2004h>       response: {
+[?2004l[?2004h>         200: {
+[?2004l[?2004h>           type: 'object',
+[?2004l[?2004h>           properties: {
+[?2004l[?2004h>             id: { type: 'string', format: 'uuid' },
+[?2004l[?2004h>             matchId: { type: 'string', format: 'uuid' },
+[?2004l[?2004h>             serverCommitHex: { type: 'string' },
+[?2004l[?2004h>             revealed: { type: 'boolean' },
+[?2004l[?2004h>             serverSeedHex: { type: 'string' },
+[?2004l[?2004h>             dice: {
+[?2004l[?2004h>               type: 'array',
+[?2004l[?2004h>               items: { type: 'integer', minimum: 1, maximum: 6 },
+[?2004l[?2004h>               minItems: 2, maxItems: 2
+[?2004l[?2004h>             }
+[?2004l[?2004h>           },
+[?2004l[?2004h>           required: ['id','matchId','serverCommitHex','revealed','serverSeedHex','dice']
+[?2004l[?2004h>         },
+[?2004l[?2004h>         400: {
+[?2004l[?2004h>           type: 'object',
+[?2004l[?2004h>           properties: { ok:{type:'boolean'}, error:{type:'string'}, message:{type:'string'} },
+[?2004l[?2004h>           required: ['ok','error','message']
+[?2004l[?2004h>         },
+[?2004l[?2004h>         404: {
+[?2004l[?2004h>           type: 'object',
+[?2004l[?2004h>           properties: { ok:{type:'boolean'}, error:{type:'string'}, message:{type:'string'} },
+[?2004l[?2004h>           required: ['ok','error','message']
+[?2004l[?2004h>         }
+[?2004l[?2004h>       }
+[?2004l[?2004h>     }
+[?2004l[?2004h>   }, async (req, reply) => {
+[?2004l[?2004h>     const { id, serverSeedHex } = (req.body as any);
+[?2004l[?2004h>     const c = await prisma.rngCommit.findUnique({ where: { id } });
+[?2004l[?2004h>     if (!c) return reply.code(404).send({ ok:false, error:'NOT_FOUND', message:'RngCommit not found' });
+[?2004l[?2004h> 
+[?2004l[?2004h>     // קביעת ה-seed: מה-body אם סופק; אחרת מה-DB אם קיים
+[?2004l[?2004h>     const seedHex = (serverSeedHex && String(serverSeedHex)) || (c as any).serverSeedHex;
+[?2004l[?2004h>     if (!seedHex) return reply.code(400).send({ ok:false, error:'SERVER_SEED_REQUIRED', message:'serverSeedHex is required (body or DB)' });
+[?2004l[?2004h> 
+[?2004l[?2004h>     const expected = (c as any).serverCommitHex?.toLowerCase();
+[?2004l[?2004h>     const actual = sha256Hex(Buffer.from(seedHex, 'hex')).toLowerCase();
+[?2004l[?2004h>     if (expected && actual !== expected) {
+[?2004l[?2004h>       return reply.code(400).send({ ok:false, error:'COMMIT_MISMATCH', message:'serverSeedHex does not match serverCommitHex' });
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     // עדכון revealed + שמירת seed אם חסר
+[?2004l[?2004h>     if (!(c as any).revealed || !(c as any).serverSeedHex) {
+[?2004l[?2004h>       await prisma.rngCommit.update({ where: { id }, data: { revealed: true, serverSeedHex: seedHex } });
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     const dice = rollTwoDiceFromSeed(seedHex);
+[?2004l[?2004h>     return {
+[?2004l[?2004h>       id: (c as any).id,
+[?2004l[?2004h>       matchId: (c as any).matchId,
+[?2004l[?2004h>       serverCommitHex: (c as any).serverCommitHex,
+[?2004l[?2004h>       revealed: true,
+[?2004l[?2004h>       serverSeedHex: seedHex,
+[?2004l[?2004h>       dice
+[?2004l[?2004h>     };
+[?2004l[?2004h>   });
+[?2004l[?2004h> };
+[?2004l[?2004h> 
+[?2004l[?2004h> export default rngRevealRoute;
+[?2004l[?2004h> TS
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ ! -f "$REVEAL_FILE" ] || ! cmp -s "$REVEAL_FILE.new" "$REVEAL_FILE"; then
+[?2004l[?2004h>   [ -f "$REVEAL_FILE" ] && cp -a "$REVEAL_FILE" "$REVEAL_FILE.bak.$TS_NOW"
+[?2004l[?2004h>   mv "$REVEAL_FILE.new" "$REVEAL_FILE"
+[?2004l[?2004h>   echo "wrote route: $REVEAL_FILE"
+[?2004l[?2004h> else
+[?2004l[?2004h>   rm -f "$REVEAL_FILE.new"
+[?2004l[?2004h>   echo "route unchanged: $REVEAL_FILE"
+[?2004l[?2004h> fi
+[?2004lwrote route: services/api-v2/src/routes/rng-reveal.ts
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 2) רישום הפלאגין + תיקוני ESM (.js) ב-main ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# MAIN=""
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# for f in "$SRC_DIR/index.ts" "$SRC_DIR/server.ts" "$SRC_DIR/app.ts"; do [ -f "$f" ] && { MAIN="$f"; break; }; done
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$MAIN" ] || { echo "ERROR: main ts file not found under $SRC_DIR"; exit 3; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # יבוא reveal עם .js (ESM) — הזרקה אם חסר
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if ! grep -q "from './routes/rng-reveal.js'" "$MAIN"; then
+[?2004l[?2004h>   cp -a "$MAIN" "$MAIN.bak.$TS_NOW.imp"
+[?2004l[?2004h>   awk '{
+[?2004l[?2004h>     if (!did && /^import /) { print; print "import rngRevealRoute from \x27./routes/rng-reveal.js\x27;"; did=1; next }
+[?2004l[?2004h>     print
+[?2004l[?2004h>   } END { if (!did) print "import rngRevealRoute from \x27./routes/rng-reveal.js\x27;" }' "$MAIN" > "$MAIN.new" && mv "$MAIN.new" "$MAIN"
+[?2004l[?2004h>   echo "imported rngRevealRoute in $MAIN"
+[?2004l[?2004h> fi
+[?2004limported rngRevealRoute in services/api-v2/src/index.ts
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # ודא שגם verify מיובא עם .js
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if grep -qE "from ['\"]/\.\/routes/rng-verify(\.ts)?['\"]" "$MAIN"; then
+[?2004l[?2004h>   cp -a "$MAIN" "$MAIN.bak.$TS_NOW.verifyimp"
+[?2004l[?2004h>   sed -E -i "s@(from[[:space:]]+['\"])\\./routes/rng-verify(\\.ts)?(['\"])@\\1./routes/rng-verify.js\\3@g" "$MAIN"
+[?2004l[?2004h>   echo "patched rng-verify import path in $MAIN"
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # נרמול רישומים: ללא await וב‑prefix '/api/v2'
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cp -a "$MAIN" "$MAIN.bak.$TS_NOW.reg"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# sed -E -i "s@await[[:space:]]+app\.register@app.register@g" "$MAIN"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if ! grep -Eq "app\.register\([^)]*rngRevealRoute[^)]*\)" "$MAIN"; then
+[?2004l[?2004h>   if grep -nE "app\.listen|app\.ready" "$MAIN" >/dev/null 2>&1; then
+[?2004l[?2004h>     L="$(grep -nE "app\.listen|app\.ready" "$MAIN" | head -n1 | cut -d: -f1)"
+[?2004l[?2004h>     head -n $((L-1)) "$MAIN" > "$MAIN.head"; tail -n +$((L)) "$MAIN" > "$MAIN.tail"
+[?2004l[?2004h>     printf '\napp.register(rngRevealRoute, { prefix: \x27/api/v2\x27 });\n' >> "$MAIN.head"
+[?2004l[?2004h>     cat "$MAIN.head" "$MAIN.tail" > "$MAIN"; rm -f "$MAIN.head" "$MAIN.tail"
+[?2004l[?2004h>     echo "inserted rngRevealRoute registration with prefix"
+[?2004l[?2004h>   else
+[?2004l[?2004h>     echo -e "\napp.register(rngRevealRoute, { prefix: '/api/v2' });" >> "$MAIN"
+[?2004l[?2004h>     echo "appended rngRevealRoute registration with prefix"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> else
+[?2004l[?2004h>   sed -E -i "s@app\.register\([^)]*rngRevealRoute[^)]*\)@app.register(rngRevealRoute, { prefix: '/api/v2' })@g" "$MAIN"
+[?2004l[?2004h>   echo "normalized rngRevealRoute registration with prefix"
+[?2004l[?2004h> fi
+[?2004linserted rngRevealRoute registration with prefix
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if grep -Eq "app\.register\([^)]*rngVerifyRoute[^)]*\)" "$MAIN"; then
+[?2004l[?2004h>   sed -E -i "s@app\.register\([^)]*rngVerifyRoute[^)]*\)@app.register(rngVerifyRoute, { prefix: '/api/v2' })@g" "$MAIN"
+[?2004l[?2004h>   echo "normalized rngVerifyRoute registration with prefix"
+[?2004l[?2004h> fi
+[?2004lnormalized rngVerifyRoute registration with prefix
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 3) OpenAPI fragment ל-reveal (דוק/דוגמאות) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# OPENAPI_DIR="docs"; NOTES_DIR="openapi/notes"; mkdir -p "$OPENAPI_DIR" "$NOTES_DIR"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# OAPI_REVEAL="$OPENAPI_DIR/openapi.rng-reveal.yaml"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cat >"$OAPI_REVEAL.new" <<'YAML'
+[?2004l[?2004h> openapi: 3.1.0
+[?2004l[?2004h> info: { title: DUELLY API — RNG Reveal (fragment), version: "0.1.0" }
+[?2004l[?2004h> servers: [ { url: https://play.duelly.online/api/v2 } ]
+[?2004l[?2004h> paths:
+[?2004l[?2004h>   /rng/reveal:
+[?2004l[?2004h>     post:
+[?2004l[?2004h>       summary: Reveal RNG seed and dice
+[?2004l[?2004h>       description: |
+[?2004l[?2004h>         מקבל מזהה commit (חובה) ו-`serverSeedHex` (אופציונלי). אם לא נשלח seed בבקשה — השרת יישאב מה-DB.
+[?2004l[?2004h>         מאמת התאמה ל-`serverCommitHex`, מעדכן `revealed=true`, ומחזיר `dice`.
+[?2004l[?2004h>       requestBody:
+[?2004l[?2004h>         required: true
+[?2004l[?2004h>         content:
+[?2004l[?2004h>           application/json:
+[?2004l[?2004h>             schema:
+[?2004l[?2004h>               type: object
+[?2004l[?2004h>               required: [ id ]
+[?2004l[?2004h>               additionalProperties: false
+[?2004l[?2004h>               properties:
+[?2004l[?2004h>                 id: { type: string, format: uuid }
+[?2004l[?2004h>                 serverSeedHex: { type: string, pattern: '^[0-9a-fA-F]+$' }
+[?2004l[?2004h>       responses:
+[?2004l[?2004h>         '200':
+[?2004l[?2004h>           description: Revealed
+[?2004l[?2004h>           content:
+[?2004l[?2004h>             application/json:
+[?2004l[?2004h>               schema:
+[?2004l[?2004h>                 type: object
+[?2004l[?2004h>                 required: [id, matchId, serverCommitHex, revealed, serverSeedHex, dice]
+[?2004l[?2004h>                 properties:
+[?2004l[?2004h>                   id: { type: string, format: uuid }
+[?2004l[?2004h>                   matchId: { type: string, format: uuid }
+[?2004l[?2004h>                   serverCommitHex: { type: string }
+[?2004l[?2004h>                   revealed: { type: boolean, const: true }
+[?2004l[?2004h>                   serverSeedHex: { type: string }
+[?2004l[?2004h>                   dice:
+[?2004l[?2004h>                     type: array
+[?2004l[?2004h>                     minItems: 2
+[?2004l[?2004h>                     maxItems: 2
+[?2004l[?2004h>                     items: { type: integer, minimum: 1, maximum: 6 }
+[?2004l[?2004h>         '400':
+[?2004l[?2004h>           description: Bad Request (seed missing or commit mismatch)
+[?2004l[?2004h>         '404':
+[?2004l[?2004h>           description: Commit not found
+[?2004l[?2004h> YAML
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f "$OAPI_REVEAL" ]; then
+[?2004l[?2004h>   if ! cmp -s "$OAPI_REVEAL.new" "$OAPI_REVEAL"; then cp -a "$OAPI_REVEAL" "$OAPI_REVEAL.bak.$TS_NOW"; mv "$OAPI_REVEAL.new" "$OAPI_REVEAL"; else rm -f "$OAPI_REVEAL.new"; fi
+[?2004l[?2004h> else
+[?2004l[?2004h>   mv "$OAPI_REVEAL.new" "$OAPI_REVEAL"
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# NOTES_FILE="openapi/notes/rng-reveal.txt"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cat >"$NOTES_FILE" <<'TXT'
+[?2004l[?2004h> - POST /api/v2/rng/reveal: body={ id: UUID, serverSeedHex?: hex }.
+[?2004l[?2004h> - אם serverSeedHex לא נשלח – השרת מנסה לשלוף seed מה-DB.
+[?2004l[?2004h> - אימות: sha256(seed) חייב להתאים ל-serverCommitHex; אחרת 400 COMMIT_MISMATCH.
+[?2004l[?2004h> - פלט 200: { id, matchId, serverCommitHex, revealed:true, serverSeedHex, dice }.
+[?2004l[?2004h> TXT
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 4) Build & Deploy לשירות api_v2 ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# COMPOSE_BIN=""
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if command -v docker >/dev/null 2>&1; then
+[?2004l[?2004h>   if docker compose version >/dev/null 2>&1; then COMPOSE_BIN="docker compose"; elif command -v docker-compose >/dev/null 2>&1; then COMPOSE_BIN="docker-compose"; fi
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$COMPOSE_BIN" ] || { echo "ERROR: docker compose not available"; exit 4; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -f docker-compose.yml ] || { echo "ERROR: docker-compose.yml not found"; exit 5; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SVC="$($COMPOSE_BIN config --services 2>/dev/null | grep -E '^api[_-]?v2$' | head -n1 || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$SVC" ] || { echo "ERROR: api_v2 service not found in compose"; $COMPOSE_BIN config --services || true; exit 6; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "Rebuilding compose service: $SVC"
+[?2004lRebuilding compose service: api_v2
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# $COMPOSE_BIN up -d --build "$SVC"
+[?2004ltime="2025-10-20T18:10:08Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:08Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:08Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:08Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:08Z" level=warning msg="The \"POSTGRES_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:08Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:08Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:08Z" level=warning msg="The \"TELEGRAM_BOT_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:08Z" level=warning msg="The \"HMAC_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:08Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:08Z" level=warning msg="The \"JWT_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:08Z" level=warning msg="The \"ALLOWED_ORIGINS\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:08Z" level=warning msg="The \"TELEGRAM_PAYMENT_PROVIDER_TOKEN\" variable is not set. Defaulting to a blank string."
+#1 [internal] load local bake definitions
+#1 reading from stdin 543B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 594B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:20-bullseye
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [build  1/10] FROM docker.io/library/node:20-bullseye
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 11.75kB done
+#6 DONE 0.0s
+
+#7 [build  6/10] RUN npx prisma generate
+#7 CACHED
+
+#8 [build  3/10] COPY services/api-v2/package.json ./package.json
+#8 CACHED
+
+#9 [build  5/10] COPY prisma ./prisma
+#9 CACHED
+
+#10 [build  2/10] WORKDIR /app
+#10 CACHED
+
+#11 [build  4/10] RUN npm install
+#11 CACHED
+
+#12 [build  7/10] COPY services/api-v2/tsconfig.json ./tsconfig.json
+#12 CACHED
+
+#13 [build  8/10] COPY services/api-v2/src ./src
+#13 DONE 0.0s
+
+#14 [build  9/10] RUN npm run build
+#14 0.402 
+#14 0.402 > backgammon-api-v2@0.1.0 build
+#14 0.402 > tsc
+#14 0.402 
+#14 DONE 6.4s
+
+#15 [build 10/10] RUN npm prune --omit=dev
+#15 1.446 
+#15 1.446 up to date, audited 125 packages in 1s
+#15 1.447 
+#15 1.447 8 packages are looking for funding
+#15 1.447   run `npm fund` for details
+#15 1.455 
+#15 1.455 2 moderate severity vulnerabilities
+#15 1.455 
+#15 1.455 To address all issues (including breaking changes), run:
+#15 1.455   npm audit fix --force
+#15 1.455 
+#15 1.455 Run `npm audit` for details.
+#15 DONE 1.5s
+
+#16 [stage-1 3/6] COPY --from=build /app/node_modules ./node_modules
+#16 CACHED
+
+#17 [stage-1 4/6] COPY --from=build /app/dist ./dist
+#17 DONE 0.0s
+
+#18 [stage-1 5/6] COPY --from=build /app/prisma ./prisma
+#18 DONE 0.0s
+
+#19 [stage-1 6/6] COPY --from=build /app/package.json ./package.json
+#19 DONE 0.0s
+
+#20 exporting to image
+#20 exporting layers 0.0s done
+#20 writing image sha256:7a4bcedb848906ebac8818f07a920aea875f533358bc2e783e26c6a19b6c899d done
+#20 naming to docker.io/library/backgammon-mini-app-api_v2 done
+#20 DONE 0.0s
+
+#21 resolving provenance for metadata file
+#21 DONE 0.0s
+ backgammon-mini-app-api_v2  Built
+ Container backgammon-mini-app-redis-1  Running
+ Container backgammon-mini-app-postgres-1  Running
+ Container backgammon-mini-app-api_v2-1  Recreate
+ Container backgammon-mini-app-api_v2-1  Recreated
+ Container backgammon-mini-app-api_v2-1  Starting
+ Container backgammon-mini-app-api_v2-1  Started
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# $COMPOSE_BIN ps | sed -n '1,8p' || true
+[?2004ltime="2025-10-20T18:10:28Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:28Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:28Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:28Z" level=warning msg="The \"TELEGRAM_PAYMENT_PROVIDER_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:28Z" level=warning msg="The \"HMAC_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:28Z" level=warning msg="The \"JWT_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:28Z" level=warning msg="The \"ALLOWED_ORIGINS\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:28Z" level=warning msg="The \"TELEGRAM_BOT_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:28Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:28Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:28Z" level=warning msg="The \"POSTGRES_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:28Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T18:10:28Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+NAME                             IMAGE                        COMMAND                  SERVICE    CREATED          STATUS                  PORTS
+backgammon-mini-app-api-1        backgammon-mini-app-api      "docker-entrypoint.s…"   api        5 hours ago      Up 5 hours (healthy)    
+backgammon-mini-app-api_v2-1     backgammon-mini-app-api_v2   "docker-entrypoint.s…"   api_v2     11 seconds ago   Up Less than a second   
+backgammon-mini-app-nginx-1      nginx:1.27-alpine            "/docker-entrypoint.…"   nginx      2 days ago       Up 2 days               0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp
+backgammon-mini-app-postgres-1   postgres:16-alpine           "docker-entrypoint.s…"   postgres   2 days ago       Up 2 days (healthy)     
+backgammon-mini-app-redis-1      redis:7-alpine               "docker-entrypoint.s…"   redis      2 days ago       Up 2 days (healthy)     
+backgammon-mini-app-wildbg-1     backgammon-mini-app-wildbg   "docker-entrypoint.s…"   wildbg     6 days ago       Up 6 days (healthy)     
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 5) המתנה ל-health OK ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# API_BASE="https://play.duelly.online/api/v2"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# for i in $(seq 1 30); do
+[?2004l[?2004h>   H="$(curl -sS "$API_BASE/health" || true)"
+[?2004l[?2004h>   if echo "$H" | grep -q '"ok":true'; then echo "health ready: $H"; break; fi
+[?2004l[?2004h>   echo "health not ready yet (try $i/30)"; sleep 2
+[?2004l[?2004h>   [ "$i" -lt 30 ] || { echo "ERROR: /health did not become ok"; exit 7; }
+[?2004l[?2004h> done
+[?2004lhealth not ready yet (try 1/30)
+health not ready yet (try 2/30)
+health not ready yet (try 3/30)
+health not ready yet (try 4/30)
+health not ready yet (try 5/30)
+health not ready yet (try 6/30)
+health not ready yet (try 7/30)
+health not ready yet (try 8/30)
+health not ready yet (try 9/30)
+health not ready yet (try 10/30)
+health not ready yet (try 11/30)
+health not ready yet (try 12/30)
+health not ready yet (try 13/30)
+health not ready yet (try 14/30)
+health not ready yet (try 15/30)
+health not ready yet (try 16/30)
+health not ready yet (try 17/30)
+health not ready yet (try 18/30)
+health not ready yet (try 19/30)
+health not ready yet (try 20/30)
+health not ready yet (try 21/30)
+health not ready yet (try 22/30)
+health not ready yet (try 23/30)
+health not ready yet (try 24/30)
+health not ready yet (try 25/30)
+health not ready yet (try 26/30)
+health not ready yet (try 27/30)
+health not ready yet (try 28/30)
+health not ready yet (try 29/30)
+health not ready yet (try 30/30)
+ERROR: /health did not become ok
+logout

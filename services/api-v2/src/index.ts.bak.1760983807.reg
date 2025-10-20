@@ -15,15 +15,15 @@ import matchesRoutes from "./routes/matches.js";
 
 const app = Fastify({ logger: { level: process.env.LOG_LEVEL ?? "info" } });
 
-app.register(helmet, { contentSecurityPolicy: false });
-app.register(cors, { origin: true, credentials: true });
-app.register(rateLimit, { max: 300, timeWindow: "1 minute" });
+await app.register(helmet, { contentSecurityPolicy: false });
+await app.register(cors, { origin: true, credentials: true });
+await app.register(rateLimit, { max: 300, timeWindow: "1 minute" });
 
-app.register(prismaPlugin);
-app.register(authRoutes,     { prefix: "/api/v2" });
-app.register(matchesRoutes,  { prefix: "/api/v2" });
-app.register(rngRoutes,      { prefix: "/api/v2" });
-app.register(paymentsRoutes, { prefix: "/api/v2" });
+await app.register(prismaPlugin);
+await app.register(authRoutes,     { prefix: "/api/v2" });
+await app.register(matchesRoutes,  { prefix: "/api/v2" });
+await app.register(rngRoutes,      { prefix: "/api/v2" });
+await app.register(paymentsRoutes, { prefix: "/api/v2" });
 
 app.get("/api/v2/health", async () => ({ ok: true }));
 
@@ -39,7 +39,5 @@ app.setErrorHandler((err, _req, reply) => {
 
 
 app.register(rngVerifyRoute, { prefix: '/api/v2' });
-
-app.register(rngRevealRoute, { prefix: '/api/v2' });
 await app.listen({ port: Number(process.env.PORT ?? 3000), host: process.env.HOST ?? "0.0.0.0" });
 app.log.info("API V2 listening (health @ /api/v2/health)");
