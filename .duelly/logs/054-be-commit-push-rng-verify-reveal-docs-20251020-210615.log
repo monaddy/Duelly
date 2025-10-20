@@ -1,0 +1,76 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step=$STEP_ID status=error code=$code line=$LINENO log=$LOG_FILE" >&2; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # נעילה להרצות מתואמות
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"; mkdir -p "$(dirname "$LOCK_FILE")"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if command -v flock >/dev/null 2>&1; then exec 9>"$LOCK_FILE"; flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED notes=another step running"; exit 1; }; fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is)"
+[?2004l::DUELLY::step=054-be-commit-push-rng-verify-reveal-docs status=running time=2025-10-20T21:06:15+00:00
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # אימות repo וענף יעד
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "ERROR: not a git repo"; exit 3; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# target_branch="${TARGET_BRANCH:-feat/be-rng-verify-pr-stub}"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cur_branch="$(git rev-parse --abbrev-ref HEAD)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ "$cur_branch" != "$target_branch" ]; then
+[?2004l[?2004h>   git fetch origin "$target_branch" || true
+[?2004l[?2004h>   if git ls-remote --exit-code --heads origin "$target_branch" >/dev/null 2>&1; then
+[?2004l[?2004h>     git checkout "$target_branch"
+[?2004l[?2004h>   else
+[?2004l[?2004h>     git checkout -b "$target_branch"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004lfatal: couldn't find remote ref feat/be-rng-verify-pr-stub
+Switched to a new branch 'feat/be-rng-verify-pr-stub'
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # יצירת sample עשן ל-docs (מעתיק את הסיכום האחרון אם קיים)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# mkdir -p docs/smoke
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# latest_summary="$(ls -1t "$DUELLY_DIR"/smoke/rng-verify-*.json "$DUELLY_DIR"/smoke/rng-verify-restore*.json 2>/dev/null | head -n1 || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -n "${latest_summary:-}" ] && [ -f "$latest_summary" ]; then
+[?2004l[?2004h>   cp -a "$latest_summary" docs/smoke/rng-verify.sample.json
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # שלב קבצים לשמירה: verify/reveal + main import + מסמכי OpenAPI/notes + smoke sample (אם קיים)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# git add services/api-v2/src/routes/rng-verify.ts 2>/dev/null || true
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# git add services/api-v2/src/routes/rng-reveal.ts 2>/dev/null || true
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# git add services/api-v2/src/index.ts 2>/dev/null || true
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# test -f docs/openapi.rng-verify.yaml && git add docs/openapi.rng-verify.yaml || true
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# test -f docs/openapi.rng-reveal.yaml && git add docs/openapi.rng-reveal.yaml || true
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# test -f openapi/notes/rng-verify.txt && git add openapi/notes/rng-verify.txt || true
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# test -f openapi/notes/rng-reveal.txt && git add openapi/notes/rng-reveal.txt || true
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# test -f docs/smoke/rng-verify.sample.json && git add docs/smoke/rng-verify.sample.json || true
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # Commit רק אם יש שינויים
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if ! git diff --cached --quiet; then
+[?2004l[?2004h>   git commit -m "BE: RNG verify/reveal stabilization
+[?2004l[?2004h> - Restore TS for verify + commit-based dice fallback (no seed)
+[?2004l[?2004h> - New reveal: SHA256/HMAC candidates, optional seed, commit-only fallback
+[?2004l[?2004h> - ESM imports (.js) + '/api/v2' prefix
+[?2004l[?2004h> - Docs: OpenAPI fragments + smoke sample"
+[?2004l[?2004h> else
+[?2004l[?2004h>   echo "No staged changes to commit"
+[?2004l[?2004h> fi
+[?2004l[feat/be-rng-verify-pr-stub fac334e] BE: RNG verify/reveal stabilization - Restore TS for verify + commit-based dice fallback (no seed) - New reveal: SHA256/HMAC candidates, optional seed, commit-only fallback - ESM imports (.js) + '/api/v2' prefix - Docs: OpenAPI fragments + smoke sample
+ 1 file changed, 1 insertion(+)
+ create mode 100644 docs/smoke/rng-verify.sample.json
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # Push לא מחייב (לא מפיל את הצעד אם אין הרשאת Git)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# git remote get-url origin >/dev/null 2>&1 || { echo "WARN: no git remote 'origin' configured"; origin_warn=1; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ "${origin_warn:-0}" != 1 ]; then
+[?2004l[?2004h>   git push -u origin "$target_branch" || echo "WARN: git push failed (auth?). Commit remains local."
+[?2004l[?2004h> fi
+[?2004lremote: 
+remote: Create a pull request for 'feat/be-rng-verify-pr-stub' on GitHub by visiting:        
+remote:      https://github.com/monaddy/Duelly/pull/new/feat/be-rng-verify-pr-stub        
+remote: 
+To github.com:monaddy/Duelly.git
+ * [new branch]      feat/be-rng-verify-pr-stub -> feat/be-rng-verify-pr-stub
+branch 'feat/be-rng-verify-pr-stub' set up to track 'origin/feat/be-rng-verify-pr-stub'.
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # הדפסת קישור PR נוח
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# REPO_URL="$(git remote get-url origin 2>/dev/null | sed 's#^git@github.com:#https://github.com/#; s#\.git$##')"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# PR_URL="${REPO_URL:+$REPO_URL/compare/main...$target_branch?expand=1}"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "${PR_URL:-}" ] && echo "PR: $PR_URL" || true
+[?2004lPR: https://github.com/monaddy/Duelly/compare/main...feat/be-rng-verify-pr-stub?expand=1
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=ok time=$(date -Is) notes=\"branch=$target_branch; push=attempted; pr_url=${PR_URL:-n/a}\""
+[?2004l::DUELLY::step=054-be-commit-push-rng-verify-reveal-docs status=ok time=2025-10-20T21:06:19+00:00 notes="branch=feat/be-rng-verify-pr-stub; push=attempted; pr_url=https://github.com/monaddy/Duelly/compare/main...feat/be-rng-verify-pr-stub?expand=1"
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [?2004l[?2004l

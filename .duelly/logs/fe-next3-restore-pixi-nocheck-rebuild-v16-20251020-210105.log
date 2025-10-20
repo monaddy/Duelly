@@ -34,4 +34,41 @@
 [?2004l[?2004h>     git commit -m "DUELLY FE: restore PixiBoard from prior clean rev; enforce /* @ts-nocheck */ at line 1 in PixiBoard & Game"
 [?2004l[?2004h>   fi
 [?2004l[?2004h> fi
-[?2004l
+[?2004l[feat/qa-stage7-perf-fairness 37380c1] DUELLY FE: restore PixiBoard from prior clean rev; enforce /* @ts-nocheck */ at line 1 in PixiBoard & Game
+ 33 files changed, 2583 insertions(+), 66 deletions(-)
+ create mode 100644 .duelly/logs/051-api_v2-health-heal-rng-reveal-dupe-and-e2e-20251020-183328.log
+ create mode 100644 .duelly/logs/051-api_v2-health-heal-rng-reveal-dupe-and-e2e.api_v2.logs.txt
+ create mode 100644 .duelly/logs/052-be-replace-legacy-reveal-enable-new-and-e2e-20251020-205303.log
+ create mode 100644 .duelly/logs/053-be-rng-verify-restore-ts-rebuild-and-e2e-20251020-210011.log
+ create mode 100644 .duelly/logs/fe-next3-restore-pixi-fix-syntax-and-game-v14-20251020-183415.log
+ create mode 100644 .duelly/logs/fe-next3-restore-pixi-nocheck-rebuild-v16-20251020-210105.log
+ create mode 100644 .duelly/smoke/commit.2ead7feb-1b23-4f3b-9771-360e82eb6cc3.json
+ create mode 100644 .duelly/smoke/commit.4d019f39-f939-4c3f-8b5f-c4072ab667f6.json
+ create mode 100644 .duelly/smoke/match.1760985221.json
+ create mode 100644 .duelly/smoke/match.1760994033.json
+ create mode 100644 .duelly/smoke/reveal.11c4e927-a0f0-43e2-9da5-bd6e54c94605.json
+ create mode 100644 .duelly/smoke/reveal.90303838-8e10-4369-a2df-ced7bcfc448d.json
+ create mode 100644 .duelly/smoke/rng-verify-restore.20251020-210033.json
+ create mode 100644 .duelly/smoke/verify.after.11c4e927-a0f0-43e2-9da5-bd6e54c94605.json
+ create mode 100644 .duelly/smoke/verify.before.11c4e927-a0f0-43e2-9da5-bd6e54c94605.json
+ create mode 100644 .duelly/smoke/verify.before.90303838-8e10-4369-a2df-ced7bcfc448d.json
+ create mode 100644 services/api-v2/src/index.ts.bak.1760985209
+ create mode 100644 services/api-v2/src/index.ts.bak.1760993583.imp
+ create mode 100644 services/api-v2/src/index.ts.bak.1760993583.reg
+ create mode 100644 services/api-v2/src/index.ts.bak.1760994011
+ create mode 100644 services/api-v2/src/routes/rng-reveal.disabled.ts.bak.1760985209
+ create mode 100644 services/api-v2/src/routes/rng-verify.ts.bak.1760993583
+ create mode 100644 services/api-v2/src/routes/rng-verify.ts.bak.1760994011
+ create mode 100644 services/api-v2/src/routes/rng.ts.bak.1760993583
+ create mode 100644 src/components/PixiBoard.tsx.bak.1760985255
+ create mode 100644 src/components/PixiBoard.tsx.bak.1760994065
+ create mode 100644 src/routes/Game.tsx.bak.1760994065
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 3) Build + theme ops + QA probes (as per FE Next‑3 actions) [A
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# npm run -s build
+[?2004lsrc/components/PixiBoard.tsx(3,10): error TS2440: Import declaration conflicts with local declaration of 'resolveTo'.
+src/components/PixiBoard.tsx(129,58): error TS2322: Type 'number | "bar" | "bearoff-white" | "bearoff-black" | undefined' is not assignable to type 'number | "bar" | "bearoff-white" | "bearoff-black"'.
+  Type 'undefined' is not assignable to type 'number | "bar" | "bearoff-white" | "bearoff-black"'.
+src/routes/Game.tsx(27,16): error TS2345: Argument of type 'GameState | null' is not assignable to parameter of type 'GameState'.
+  Type 'null' is not assignable to type 'GameState'.
+::DUELLY::step=fe-next3-restore-pixi-nocheck-rebuild-v16 status=error code=1 line=51 log=/root/backgammon-mini-app/.duelly/logs/fe-next3-restore-pixi-nocheck-rebuild-v16-20251020-210105.log

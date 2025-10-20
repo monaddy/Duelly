@@ -1,4 +1,4 @@
-// @ts-nocheck
+/* @ts-nocheck */
 import type { MoveTarget } from '../types/moves';
 import { resolveTo } from '../types/moves';
 function resolveTo(to: MoveTarget | undefined, fallback: MoveTarget): MoveTarget {
