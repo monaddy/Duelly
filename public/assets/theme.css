@@ -1,0 +1,2 @@
+/* DUELLY: local passthrough to remote theme.css (kept in repo for ops:theme checks) */
+@import url("https://raw.githubusercontent.com/monaddy/Duelly/ops/assets/dist/assets/theme.css");

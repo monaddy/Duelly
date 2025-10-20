@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>DUELLY Theme Probe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- local passthrough to remote theme -->
+    <link rel="preload" href="/assets/theme.css" as="style">
+    <link rel="stylesheet" href="/assets/theme.css" />
+    <style>
+      .swatch{display:inline-block;min-width:120px;padding:12px;margin:6px;border-radius:8px}
+      body{font-family:system-ui,Segoe UI,Arial,sans-serif}
+    </style>
+  </head>
+  <body class="bg-surface/60 text-fg">
+    <h1 class="text-fg" style="margin:12px 8px;">DUELLY Theme Probe</h1>
+    <div class="swatch bg-accent text-fg">bg-accent</div>
+    <div class="swatch bg-accent/60 text-fg">bg-accent/60</div>
+    <div class="swatch bg-surface/60 text-fg">bg-surface/60</div>
+    <p class="text-fg" style="margin:12px 8px;">Remote theme via <code>/assets/theme.css</code>.</p>
+  </body>
+</html>
