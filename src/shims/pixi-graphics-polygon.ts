@@ -1,4 +1,5 @@
 import { Graphics } from 'pixi.js';
+type PointLike = { x: number; y: number };
 declare module 'pixi.js' { interface Graphics { polygon(points: number[] | { x: number; y: number }[], close?: boolean): this; } }
 (function attachPolygon() {
   const proto = (Graphics as any).prototype;

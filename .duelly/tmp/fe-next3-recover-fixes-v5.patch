@@ -1,0 +1,104 @@
+diff --git a/src/shims/pixi-graphics-polygon.ts b/src/shims/pixi-graphics-polygon.ts
+--- a/src/shims/pixi-graphics-polygon.ts
++++ b/src/shims/pixi-graphics-polygon.ts
+@@
+-import { Graphics, IPointData } from 'pixi.js';
++import { Graphics } from 'pixi.js';
++type PointLike = { x: number; y: number };
+ declare module 'pixi.js' {
+   interface Graphics {
+-    polygon(points: number[] | IPointData[], close?: boolean): this;
++    polygon(points: number[] | PointLike[], close?: boolean): this;
+   }
+ }
+ (function attachPolygon() {
+-  // @ts-expect-error augment at runtime
+-  const proto = (Graphics as any).prototype;
++  const proto = (Graphics as any).prototype;
+   if (typeof proto.polygon === 'function') return;
+-  proto.polygon = function(points: number[] | IPointData[], close: boolean = true) {
++  proto.polygon = function(points: number[] | PointLike[], close: boolean = true) {
+     const g = this as Graphics;
+     const arr: any[] = Array.isArray(points) ? (points as any[]) : [];
+     let firstX: number | null = null, firstY: number | null = null;
+@@
+-      } else {
+-        for (let i = 0; i < arr.length; i++) { const p = arr[i] as IPointData; pushPoint(p.x, p.y, i); }
+-      }
++      } else {
++        for (let i = 0; i < arr.length; i++) { const p = arr[i] as PointLike; pushPoint(p.x, p.y, i); }
++      }
+     }
+     if (close && firstX != null && firstY != null) { g.lineTo(firstX, firstY); }
+     return g;
+   };
+ })();
+diff --git a/src/types/pixi-v7-augment.d.ts b/src/types/pixi-v7-augment.d.ts
+--- a/src/types/pixi-v7-augment.d.ts
++++ b/src/types/pixi-v7-augment.d.ts
+@@
+ import 'pixi.js';
++type PointLike = { x: number; y: number };
+ declare module 'pixi.js' {
+   interface Graphics {
+-    polygon(points: number[] | import('pixi.js').IPointData[], close?: boolean): this;
++    polygon(points: number[] | PointLike[], close?: boolean): this;
+   }
+   interface DestroyOptions {
+     /** Pixi v7 uses textureSource instead of baseTexture */
+     textureSource?: boolean;
+   }
+ }
+diff --git a/src/components/FpsOverlay.tsx b/src/components/FpsOverlay.tsx
+--- a/src/components/FpsOverlay.tsx
++++ b/src/components/FpsOverlay.tsx
+@@
+-import React, { useEffect } from 'react'
+-// existing implementation …
++import React, { useEffect, useRef, useState } from 'react';
++
++export default function FpsOverlay() {
++  const rafRef = useRef<number | null>(null);
++  const [fps, setFps] = useState(0);
++  useEffect(() => {
++    let last = performance.now();
++    let frames = 0;
++    let acc = 0;
++    const loop = (now: number) => {
++      const dt = now - last;
++      last = now;
++      frames++;
++      acc += dt;
++      if (acc >= 500) {
++        setFps(Math.round((frames * 1000) / acc));
++        frames = 0; acc = 0;
++      }
++      rafRef.current = requestAnimationFrame(loop);
++    };
++    rafRef.current = requestAnimationFrame(loop);
++    return () => { if (rafRef.current != null) cancelAnimationFrame(rafRef.current); rafRef.current = null; };
++  }, []);
++  return <div className="fps-overlay">{fps} FPS</div>;
++}
+diff --git a/src/components/PixiBoard.tsx b/src/components/PixiBoard.tsx
+--- a/src/components/PixiBoard.tsx
++++ b/src/components/PixiBoard.tsx
+@@
+-  const to = (moveAttempt && typeof moveAttempt.to === 'number') ? moveAttempt.to : from;
++  // Ensure 'to' is never undefined for downstream typing/logic.
++  const to = (moveAttempt?.to ?? from);
+@@
+-  g.polygon(a.x, a.y, b.x, b.y, c.x, c.y);
++  g.polygon([a.x, a.y, b.x, b.y, c.x, c.y]);
+@@
+-  g.polygon(d.x, d.y, e.x, e.y, f.x, f.y);
++  g.polygon([d.x, d.y, e.x, e.y, f.x, f.y]);
+diff --git a/src/routes/Game.tsx b/src/routes/Game.tsx
+--- a/src/routes/Game.tsx
++++ b/src/routes/Game.tsx
+@@
+-const [gameState, setGameState] = useState<GameState>(null)
++const [gameState, setGameState] = useState<GameState | null>(null)
++// When passing setGameState into callbacks that expect (gs: GameState) => void,
++// wrap to satisfy the narrower parameter type:
++const setGameStateStrict: (gs: GameState) => void = (gs) => setGameState(gs);

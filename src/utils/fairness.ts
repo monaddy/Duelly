@@ -30,7 +30,7 @@ export async function hmacSha256Hex(keyHex: string, data: Uint8Array): Promise<s
     false,
     ['sign']
   );
-  const sig = await crypto.subtle.sign('HMAC', key, normalizeForSign(toArrayBuffer(data)));
+  const sig = await crypto.subtle.sign('HMAC', key, normalizeForSign(normalizeForSign(toArrayBuffer(data))));
   return bytesToHex(new Uint8Array(sig));
 }
 

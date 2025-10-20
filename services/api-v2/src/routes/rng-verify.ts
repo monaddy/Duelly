@@ -1,0 +1,72 @@
+// DUELLY — RNG Verify (auto-heal 1760947628)
+import type { FastifyPluginAsync } from 'fastify';
+import { PrismaClient } from '@prisma/client';
+import { createHash } from 'node:crypto';
+
+const prisma = new PrismaClient();
+
+const rngVerifyRoute: FastifyPluginAsync = async (app) => {
+  app.get('/rng/verify', {
+    schema: {
+      querystring: {
+        type: 'object',
+        properties: { id: { type: 'string', format: 'uuid' } },
+        required: ['id']
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            matchId: { type: 'string', format: 'uuid' },
+            serverCommitHex: { type: 'string' },
+            revealed: { type: 'boolean' },
+            serverSeedHex: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+            dice: {
+              anyOf: [
+                { type: 'null' },
+                {
+                  type: 'array',
+                  items: { type: 'integer', minimum: 1, maximum: 6 },
+                  minItems: 2, maxItems: 2
+                }
+              ]
+            }
+          },
+          required: ['id','matchId','serverCommitHex','revealed']
+        },
+        404: {
+          type: 'object',
+          properties: { ok: { type: 'boolean' }, error: { type: 'string' }, message: { type: 'string' } },
+          required: ['ok','error','message']
+        }
+      }
+    }
+  }, async (req, reply) => {
+    const { id } = (req.query as any);
+    const c = await prisma.rngCommit.findUnique({ where: { id } });
+    if (!c) return reply.code(404).send({ ok:false, error:'NOT_FOUND', message:'RngCommit not found' });
+
+    const payload: any = {
+      id: (c as any).id,
+      matchId: (c as any).matchId,
+      serverCommitHex: (c as any).serverCommitHex,
+      revealed: Boolean((c as any).revealed)
+    };
+
+    if (payload.revealed) {
+      const seed: string | null = (c as any).serverSeedHex ?? null;
+      payload.serverSeedHex = seed;
+      let dice: number[] | null = Array.isArray((c as any).dice) ? (c as any).dice : null;
+      if (!dice && seed) {
+        const h = createHash('sha256').update(Buffer.from(seed, 'hex')).digest();
+        dice = [ (h[0] % 6) + 1, (h[1] % 6) + 1 ];
+      }
+      if (dice) payload.dice = dice;
+    }
+
+    return payload;
+  });
+};
+
+export default rngVerifyRoute;

@@ -1,0 +1,321 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step=$STEP_ID status=error code=$code line=$LINENO log=$LOG_FILE" >&2; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # נעילה מתואמת
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"; mkdir -p "$(dirname "$LOCK_FILE")"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if command -v flock >/dev/null 2>&1; then exec 9>"$LOCK_FILE"; flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED notes=another step running"; exit 1; }; fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is)"
+[?2004l::DUELLY::step=031-be-rng-verify-autoheal status=running time=2025-10-20T08:07:08+00:00
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 0) הקשר אחרון (לוג צעד 030, אם קיים) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LAST_FAIL_LOG="$(ls -1t .duelly/logs/030-be-fix-rng-verify-route-register-*.log 2>/dev/null | head -n1 || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -n "${LAST_FAIL_LOG:-}" ]; then
+[?2004l[?2004h>   echo "--- tail last fail log: $LAST_FAIL_LOG ---"
+[?2004l[?2004h>   tail -n 80 "$LAST_FAIL_LOG" || true
+[?2004l[?2004h>   echo "------"
+[?2004l[?2004h> fi
+[?2004l--- tail last fail log: .duelly/logs/030-be-fix-rng-verify-route-register-20251020-074431.log ---
+time="2025-10-20T07:44:32Z" level=warning msg="The \"TELEGRAM_BOT_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T07:44:32Z" level=warning msg="The \"HMAC_SECRET\" variable is not set. Defaulting to a blank string."
+#1 [internal] load local bake definitions
+#1 reading from stdin 543B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile:
+#2 transferring dockerfile: 594B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:20-bullseye
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [build  1/10] FROM docker.io/library/node:20-bullseye
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 12.98kB done
+#6 DONE 0.0s
+
+#7 [build  3/10] COPY services/api-v2/package.json ./package.json
+#7 CACHED
+
+#8 [build  4/10] RUN npm install
+#8 CACHED
+
+#9 [build  6/10] RUN npx prisma generate
+#9 CACHED
+
+#10 [build  5/10] COPY prisma ./prisma
+#10 CACHED
+
+#11 [build  2/10] WORKDIR /app
+#11 CACHED
+
+#12 [build  7/10] COPY services/api-v2/tsconfig.json ./tsconfig.json
+#12 CACHED
+
+#13 [build  8/10] COPY services/api-v2/src ./src
+#13 DONE 0.0s
+
+#14 [build  9/10] RUN npm run build
+#14 0.413 
+#14 0.413 > backgammon-api-v2@0.1.0 build
+#14 0.413 > tsc
+#14 0.413 
+#14 6.040 src/index.ts(2,28): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './routes/rng-verify.js'?
+#14 ERROR: process "/bin/sh -c npm run build" did not complete successfully: exit code: 2
+------
+ > [build  9/10] RUN npm run build:
+0.413 
+0.413 > backgammon-api-v2@0.1.0 build
+0.413 > tsc
+0.413 
+6.040 src/index.ts(2,28): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './routes/rng-verify.js'?
+------
+Dockerfile:9
+
+--------------------
+
+   7 |     COPY services/api-v2/tsconfig.json ./tsconfig.json
+
+   8 |     COPY services/api-v2/src ./src
+
+   9 | >>> RUN npm run build
+
+  10 |     RUN npm prune --omit=dev
+
+  11 |     FROM node:20-bullseye
+
+--------------------
+
+failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 2
+
+::DUELLY::step=030-be-fix-rng-verify-route-register status=error code=1 line=159 log=.duelly/logs/030-be-fix-rng-verify-route-register-20251020-074431.log
+------
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 1) קביעת prefix ובניית מסלול נכון ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# API_DIR="services/api-v2"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SRC_DIR="$API_DIR/src"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# ROUTES_DIR="$SRC_DIR/routes"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# MAIN_CAND=( "$SRC_DIR/index.ts" "$SRC_DIR/server.ts" "$SRC_DIR/app.ts" )
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# test -d "$API_DIR" || { echo "ERROR: $API_DIR not found"; exit 2; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# mkdir -p "$ROUTES_DIR"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# HAS_PREFIX=0
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# for mf in "${MAIN_CAND[@]}"; do
+[?2004l[?2004h>   if [ -f "$mf" ] && grep -qE 'prefix\s*:\s*["'"'"']/api/v2["'"'"']' "$mf"; then HAS_PREFIX=1; break; fi
+[?2004l[?2004h> done
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# ROUTE_PATH=$([ "$HAS_PREFIX" -eq 1 ] && echo "/rng/verify" || echo "/api/v2/rng/verify")
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "Detected prefix: $HAS_PREFIX → route path: $ROUTE_PATH" [A
+[?2004lDetected prefix: 1 → route path: /rng/verify
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 2) יצירת/רענון קובץ המסלול (TS Fastify v4, Prisma, ESM) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# ROUTE_FILE="$ROUTES_DIR/rng-verify.ts"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# TS_NOW="$(date +%s)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cat >"$ROUTE_FILE.new" <<TS
+[?2004l[?2004h> // DUELLY — RNG Verify (auto-heal ${TS_NOW})
+[?2004l[?2004h> import type { FastifyPluginAsync } from 'fastify';
+[?2004l[?2004h> import { PrismaClient } from '@prisma/client';
+[?2004l[?2004h> import { createHash } from 'node:crypto';
+[?2004l[?2004h> 
+[?2004l[?2004h> const prisma = new PrismaClient();
+[?2004l[?2004h> 
+[?2004l[?2004h> const rngVerifyRoute: FastifyPluginAsync = async (app) => {
+[?2004l[?2004h>   app.get('${ROUTE_PATH}', {
+[?2004l[?2004h>     schema: {
+[?2004l[?2004h>       querystring: {
+[?2004l[?2004h>         type: 'object',
+[?2004l[?2004h>         properties: { id: { type: 'string', format: 'uuid' } },
+[?2004l[?2004h>         required: ['id']
+[?2004l[?2004h>       },
+[?2004l[?2004h>       response: {
+[?2004l[?2004h>         200: {
+[?2004l[?2004h>           type: 'object',
+[?2004l[?2004h>           properties: {
+[?2004l[?2004h>             id: { type: 'string', format: 'uuid' },
+[?2004l[?2004h>             matchId: { type: 'string', format: 'uuid' },
+[?2004l[?2004h>             serverCommitHex: { type: 'string' },
+[?2004l[?2004h>             revealed: { type: 'boolean' },
+[?2004l[?2004h>             serverSeedHex: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+[?2004l[?2004h>             dice: {
+[?2004l[?2004h>               anyOf: [
+[?2004l[?2004h>                 { type: 'null' },
+[?2004l[?2004h>                 {
+[?2004l[?2004h>                   type: 'array',
+[?2004l[?2004h>                   items: { type: 'integer', minimum: 1, maximum: 6 },
+[?2004l[?2004h>                   minItems: 2, maxItems: 2
+[?2004l[?2004h>                 }
+[?2004l[?2004h>               ]
+[?2004l[?2004h>             }
+[?2004l[?2004h>           },
+[?2004l[?2004h>           required: ['id','matchId','serverCommitHex','revealed']
+[?2004l[?2004h>         },
+[?2004l[?2004h>         404: {
+[?2004l[?2004h>           type: 'object',
+[?2004l[?2004h>           properties: { ok: { type: 'boolean' }, error: { type: 'string' }, message: { type: 'string' } },
+[?2004l[?2004h>           required: ['ok','error','message']
+[?2004l[?2004h>         }
+[?2004l[?2004h>       }
+[?2004l[?2004h>     }
+[?2004l[?2004h>   }, async (req, reply) => {
+[?2004l[?2004h>     const { id } = (req.query as any);
+[?2004l[?2004h>     const c = await prisma.rngCommit.findUnique({ where: { id } });
+[?2004l[?2004h>     if (!c) return reply.code(404).send({ ok:false, error:'NOT_FOUND', message:'RngCommit not found' });
+[?2004l[?2004h> 
+[?2004l[?2004h>     const payload: any = {
+[?2004l[?2004h>       id: (c as any).id,
+[?2004l[?2004h>       matchId: (c as any).matchId,
+[?2004l[?2004h>       serverCommitHex: (c as any).serverCommitHex,
+[?2004l[?2004h>       revealed: Boolean((c as any).revealed)
+[?2004l[?2004h>     };
+[?2004l[?2004h> 
+[?2004l[?2004h>     if (payload.revealed) {
+[?2004l[?2004h>       const seed: string | null = (c as any).serverSeedHex ?? null;
+[?2004l[?2004h>       payload.serverSeedHex = seed;
+[?2004l[?2004h>       let dice: number[] | null = Array.isArray((c as any).dice) ? (c as any).dice : null;
+[?2004l[?2004h>       if (!dice && seed) {
+[?2004l[?2004h>         const h = createHash('sha256').update(Buffer.from(seed, 'hex')).digest();
+[?2004l[?2004h>         dice = [ (h[0] % 6) + 1, (h[1] % 6) + 1 ];
+[?2004l[?2004h>       }
+[?2004l[?2004h>       if (dice) payload.dice = dice;
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     return payload;
+[?2004l[?2004h>   });
+[?2004l[?2004h> };
+[?2004l[?2004h> 
+[?2004l[?2004h> export default rngVerifyRoute;
+[?2004l[?2004h> TS
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ ! -f "$ROUTE_FILE" ] || ! cmp -s "$ROUTE_FILE.new" "$ROUTE_FILE"; then
+[?2004l[?2004h>   [ -f "$ROUTE_FILE" ] && cp -a "$ROUTE_FILE" "$ROUTE_FILE.bak.$TS_NOW"
+[?2004l[?2004h>   mv "$ROUTE_FILE.new" "$ROUTE_FILE"
+[?2004l[?2004h>   echo "wrote route: $ROUTE_FILE"
+[?2004l[?2004h> else
+[?2004l[?2004h>   rm -f "$ROUTE_FILE.new"
+[?2004l[?2004h>   echo "route unchanged: $ROUTE_FILE"
+[?2004l[?2004h> fi
+[?2004lwrote route: services/api-v2/src/routes/rng-verify.ts
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 3) רישום הפלאגין בקובץ הראשי (ללא top-level await) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# register_in_file() {
+[?2004l[?2004h>   local f="$1"
+[?2004l[?2004h>   [ -f "$f" ] || return 0
+[?2004l[?2004h>   # import
+[?2004l[?2004h>   if ! grep -q "routes/rng-verify" "$f"; then
+[?2004l[?2004h>     cp -a "$f" "$f.bak.$TS_NOW"
+[?2004l[?2004h>     awk '{
+[?2004l[?2004h>       if (!did && $0 ~ /^import /) { print; print "import rngVerifyRoute from \x27./routes/rng-verify\x27;"; did=1; next }
+[?2004l[?2004h>       print
+[?2004l[?2004h>     } END { if (!did) print "import rngVerifyRoute from \x27./routes/rng-verify\x27;" }' "$f" > "$f.new" && mv "$f.new" "$f"
+[?2004l[?2004h>     echo "injected import into $f"
+[?2004l[?2004h>   fi
+[?2004l[?2004h>   # remove accidental 'await app.register(...)'
+[?2004l[?2004h>   if grep -q "await[[:space:]]\+app\.register(rngVerifyRoute" "$f"; then
+[?2004l[?2004h>     cp -a "$f" "$f.bak.$TS_NOW.a"
+[?2004l[?2004h>     sed -i 's/await[[:space:]]\+app\.register(rngVerifyRoute)/app.register(rngVerifyRoute)/g' "$f" [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[K"
+[?2004l[?2004h>     echo "stripped 'await' in register at $f"
+[?2004l[?2004h>   fi
+[?2004l[?2004h>   # ensure registration line exists before listen/ready
+[?2004l[?2004h>   if ! grep -q "app\.register(rngVerifyRoute" "$f"; then
+[?2004l[?2004h>     cp -a "$f" "$f.bak.$TS_NOW.b"
+[?2004l[?2004h>     if grep -n -E "app\.listen|await[[:space:]]+app\.ready|app\.ready" "$f" >/dev/null 2>&1; then
+[?2004l[?2004h>       line="$(grep -n -E "app\.listen|await[[:space:]]+app\.ready|app\.ready" "$f" | head -n1 | cut -d: -f1)"
+[?2004l[?2004h>       head -n $((line-1)) "$f" > "$f.head"; tail -n +$((line)) "$f" > "$f.tail"
+[?2004l[?2004h>       printf '\napp.register(rngVerifyRoute);\n' >> "$f.head"
+[?2004l[?2004h>       cat "$f.head" "$f.tail" > "$f"
+[?2004l[?2004h>       rm -f "$f.head" "$f.tail"
+[?2004l[?2004h>       echo "inserted register before listen/ready in $f"
+[?2004l[?2004h>     else
+[?2004l[?2004h>       echo -e "\napp.register(rngVerifyRoute);" >> "$f"
+[?2004l[?2004h>       echo "appended register at EOF in $f"
+[?2004l[?2004h>     fi
+[?2004l[?2004h>   else
+[?2004l[?2004h>     echo "register present in $f"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# for main in "${MAIN_CAND[@]}"; do register_in_file "$main"; done
+[?2004lstripped 'await' in register at services/api-v2/src/index.ts
+register present in services/api-v2/src/index.ts
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- 4) Build & Deploy (Compose אם קיים; אחרת build מקומי; PM2 אם קיים) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# COMPOSE_BIN=""
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if command -v docker >/dev/null 2>&1; then
+[?2004l[?2004h>   if docker compose version >/dev/null 2>&1; then COMPOSE_BIN="docker compose"; elif command -v docker-compose >/dev/null 2>&1; then COMPOSE_BIN="docker-compose"; fi
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -n "$COMPOSE_BIN" ] && [ -f "docker-compose.yml" ]; then [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Kn
+[?2004l[?2004h>   # מציאת שירות api המתאים
+[?2004l[?2004h>   SVC_CAND="$($COMPOSE_BIN config --services 2>/dev/null | grep -E 'api|api[_-]?v2|server|backend' | head -n1 || true)"
+[?2004l[?2004h>   if [ -z "$SVC_CAND" ]; then
+[?2004l[?2004h>     echo "WARN: no api-like service found; rebuilding all"
+[?2004l[?2004h>     $COMPOSE_BIN up -d --build
+[?2004l[?2004h>   else
+[?2004l[?2004h>     echo "Rebuilding compose service: $SVC_CAND"
+[?2004l[?2004h>     $COMPOSE_BIN up -d --build "$SVC_CAND"
+[?2004l[?2004h>     echo "Recent logs ($SVC_CAND):"
+[?2004l[?2004h>     $COMPOSE_BIN logs --no-color --tail=120 "$SVC_CAND" || true
+[?2004l[?2004h>   fi
+[?2004l[?2004h> else
+[?2004l[?2004h>   echo "No compose detected — local build"
+[?2004l[?2004h>   if [ -f "$API_DIR/package.json" ]; then
+[?2004l[?2004h>     pushd "$API_DIR" >/dev/null
+[?2004l[?2004h>     PKG_MGR="npm"
+[?2004l[?2004h>     command -v pnpm >/dev/null 2>&1 && [ -f pnpm-lock.yaml ] && PKG_MGR="pnpm"
+[?2004l[?2004h>     if [ "$PKG_MGR" = "pnpm" ]; then pnpm i --frozen-lockfile || pnpm install; else npm ci || npm install; fi
+[?2004l[?2004h>     if [ -f "tsconfig.json" ]; then npx tsc -v >/dev/null 2>&1 || (npm i -D typescript && npx tsc -v >/dev/null); npx tsc; fi
+[?2004l[?2004h>     popd >/dev/null
+[?2004l[?2004h>   fi
+[?2004l[?2004h>   if command -v pm2 >/dev/null 2>&1 && [ -f "pm2/ecosystem.config.cjs" ]; then
+[?2004l[?2004h>     pm2 startOrReload pm2/ecosystem.config.cjs --only api-v2 || pm2 start pm2/ecosystem.config.cjs [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Ks
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004lRebuilding compose service: api
+time="2025-10-20T08:07:08Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"TELEGRAM_BOT_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"HMAC_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"JWT_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"ALLOWED_ORIGINS\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"TELEGRAM_PAYMENT_PROVIDER_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"POSTGRES_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T08:07:08Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+#1 [internal] load local bake definitions
+#1 reading from stdin 984B done
+#1 DONE 0.0s
+
+#2 [wildbg internal] load build definition from Dockerfile
+#2 transferring dockerfile: 253B done
+#2 DONE 0.0s
+
+#3 [api internal] load build definition from Dockerfile
+#3 transferring dockerfile: 818B done
+#3 DONE 0.0s
+
+#4 [wildbg internal] load metadata for docker.io/library/node:20-alpine
+#4 ERROR: failed to authorize: failed to fetch anonymous token: unexpected status from GET request to https://auth.docker.io/token?scope=repository%3Alibrary%2Fnode%3Apull&service=registry.docker.io: 503 Service Unavailable
+------
+ > [api internal] load metadata for docker.io/library/node:20-alpine:
+------
+Dockerfile:1
+
+--------------------
+
+   1 | >>> FROM node:20-alpine
+
+   2 |     
+
+   3 |     WORKDIR /app
+
+--------------------
+
+target wildbg: failed to solve: failed to fetch anonymous token: unexpected status from GET request to https://auth.docker.io/token?scope=repository%3Alibrary%2Fnode%3Apull&service=registry.docker.io: 503 Service Unavailable
+
+::DUELLY::step=031-be-rng-verify-autoheal status=error code=1 line=179 log=.duelly/logs/031-be-rng-verify-autoheal-20251020-080708.log
