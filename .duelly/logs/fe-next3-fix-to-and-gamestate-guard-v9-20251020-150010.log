@@ -1,0 +1,89 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step='$STEP_ID' status=error code=$code line=$LINENO log=$LOG_FILE"; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"; exec 9>"$LOCK_FILE"; flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED time=$(date -Is) notes=\"another step running\""; exit 1; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is) notes=\"eliminate undefined for PixiBoard.to + harden Game.tsx nullability; then build + theme ops + QA\""
+[?2004l::DUELLY::step=fe-next3-fix-to-and-gamestate-guard-v9 status=running time=2025-10-20T15:00:10+00:00 notes="eliminate undefined for PixiBoard.to + harden Game.tsx nullability; then build + theme ops + QA"
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # =============================================================================
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 1) PixiBoard.tsx — strong coalescing for 'to' (no undefined at any site)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # =============================================================================
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# PB="src/components/PixiBoard.tsx"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f "$PB" ]; then
+[?2004l[?2004h>   cp -a "$PB" "$PB.bak.$(date +%s)"
+[?2004l[?2004h>   # (a) Ensure MoveTarget + typed resolver exist (idempotent)
+[?2004l[?2004h>   if ! grep -q "type MoveTarget = number | 'bar' | 'bearoff-white' | 'bearoff-black'" "$PB"; then
+[?2004l[?2004h>     awk 'BEGIN{ins=0}
+[?2004l[?2004h>       /^import /{print; next}
+[?2004l[?2004h>       { if(!ins){
+[?2004l[?2004h>           print "type MoveTarget = number | '\''bar'\'' | '\''bearoff-white'\'' | '\''bearoff-black'\'';";
+[?2004l[?2004h>           print "function resolveTo(to: MoveTarget | undefined, fallback: MoveTarget): MoveTarget {";
+[?2004l[?2004h>           print "  return (typeof to === '\''undefined'\'' ? fallback : to) as MoveTarget;";
+[?2004l[?2004h>           print "}";
+[?2004l[?2004h>           ins=1
+[?2004l[?2004h>         }
+[?2004l[?2004h>         print
+[?2004l[?2004h>       }' "$PB" > "$PB.new" && mv "$PB.new" "$PB"
+[?2004l[?2004h>   else
+[?2004l[?2004h>     # If resolver exists with narrower signature, widen first arg to allow undefined
+[?2004l[?2004h>     perl -0777 -i -pe 's/function\s+resolveTo\s*\(\s*to:\s*([^)]+?)\s*,\s*fallback:\s*([^)]+?)\)/function resolveTo(to: MoveTarget | undefined, fallback: MoveTarget)/' "$PB" || true
+[?2004l[?2004h>   fi
+[?2004l[?2004h> 
+[?2004l[?2004h>   # (b) Replace ALL uses of moveAttempt.to (with or without optional chain) to resolver, avoiding double-wrap
+[?2004l[?2004h>   perl -0777 -i -pe 's/(?<!resolveTo\()(moveAttempt\?\.\s*to)/resolveTo($1, from)/g' "$PB" || true [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Ke
+[?2004l[?2004h>   perl -0777 -i -pe 's/(?<!resolveTo\()(moveAttempt\.to)/resolveTo(moveAttempt?.to, from)/g' "$PB" || true
+[?2004l[?2004h> 
+[?2004l[?2004h>   # (c) Typical local vars / destructures → force typed, resolved value
+[?2004l[?2004h>   perl -0777 -i -pe 's/\bconst\s+to\s*=\s*\(moveAttempt\?\.\s*to\s*\?\?\s*from\)\s*;/const to: MoveTarget = resolveTo(moveAttempt?.to, from);/g' "$PB" || true
+[?2004l[?2004h>   perl -0777 -i -pe 's/\bconst\s+to\s*=\s*moveAttempt\.\s*to\s*;/const to: MoveTarget = resolveTo(moveAttempt?.to, from);/g' "$PB" || true
+[?2004l[?2004h>   perl -0777 -i -pe 's/const\s*\{\s*to\s*\}\s*=\s*moveAttempt\s*;/const to: MoveTarget = resolveTo(moveAttempt?.to, from);/g' "$PB" || true
+[?2004l[?2004h> 
+[?2004l[?2004h>   # (d) Object literals where property is 'to: …' → resolved
+[?2004l[?2004h>   perl -0777 -i -pe 's/(to\s*:\s*)(moveAttempt\?\.\s*to)/$1resolveTo($2, from)/g' "$PB" || true
+[?2004l[?2004h>   perl -0777 -i -pe 's/(to\s*:\s*)(moveAttempt\.to)/$1resolveTo(moveAttempt?.to, from)/g' "$PB" || true
+[?2004l[?2004h>   # If we still have "to: to" and that local 'to' might be union-with-undefined elsewhere, resolve again
+[?2004l[?2004h>   perl -0777 -i -pe 's/\bto\s*:\s*to\b/to: resolveTo((to as unknown as MoveTarget | undefined), from)/g' "$PB" || true
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # =============================================================================
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 2) Game.tsx — strict non-null usage: guard + alias + assert function + rewrites
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # =============================================================================
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# GAME="src/routes/Game.tsx"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -f "$GAME" ]; then
+[?2004l[?2004h>   cp -a "$GAME" "$GAME.bak.$(date +%s)"
+[?2004l[?2004h>   # Ensure nullable state declaration
+[?2004l[?2004h>   perl -0777 -i -pe 's/useState<\s*GameState\s*>\(\s*null\s*\)/useState<GameState | null>(null)/g' "$GAME" || true
+[?2004l[?2004h> 
+[?2004l[?2004h>   # Early guard (render nothing until initialized)
+[?2004l[?2004h>   if ! grep -q "if (gameState == null)" "$GAME"; then
+[?2004l[?2004h>     perl -0777 -i -pe "s/(useState<\s*GameState\s*\|\s*null\s*>\(\s*null\s*\)\s*\)\s*;?)/\\1\nif (gameState == null) { return null; }\n/;" "$GAME" || true
+[?2004l[?2004h>   fi
+[?2004l[?2004h> 
+[?2004l[?2004h>   # Non-null alias + assert helper (idempotent)
+[?2004l[?2004h>   if ! grep -q "function asNN(" "$GAME"; then
+[?2004l[?2004h>     awk '1; /return null; \}/ && !p { print "\nfunction asNN(gs: GameState | null): GameState {\n  if (gs == null) { throw new Error(\"GameState not initialized\"); }\n  return gs as GameState;\n}\nconst gameStateNN: GameState = asNN(gameState);\n"; p=1 }' "$GAME" > "$GAME.new" && mv "$GAME.new" "$GAME"
+[?2004l[?2004h>   elif ! grep -q "const gameStateNN:" "$GAME"; then
+[?2004l[?2004h>     perl -0777 -i -pe 's/(return\s+null;\s*\}\s*)/\1\nconst gameStateNN: GameState = gameState as GameState;\n/' "$GAME" || true
+[?2004l[?2004h>   fi
+[?2004l[?2004h> 
+[?2004l[?2004h>   # Rewrite common usages to NN alias or asNN(...) (avoid state tuple / type refs)
+[?2004l[?2004h>   # property access & spreads
+[?2004l[?2004h>   perl -0777 -i -pe 's/\bgameState\./gameStateNN./g' "$GAME" || true
+[?2004l[?2004h>   perl -0777 -i -pe 's/\.\.\.\s*gameState\b/...gameStateNN/g' "$GAME" || true
+[?2004l[?2004h>   perl -0777 -i -pe 's/\bgameState\[/gameStateNN[/g' "$GAME" || true
+[?2004l[?2004h>   # JSX/props state={gameState}
+[?2004l[?2004h>   sed -E -i 's/state=\{gameState\}/state={gameStateNN}/g' "$GAME" || true
+[?2004l[?2004h>   # Call sites: (..., gameState) or (gameState) → wrap with asNN if not already
+[?2004l[?2004h>   perl -0777 -i -pe 's/(\(|,\s*)(?!asNN\()gameState(\s*\))/\1asNN(gameState)\2/g' "$GAME" || true
+[?2004l[?2004h>   perl -0777 -i -pe 's/(\(|,\s*)(?!asNN\()gameState(\s*,)/\1asNN(gameState)\2/g' "$GAME" || true
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # =============================================================================
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 3) Commit changes if any
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # =============================================================================
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if git rev-parse --git-dir >/dev/null 2>&1; then
+[?2004l[?2004h>   git add -A
+[?2004l[?2004h>   if ! git diff --cached --quiet --ignore-submodules --; then
+[?2004l[?2004h>     git commit -m "DUELLY FE: coalesce moveAttempt.to via typed resolver; enforce non-null GameState with alias/assert; rewrite callsites to remove undefined/null types"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004l

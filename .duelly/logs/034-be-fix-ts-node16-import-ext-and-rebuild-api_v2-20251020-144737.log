@@ -1,0 +1,212 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step=$STEP_ID status=error code=$code line=$LINENO log=$LOG_FILE" >&2; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # נעילה למניעת מרוצים בין צעדים
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"; mkdir -p "$(dirname "$LOCK_FILE")"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if command -v flock >/dev/null 2>&1; then exec 9>"$LOCK_FILE"; flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED notes=another step running"; exit 1; }; fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is)"
+[?2004l::DUELLY::step=034-be-fix-ts-node16-import-ext-and-rebuild-api_v2 status=running time=2025-10-20T14:47:37+00:00
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# API_DIR="services/api-v2"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SRC_DIR="$API_DIR/src"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# ROUTES_DIR="$SRC_DIR/routes"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# MAIN_CAND=( "$SRC_DIR/index.ts" "$SRC_DIR/server.ts" "$SRC_DIR/app.ts" )
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# ROUTE_FILE="$ROUTES_DIR/rng-verify.ts"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -d "$SRC_DIR" ] || { echo "ERROR: missing $SRC_DIR"; exit 2; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# TS_NOW="$(date +%s)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 1) ודא שקובץ המסלול קיים (כפי שמוגדר ב-state/handoff). לא נוגעים אם כבר קיים.
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ ! -f "$ROUTE_FILE" ]; then
+[?2004l[?2004h>   mkdir -p "$ROUTES_DIR"
+[?2004l[?2004h>   cat >"$ROUTE_FILE" <<'TS'
+[?2004l[?2004h> // DUELLY — RNG Verify (expects registration with { prefix: "/api/v2" })
+[?2004l[?2004h> import type { FastifyPluginAsync } from 'fastify';
+[?2004l[?2004h> import { PrismaClient } from '@prisma/client';
+[?2004l[?2004h> import { createHash } from 'node:crypto';
+[?2004l[?2004h> 
+[?2004l[?2004h> const prisma = new PrismaClient();
+[?2004l[?2004h> 
+[?2004l[?2004h> const rngVerifyRoute: FastifyPluginAsync = async (app) => {
+[?2004l[?2004h>   app.get('/rng/verify', {
+[?2004l[?2004h>     schema: {
+[?2004l[?2004h>       querystring: {
+[?2004l[?2004h>         type: 'object',
+[?2004l[?2004h>         properties: { id: { type: 'string', format: 'uuid' } },
+[?2004l[?2004h>         required: ['id']
+[?2004l[?2004h>       }
+[?2004l[?2004h>     }
+[?2004l[?2004h>   }, async (req, reply) => {
+[?2004l[?2004h>     const { id } = (req.query as any);
+[?2004l[?2004h>     const c = await prisma.rngCommit.findUnique({ where: { id } });
+[?2004l[?2004h>     if (!c) return reply.code(404).send({ ok:false, error:'NOT_FOUND', message:'RngCommit not found' });
+[?2004l[?2004h> 
+[?2004l[?2004h>     const payload: any = {
+[?2004l[?2004h>       id: (c as any).id,
+[?2004l[?2004h>       matchId: (c as any).matchId,
+[?2004l[?2004h>       serverCommitHex: (c as any).serverCommitHex,
+[?2004l[?2004h>       revealed: Boolean((c as any).revealed)
+[?2004l[?2004h>     };
+[?2004l[?2004h> 
+[?2004l[?2004h>     if (payload.revealed) {
+[?2004l[?2004h>       const seed: string | null = (c as any).serverSeedHex ?? null;
+[?2004l[?2004h>       payload.serverSeedHex = seed;
+[?2004l[?2004h>       let dice: number[] | null = Array.isArray((c as any).dice) ? (c as any).dice : null;
+[?2004l[?2004h>       if (!dice && seed) {
+[?2004l[?2004h>         const h = createHash('sha256').update(Buffer.from(seed, 'hex')).digest();
+[?2004l[?2004h>         dice = [ (h[0] % 6) + 1, (h[1] % 6) + 1 ];
+[?2004l[?2004h>       }
+[?2004l[?2004h>       if (dice) payload.dice = dice;
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     return payload;
+[?2004l[?2004h>   });
+[?2004l[?2004h> };
+[?2004l[?2004h> 
+[?2004l[?2004h> export default rngVerifyRoute;
+[?2004l[?2004h> TS
+[?2004l[?2004h>   echo "created route file: $ROUTE_FILE"
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 2) תיקון import: הוספת .js בכל import של './routes/rng-verify' (ESM + node16/nodenext)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# changed_files=()
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# for f in "${MAIN_CAND[@]}"; do
+[?2004l[?2004h>   [ -f "$f" ] || continue
+[?2004l[?2004h>   if grep -qE "from ['\"]/\.\/routes/rng-verify(\.ts)?['\"]" "$f"; then
+[?2004l[?2004h>     cp -a "$f" "$f.bak.$TS_NOW"
+[?2004l[?2004h>     # החלפות בטוחות: ' or " וגם אם בטעות מישהו שם .ts
+[?2004l[?2004h>     sed -E -i "s|(from[[:space:]]+['\"])\\./routes/rng-verify(\\.ts)?(['\"])|\\1./routes/rng-verify.js\\3|g" "$f"
+[?2004l[?2004h>     changed_files+=("$f")
+[?2004l[?2004h>   fi
+[?2004l[?2004h> done
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# printf 'import-patched files: %s\n' "${changed_files[@]:-none}"
+[?2004limport-patched files: none
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 3) הבטחת רישום הפלאגין עם prefix '/api/v2' (לא משנה אם כבר קיים)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# for f in "${MAIN_CAND[@]}"; do
+[?2004l[?2004h>   [ -f "$f" ] || continue
+[?2004l[?2004h>   if grep -q "from './routes/rng-verify.js'" "$f" || grep -q "from \"./routes/rng-verify.js\"" "$f"; then
+[?2004l[?2004h>     if grep -qE "app\.register\([^)]*rngVerifyRoute[^)]*\)" "$f"; then
+[?2004l[?2004h>       cp -a "$f" "$f.bak.$TS_NOW.reg"
+[?2004l[?2004h>       # נרמל לכל היותר: נחליף כל רישום קיים לרישום עם prefix '/api/v2'
+[?2004l[?2004h>       sed -E -i "s@app\.register\([^)]*rngVerifyRoute[^)]*\)@app.register(rngVerifyRoute, { prefix: '/api/v2' })@g" "$f"
+[?2004l[?2004h>       echo "normalized register with prefix in: $f"
+[?2004l[?2004h>     else
+[?2004l[?2004h>       # הזרקה לפני listen/ready אם קיים; אחרת הוספה בסוף
+[?2004l[?2004h>       if grep -nE "app\.listen|app\.ready" "$f" >/dev/null 2>&1; then
+[?2004l[?2004h>         line="$(grep -nE 'app\.listen|app\.ready' "$f" | head -n1 | cut -d: -f1)"
+[?2004l[?2004h>         head -n $((line-1)) "$f" > "$f.head"; tail -n +$((line)) "$f" > "$f.tail"
+[?2004l[?2004h>         printf '\napp.register(rngVerifyRoute, { prefix: \x27/api/v2\x27 });\n' >> "$f.head"
+[?2004l[?2004h>         cat "$f.head" "$f.tail" > "$f"; rm -f "$f.head" "$f.tail"
+[?2004l[?2004h>         echo "inserted register with prefix in: $f"
+[?2004l[?2004h>       else
+[?2004l[?2004h>         echo -e "\napp.register(rngVerifyRoute, { prefix: '/api/v2' });" >> "$f"
+[?2004l[?2004h>         echo "appended register with prefix in: $f"
+[?2004l[?2004h>       fi
+[?2004l[?2004h>     fi
+[?2004l[?2004h>   fi
+[?2004l[?2004h> done
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # 4) Rebuild לשירות api_v2 בלבד (זה שמקבל את ה‑proxy של /api/v2/*)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# COMPOSE_BIN=""
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if command -v docker >/dev/null 2>&1; then
+[?2004l[?2004h>   if docker compose version >/dev/null 2>&1; then COMPOSE_BIN="docker compose"; elif command -v docker-compose >/dev/null 2>&1; then COMPOSE_BIN="docker-compose"; fi
+[?2004l[?2004h> fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$COMPOSE_BIN" ] || { echo "ERROR: docker compose not available"; exit 3; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -f docker-compose.yml ] || { echo "ERROR: docker-compose.yml not found"; exit 4; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SVC="$($COMPOSE_BIN config --services 2>/dev/null | grep -E '^api[_-]?v2$' | head -n1 || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$SVC" ] || { echo "ERROR: api_v2 service not found in compose"; $COMPOSE_BIN config --services || true; exit 5; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "Rebuilding compose service: $SVC"
+[?2004lRebuilding compose service: api_v2
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# $COMPOSE_BIN up -d --build "$SVC"
+[?2004ltime="2025-10-20T14:47:37Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:47:37Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:47:37Z" level=warning msg="The \"POSTGRES_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:47:37Z" level=warning msg="The \"POSTGRES_USER\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:47:37Z" level=warning msg="The \"POSTGRES_DB\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:47:37Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:47:37Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:47:37Z" level=warning msg="The \"TELEGRAM_BOT_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:47:37Z" level=warning msg="The \"HMAC_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:47:37Z" level=warning msg="The \"REDIS_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:47:37Z" level=warning msg="The \"JWT_SECRET\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:47:37Z" level=warning msg="The \"ALLOWED_ORIGINS\" variable is not set. Defaulting to a blank string."
+time="2025-10-20T14:47:37Z" level=warning msg="The \"TELEGRAM_PAYMENT_PROVIDER_TOKEN\" variable is not set. Defaulting to a blank string."
+#1 [internal] load local bake definitions
+#1 reading from stdin 543B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 594B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:20-bullseye
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [build  1/10] FROM docker.io/library/node:20-bullseye
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 2.50kB done
+#6 DONE 0.0s
+
+#7 [build  2/10] WORKDIR /app
+#7 CACHED
+
+#8 [build  3/10] COPY services/api-v2/package.json ./package.json
+#8 CACHED
+
+#9 [build  7/10] COPY services/api-v2/tsconfig.json ./tsconfig.json
+#9 CACHED
+
+#10 [build  4/10] RUN npm install
+#10 CACHED
+
+#11 [build  5/10] COPY prisma ./prisma
+#11 CACHED
+
+#12 [build  6/10] RUN npx prisma generate
+#12 CACHED
+
+#13 [build  8/10] COPY services/api-v2/src ./src
+#13 CACHED
+
+#14 [build  9/10] RUN npm run build
+#14 0.359 
+#14 0.359 > backgammon-api-v2@0.1.0 build
+#14 0.359 > tsc
+#14 0.359 
+#14 5.840 src/index.ts(2,28): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './routes/rng-verify.js'?
+#14 ERROR: process "/bin/sh -c npm run build" did not complete successfully: exit code: 2
+------
+ > [build  9/10] RUN npm run build:
+0.359 
+0.359 > backgammon-api-v2@0.1.0 build
+0.359 > tsc
+0.359 
+5.840 src/index.ts(2,28): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './routes/rng-verify.js'?
+------
+Dockerfile:9
+
+--------------------
+
+   7 |     COPY services/api-v2/tsconfig.json ./tsconfig.json
+
+   8 |     COPY services/api-v2/src ./src
+
+   9 | >>> RUN npm run build
+
+  10 |     RUN npm prune --omit=dev
+
+  11 |     FROM node:20-bullseye
+
+--------------------
+
+failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 2
+
+::DUELLY::step=034-be-fix-ts-node16-import-ext-and-rebuild-api_v2 status=error code=1 line=128 log=.duelly/logs/034-be-fix-ts-node16-import-ext-and-rebuild-api_v2-20251020-144737.log
