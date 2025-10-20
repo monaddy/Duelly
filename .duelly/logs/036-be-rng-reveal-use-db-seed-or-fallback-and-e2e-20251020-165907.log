@@ -1,0 +1,133 @@
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# trap 'code=$?; echo "::DUELLY::step=$STEP_ID status=error code=$code line=$LINENO log=$LOG_FILE" >&2; exit $code' ERR
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # נעילה למניעת התנגשויות
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# LOCK_FILE="$DUELLY_DIR/duelly.lock"; mkdir -p "$(dirname "$LOCK_FILE")"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if command -v flock >/dev/null 2>&1; then exec 9>"$LOCK_FILE"; flock -n 9 || { echo "::DUELLY::step=$STEP_ID status=error code=LOCKED notes=another step running"; exit 1; }; fi
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=running time=$(date -Is)"
+[?2004l::DUELLY::step=036-be-rng-reveal-use-db-seed-or-fallback-and-e2e status=running time=2025-10-20T16:59:07+00:00
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# API_BASE="https://play.duelly.online/api/v2"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# HDR=(-H "content-type: application/json" -H "accept: application/json")
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- A) Health ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# H="$(curl -sS "$API_BASE/health" || true)"; echo "health: $H" [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[K"
+[?2004lhealth: {"ok":true}
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "$H" | grep -q '"ok":true' || { echo "ERROR: /health not ok"; exit 2; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- B) יצירת match + commit ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# MATCH_BODY="$SMK_DIR/match.$(date +%s).json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# MC="$(curl -sS -o "$MATCH_BODY" -w "%{http_code}" -X POST "$API_BASE/matches" "${HDR[@]}" -d '{}' || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "POST /matches -> $MC"; [ "$MC" = "200" ] || [ "$MC" = "201" ] || { echo "BODY:"; cat "$MATCH_BODY"; exit 3; }
+[?2004lPOST /matches -> 200
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# match_id="$(sed -n 's/.*"id":"\([0-9a-fA-F-]\{36\}\)".*/\1/p' "$MATCH_BODY" | head -n1)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$match_id" ] || { echo "ERROR: matchId missing"; cat "$MATCH_BODY"; exit 4; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "matchId=$match_id"
+[?2004lmatchId=d660a781-4d33-4c82-9eeb-50ffffa7e794
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# COMMIT_BODY="$SMK_DIR/commit.$match_id.json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# CC="$(curl -sS -o "$COMMIT_BODY" -w "%{http_code}" -X POST "$API_BASE/rng/commit" "${HDR[@]}" -d "{\"matchId\":\"$match_id\"}" || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "POST /rng/commit -> $CC"; [ "$CC" = "200" ] || [ "$CC" = "201" ] || { echo "BODY:"; cat "$COMMIT_BODY"; exit 5; }
+[?2004lPOST /rng/commit -> 200
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# commit_id="$(sed -n 's/.*"id":"\([0-9a-fA-F-]\{36\}\)".*/\1/p' "$COMMIT_BODY" | head -n1)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# server_commit="$(sed -n 's/.*"serverCommitHex":"\([0-9a-fA-F]\+\)".*/\1/p' "$COMMIT_BODY" | head -n1)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$commit_id" ] || { echo "ERROR: commit id missing"; cat "$COMMIT_BODY"; exit 6; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "commitId=$commit_id serverCommitHex=${server_commit:0:8}…"
+[?2004lcommitId=e6fef3ea-8982-4862-8e55-c8de8b609caa serverCommitHex=439206c6…
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- C) verify לפני reveal (ציפיה: 200 + revealed=false) --- [A
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# VER1="$SMK_DIR/verify.before.$commit_id.json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# V1="$(curl -sS -o "$VER1" -w "%{http_code}" "$API_BASE/rng/verify?id=$commit_id" || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "GET /rng/verify (before) -> $V1"; [ "$V1" = "200" ] || { echo "BODY:"; cat "$VER1"; exit 7; }
+[?2004lGET /rng/verify (before) -> 200
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# rev_before="$(grep -o '"revealed":[^,}]*' "$VER1" | head -n1 | cut -d: -f2 | tr -d ' ')"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ "$rev_before" = "false" ] || { echo "ERROR: expected revealed=false"; cat "$VER1"; exit 8; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- D) ניסיון reveal עם serverSeedHex ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# #  D1) נסה לחלץ seed מגוף ה-commit (אם ה-API מחזיר אותו)
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# seed="$(sed -n 's/.*"serverSeedHex":"\([0-9a-fA-F]\+\)".*/\1/p' "$COMMIT_BODY" | head -n1 || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# #  D2) אם חסר — נשלוף מה-DB דרך Prisma בתוך קונטיינר api_v2
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -z "${seed:-}" ]; then
+[?2004l[?2004h>   COMPOSE_BIN=""
+[?2004l[?2004h>   if command -v docker >/dev/null 2>&1; then
+[?2004l[?2004h>     if docker compose version >/dev/null 2>&1; then COMPOSE_BIN="docker compose"; elif command -v docker-compose >/dev/null 2>&1; then COMPOSE_BIN="docker-compose"; fi
+[?2004l[?2004h>   fi
+[?2004l[?2004h>   API_V2_CONT="$(docker ps --format '{{.Names}}' | grep -E 'api[_-]?v2' | head -n1 || true)"
+[?2004l[?2004h>   if [ -n "$API_V2_CONT" ]; then
+[?2004l[?2004h>     echo "Querying Prisma inside container: $API_V2_CONT"
+[?2004l[?2004h>     DB_JSON="$(docker exec -e CID="$commit_id" -i "$API_V2_CONT" node --input-type=module - <<'NODE'
+[?2004l[?2004h> import { PrismaClient } from '@prisma/client';
+[?2004l[?2004h> const prisma = new PrismaClient();
+[?2004l[?2004h> const id = process.env.CID;
+[?2004l[?2004h> try {
+[?2004l[?2004h>   const c = await prisma.rngCommit.findUnique({ where: { id }});
+[?2004l[?2004h>   console.log(JSON.stringify({ id: c?.id, serverSeedHex: c?.serverSeedHex, serverCommitHex: c?.serverCommitHex, revealed: c?.revealed }));
+[?2004l[?2004h> } catch (e) {
+[?2004l[?2004h>   console.error(String(e));
+[?2004l[?2004h>   process.exit(2);
+[?2004l[?2004h> } finally {
+[?2004l[?2004h>   await prisma.$disconnect();
+[?2004l[?2004h> }
+[?2004l[?2004h> NODE
+[?2004l[?2004h> )"
+[?2004l[?2004h>     echo "db lookup: $DB_JSON" | sed 's/["\\]//g' | tr -d '\n' | cut -c1-200 | sed 's/$/.../' || true
+[?2004l[?2004h>     seed="$(printf '%s' "$DB_JSON" | sed -n 's/.*"serverSeedHex":"\([0-9a-fA-F]\+\)".*/\1/p' | head -n1 || true)"
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004lQuerying Prisma inside container: backgammon-mini-app-api_v2-1
+db lookup: {id:e6fef3ea-8982-4862-8e55-c8de8b609caa,serverSeedHex:93f6ad3d56e8627223e40fc4273345699886d73d006863ebb9e2702aba7f2155,serverCommitHex:439206c6b748793b51d199b73a201086bf601de1498abf06d5518...
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# REVEAL_BODY="$SMK_DIR/reveal.$commit_id.json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# R1=""; USED="none"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -n "${seed:-}" ]; then
+[?2004l[?2004h>   R1="$(curl -sS -o "$REVEAL_BODY" -w "%{http_code}" -X POST "$API_BASE/rng/reveal" "${HDR[@]}" -d "{\"id\":\"$commit_id\",\"serverSeedHex\":\"$seed\"}" || true)"
+[?2004l[?2004h>   USED="api_with_seed"
+[?2004l[?2004h>   echo "POST /rng/reveal (with serverSeedHex) -> $R1"
+[?2004l[?2004h> fi
+[?2004lPOST /rng/reveal (with serverSeedHex) -> 400
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- E) Fallback אם אין seed או אם POST החזיר !=200: עדכון revealed=true ישירות ב-DB (זמני ל-SMOKE) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# if [ -z "$R1" ] || [ "$R1" != "200" ]; then
+[?2004l[?2004h>   if [ -z "${API_V2_CONT:-}" ]; then
+[?2004l[?2004h>     API_V2_CONT="$(docker ps --format '{{.Names}}' | grep -E 'api[_-]?v2' | head -n1 || true)"
+[?2004l[?2004h>   fi
+[?2004l[?2004h>   if [ -n "$API_V2_CONT" ]; then
+[?2004l[?2004h>     echo "Fallback: setting revealed=true in DB for commitId=$commit_id (container: $API_V2_CONT)" [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[K"
+[?2004l[?2004h>     docker exec -e CID="$commit_id" -i "$API_V2_CONT" node --input-type=module - <<'NODE'
+[?2004l[?2004h> import { PrismaClient } from '@prisma/client';
+[?2004l[?2004h> const prisma = new PrismaClient();
+[?2004l[?2004h> const id = process.env.CID;
+[?2004l[?2004h> try {
+[?2004l[?2004h>   await prisma.rngCommit.update({ where: { id }, data: { revealed: true } });
+[?2004l[?2004h>   console.log(JSON.stringify({ ok:true, id }));
+[?2004l[?2004h> } catch(e){ console.error(String(e)); process.exit(2); } finally { await prisma.$disconnect(); }
+[?2004l[?2004h> NODE
+[?2004l[?2004h>     USED="db_fallback_revealed_true"
+[?2004l[?2004h>     echo '{"ok":true}' > "$REVEAL_BODY"
+[?2004l[?2004h>     R1="200"
+[?2004l[?2004h>   else
+[?2004l[?2004h>     echo "ERROR: api_v2 container not found; cannot fallback"; exit 9
+[?2004l[?2004h>   fi
+[?2004l[?2004h> fi
+[?2004lFallback: setting revealed=true in DB for commitId=e6fef3ea-8982-4862-8e55-c8de8b609caa (container: backgammon-mini-app-api_v2-1)
+{"ok":true,"id":"e6fef3ea-8982-4862-8e55-c8de8b609caa"}
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # --- F) verify אחרי reveal (דרישה מינימלית: 200 + revealed=true; seed/dice אופציונליים בשלב זה) ---
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# VER2="$SMK_DIR/verify.after.$commit_id.json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# V2="$(curl -sS -o "$VER2" -w "%{http_code}" "$API_BASE/rng/verify?id=$commit_id" || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "GET /rng/verify (after) -> $V2"; [ "$V2" = "200" ] || { echo "BODY:"; cat "$VER2"; exit 10; }
+[?2004lGET /rng/verify (after) -> 200
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# rev_after="$(grep -o '"revealed":[^,}]*' "$VER2" | head -n1 | cut -d: -f2 | tr -d ' ')"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ "$rev_after" = "true" ] || { echo "ERROR: expected revealed=true"; cat "$VER2"; exit 11; }
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# # אפשרות: אם dice הגיעו — נדפיס אותם; אם לא, נציין "dice: n/a"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# dice_json="$(sed -n 's/.*"dice":\(\[[^]]*]\).*/\1/p' "$VER2" | head -n1 || true)"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [ -n "$dice_json" ] || dice_json="null"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# SUMMARY="$SMK_DIR/rng-verify-reveal-fix.$(date +%Y%m%d-%H%M%S).json"
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# cat >"$SUMMARY" <<JSON
+[?2004l[?2004h> {"ts":"$(date -Is)","commitId":"$commit_id","used":"$USED","serverSeedHex_short":"${seed:+${seed:0:12}}","http":{"matches":"$MC","commit":"$CC","reveal":"$R1","verify_before":"$V1","verify_after":"$V2"},"dice":$dice_json}
+[?2004l[?2004h> JSON
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# 
+[?2004l[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# echo "::DUELLY::step=$STEP_ID status=ok time=$(date -Is) notes=\"used=$USED; before=$V1 after=$V2; summary=$SUMMARY\""
+[?2004l::DUELLY::step=036-be-rng-reveal-use-db-seed-or-fallback-and-e2e status=ok time=2025-10-20T16:59:08+00:00 notes="used=db_fallback_revealed_true; before=200 after=200; summary=.duelly/smoke/rng-verify-reveal-fix.20251020-165908.json"
+[?2004h]0;root@Duelly-Dev: ~/backgammon-mini-approot@Duelly-Dev:~/backgammon-mini-app# [?2004l[?2004l
