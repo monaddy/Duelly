@@ -1,0 +1,13 @@
+{
+  "ts": "2025-10-21T05:52:34+00:00",
+  "stage": "FE-7",
+  "status": "HOLD_FOR_APPROVAL",
+  "preview_url": "http://104.238.172.232:4174/",
+  "api_health_url": "http://104.238.172.232:3000/api/v2/health",
+  "theme_url": "https://raw.githubusercontent.com/monaddy/Duelly/ops/assets/dist/assets/theme.css",
+  "reports": {
+    "handoff": "fe-stage7-handoff-20251020-215053.md",
+    "approval_summary": "fe-stage7-hold-for-approval-20251021-055107.md",
+    "smoke_latest": "fe-be-smoke-20251021-054055.md"
+  }
+}
