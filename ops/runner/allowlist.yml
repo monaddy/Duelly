@@ -1,0 +1,7 @@
+# Ops-Runner allowlist (skeleton)
+# jobs:
+#   - id: "nginx-reload"
+#     cmd: "docker compose exec -T nginx nginx -s reload"
+#   - id: "stack-logs"
+#     cmd: "docker compose logs --tail=200"
+jobs: []

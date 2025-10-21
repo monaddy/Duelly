@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  ops-runner:
+    image: node:20-alpine
+    working_dir: /app
+    environment:
+      - NODE_ENV=production
+      - PORT=4001
+      - DUELLY_DIR=/root/duelly/.duelly
+      - DUELLY_LOG_DIR=/root/duelly/.duelly/logs
+      - PROJECT_ROOT=/root/backgammon-mini-app
+      - ALLOWLIST=/root/backgammon-mini-app/ops/runner/allowlist.yml
+    volumes:
+      - /root/duelly/.duelly:/root/duelly/.duelly
+      - /root/backgammon-mini-app:/root/backgammon-mini-app
+    command: ["node", "/root/backgammon-mini-app/services/ops-runner/server.js"]
+    ports:
+      - "4001:4001"
